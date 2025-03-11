@@ -1,0 +1,473 @@
+name: Sync Template Common with PR
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - '.github/actions/**'
+      - '.github/workflows/**'
+      - '.template-version'
+      - '**[sync-template]**'  # ✅ Ignore commits related to template sync updates
+  workflow_dispatch:
+  schedule:
+    - cron: '0 6 * * 0'  # ✅ Runs every Sunday at 6 AM UTC
+
+concurrency:
+  group: sync-template-${{ github.run_id }}  # ✅ Avoids conflicts in retries
+  cancel-in-progress: false  # ✅ Ensures manual trigger is not blocked
+
+jobs:
+  sync_template:
+    if: "!contains(github.event.head_commit.author.name, 'github-actions')"  # ✅ Ignore auto commits
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Target Repository (cfa-repo-template-test Repo)
+        uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.PAT }}
+
+      - name: Fetch Latest Template Updates (cfa-repo-template-common)
+        run: |
+          # ✅ Unset any existing Git user details before setting new ones
+          git config --global --unset-all user.name || echo "No existing user.name to unset"
+          git config --global --unset-all user.email || echo "No existing user.email to unset"
+
+          # ✅ Set correct Git user
+          git config --global user.name "github-actions"
+          git config --global user.email "github-actions@github.com"
+          # ✅ Clone the parent repo into a temporary directory
+          mkdir -p temp-clone
+          git clone --depth=1 https://x-access-token:${{ secrets.PAT }}@github.com/cdcent/cfa-repo-template-common.git temp-clone
+
+          # ✅ Ensure .template-version exists in the child repo
+          if [[ -f .template-version ]]; then
+            TEMPLATE_VERSION=$(cat .template-version)
+
+            # ✅ Ensure .template-version contains a valid commit hash
+            if [[ "$TEMPLATE_VERSION" =~ ^[0-9a-f]{40}$ ]]; then
+              echo "🔒 Pinned template version detected in child repo: $TEMPLATE_VERSION"
+
+              # ✅ Verify if the commit exists in the parent repo
+              if git -C temp-clone cat-file -e "$TEMPLATE_VERSION^{commit}" 2>/dev/null; then
+                echo "✅ Pinned version exists in parent repo. Keeping existing version."
+              else
+                echo "⚠️ Pinned version does not exist in parent repo. Resetting to latest parent commit..."
+                TEMPLATE_VERSION=$(git -C temp-clone rev-parse HEAD)
+                echo "$TEMPLATE_VERSION" > .template-version
+                git add .template-version
+                git commit -m "Fix invalid template-version reference" || echo "✅ No changes to commit."
+                git push origin main
+              fi
+            else
+              echo "⚠️ Invalid template version format in .template-version: $TEMPLATE_VERSION"
+              echo "🔄 Resetting .template-version to the latest parent commit..."
+              TEMPLATE_VERSION=$(git -C temp-clone rev-parse HEAD)
+              echo "$TEMPLATE_VERSION" > .template-version
+              git add .template-version
+              git commit -m "Fix invalid template-version format" || echo "✅ No changes to commit."
+              git push origin main
+            fi
+          else
+            echo "⚠️ .template-version file not found in child repo. Creating with latest parent commit."
+            TEMPLATE_VERSION=$(git -C temp-clone rev-parse HEAD)
+            echo "$TEMPLATE_VERSION" > .template-version
+            git add .template-version
+            git commit -m "Initialize .template-version"
+            git push origin main
+          fi
+
+          # ✅ Define files that should NEVER be overwritten (Added README.md)
+          EXCLUDED_FILES=("config.yaml" ".env" "custom-settings.json" "README.md")
+          RSYNC_EXCLUDES=""
+          for FILE in "${EXCLUDED_FILES[@]}"; do
+            RSYNC_EXCLUDES+="--exclude=${FILE} "
+          done
+
+          # ✅ Check if updates exist in parent repo before syncing
+          echo "🔍 Checking if updates exist in parent repo before syncing..."
+          if rsync -n -av --exclude '.git' --exclude 'config/' $RSYNC_EXCLUDES temp-clone/ ./ | grep -q '^'; then
+            echo "Updates detected from cfa-repo-template-common repo."
+          else
+            echo "No updates detected from cfa-repo-template-common repo. Skipping sync."
+            exit 0
+          fi
+
+          # ✅ Apply updates from parent repo
+          rsync -av --exclude '.git' --exclude 'config/' $RSYNC_EXCLUDES temp-clone/ ./
+
+          # ✅ Debug: Check if `.pre-commit-config.yaml` actually got copied
+          if [[ -f ".pre-commit-config.yaml" ]]; then
+            echo "✅ Successfully copied .pre-commit-config.yaml"
+            cat .pre-commit-config.yaml | head -n 10  # Show first 10 lines for verification
+          else
+            echo "❌ .pre-commit-config.yaml is missing after rsync!"
+          fi
+
+          # ✅ Ensure `.pre-commit-config.yaml` only updates if no local modifications exist
+          if [[ -f "temp-clone/.pre-commit-config.yaml" ]]; then
+            echo "🔍 Checking if .pre-commit-config.yaml has updates in parent..."
+            # Compare with child repo
+            if ! cmp --silent "temp-clone/.pre-commit-config.yaml" ".pre-commit-config.yaml"; then
+              echo "🟡 Parent repo has updates for .pre-commit-config.yaml"
+              # ✅ Ensure no local modifications before applying the update
+              if git diff --name-only HEAD | grep -q ".pre-commit-config.yaml"; then
+                echo "⚠️ Local changes detected in .pre-commit-config.yaml. Skipping update to avoid overwrite."
+              else
+                echo "✅ Applying parent updates to .pre-commit-config.yaml"
+                cp "temp-clone/.pre-commit-config.yaml" ".pre-commit-config.yaml"
+                git add .pre-commit-config.yaml
+                git commit -m "Sync .pre-commit-config.yaml from parent repo" || echo "✅ No changes to commit."
+                git push origin main || echo "✅ No changes to push."
+              fi
+            else
+              echo "✅ No updates detected for .pre-commit-config.yaml. Keeping existing version."
+            fi
+          fi
+
+          # ✅ Final sync message
+          echo "✅ Sync completed (excluding specific files)."
+
+      - name: Ensure Full Commit History (Only if Shallow Clone)
+        run: |
+          if [ -f "$(git rev-parse --git-dir)/shallow" ]; then
+            echo "🔄 Repository is shallow. Fetching full commit history..."
+            git fetch --unshallow --tags --force origin main
+          else
+            echo "✅ Repository is already a full clone. Skipping --unshallow."
+          fi
+
+      - name: Reset and Untrack `.gitignore` Before Sync
+        run: |
+          # ✅ Ensure `temp-clone/` is ignored in `.gitignore`
+          if ! grep -qxF "temp-clone/" .gitignore; then
+            echo "temp-clone/" >> .gitignore
+            echo "✅ Added temp-clone/ to .gitignore"
+          fi
+          # ✅ Forcefully remove `.gitignore` from Git tracking if needed
+          git update-index --skip-worktree .gitignore 2>/dev/null || echo "✅ Marked .gitignore as unchanged."
+          git rm --cached .gitignore 2>/dev/null || echo "✅ .gitignore is no longer tracked."
+          git restore .gitignore || true
+          git checkout -- .gitignore || true
+          # ✅ Verify `.gitignore` is clean before proceeding
+          git status | grep -E '\b.gitignore\b' && echo "❌ .gitignore is still modified!" || echo "✅ .gitignore is clean."
+
+      - name: Set Up Environment Variables
+        run: |
+          echo "GH_TOKEN=${{ secrets.PAT }}" >> $GITHUB_ENV
+
+      - name: Detect Local Modifications Before Sync & Create PR if Needed
+        run: |
+          # ✅ Fetch latest updates from remote
+          git fetch --all --prune --force
+          git status
+
+          # ✅ Capture local changes in child repo (excluding .gitignore and .template-version)
+          echo "🔍 Detecting local modifications..."
+          # LOCAL_CHANGES=$(git diff --name-only HEAD HEAD~1 --diff-filter=d | grep -Ev '^(.gitignore|.template-version)$' || true)
+          LOCAL_CHANGES=$(git status --porcelain | awk '{print $2}' | grep -Ev '^(.gitignore|.template-version)$' || true)
+          echo "🔍 LOCAL_CHANGES: [$LOCAL_CHANGES]"
+
+          # ✅ Capture updates in parent repo
+          echo "🔍 Checking for parent repo updates..."
+          PARENT_UPDATES=$(git diff --name-only origin/main HEAD --diff-filter=AM | grep -Ev '^(.gitignore|.template-version)$' || true)
+          echo "🔍 PARENT_UPDATES: [$PARENT_UPDATES]"
+
+          # ✅ Debugging ruff.toml detection
+          if [[ "$PARENT_UPDATES" == *"ruff.toml"* ]]; then
+            echo "✅ Parent repo has changes in ruff.toml"
+          else
+            echo "❌ No updates detected for ruff.toml"
+          fi
+
+          # ✅ Ignore cases where only .template-version or .gitignore was updated
+          if [[ -n "$PARENT_UPDATES" && -z "$(echo "$PARENT_UPDATES" | grep -vE '^(.gitignore|.template-version)$')" ]]; then
+            echo "✅ Only .template-version or .gitignore updated. No PR required."
+            exit 0
+          fi
+
+          # ✅ Ensure `temp-clone` is updated with the latest parent repo state
+          cd temp-clone
+          git pull origin main --force || echo "⚠️ Failed to pull latest changes in temp-clone"
+          cd ..
+
+          # ✅ Check if a sync PR already exists
+          echo "🔍 Checking for existing PRs..."
+          # EXISTING_PR=$(gh pr list --state open --json title,headRefName --jq '.[] | select(.title | test("Sync updates from parent repo")) | .headRefName' || true)
+          EXISTING_PR=$(gh pr list --state open --json title,headRefName --jq '.[] | select(.title | contains("Sync updates from parent repo")) | .headRefName' | grep -E "^sync-[0-9]{8}-[0-9]{6}$" || true)
+          if [[ -n "$EXISTING_PR" ]]; then
+            echo "🔄 Existing sync PR found: $EXISTING_PR. Skipping PR creation."
+            exit 0
+          fi
+
+          # ✅ Detect conflicts between local and parent updates
+          echo "🔍 Checking for conflicts..."
+          CONFLICTS=""
+          for FILE in $LOCAL_CHANGES; do
+            if [[ " $PARENT_UPDATES " == *" $FILE "* ]]; then
+              if [[ -f "temp-clone/$FILE" && -f "$FILE" ]]; then
+                if ! git diff --exit-code "$FILE" "origin/main:$FILE" >/dev/null; then
+                  echo "🚨 Conflict detected in: $FILE"
+                  CONFLICTS+="$FILE "
+                fi
+              else
+                CONFLICTS+="$FILE "
+              fi
+            fi
+          done
+
+          echo "🔍 Debug: CONFLICTS variable content → [$CONFLICTS]"
+
+          # ✅ Determine if a PR is needed due to conflicts or local changes
+          if [[ -n "$CONFLICTS" || -n "$LOCAL_CHANGES" ]]; then
+            echo "❌ Changes detected! Creating a PR for manual review."
+
+            # ✅ Branch name logic
+            if [[ -n "$CONFLICTS" ]]; then
+              BRANCH_NAME="sync-conflict-$(date +%Y%m%d-%H%M%S)"
+              echo "🚨 Conflict detected in the following files: $CONFLICTS"
+            else
+              BRANCH_NAME="sync-update-$(date +%Y%m%d-%H%M%S)"
+              echo "⚠️ No conflicts, but local changes exist: $LOCAL_CHANGES"
+            fi
+
+            # ✅ Ensure branch does not already exist before creating it
+            if git ls-remote --exit-code --heads origin "$BRANCH_NAME"; then
+              echo "⚠️ Branch $BRANCH_NAME already exists! Deleting and recreating."
+              git branch -D "$BRANCH_NAME" || true
+            fi
+            git checkout -b "$BRANCH_NAME"
+            git add -A
+            git commit -m "Detected changes - Manual review required"
+            git push origin "$BRANCH_NAME"
+
+            # ✅ Create PR
+           UPDATED_FILES=$(echo -e "$LOCAL_CHANGES\n$PARENT_UPDATES" | sed '/^$/d' | tr '\n' ',' | sed 's/,$//')
+           COMMENT_BODY="🚀 **Changes Detected!** 🚀\n\n### Please review and merge.\n\n#### Updated files:\n- $(echo -e "$UPDATED_FILES" | tr ',' '\n- ')"
+           gh pr create --title "Detected changes: Review required" \
+                      --body "$COMMENT_BODY" \
+                      --base main --head "$BRANCH_NAME" \
+                      --repo "$GITHUB_REPOSITORY"
+
+            echo "🚀 PR created successfully."
+            exit 0
+          fi
+
+          # ✅ Ensure parent updates do not overwrite local changes without a PR
+          for FILE in $PARENT_UPDATES; do
+            if [[ -f "$FILE" ]]; then
+              echo "❌ Preventing overwrite of modified file: $FILE"
+
+              # ✅ Trigger PR creation for conflict resolution
+              BRANCH_NAME="sync-conflict-$(date +%Y%m%d-%H%M%S)"
+
+              if git ls-remote --exit-code --heads origin "$BRANCH_NAME"; then
+                git branch -D "$BRANCH_NAME" || true
+              fi
+
+              git checkout -b "$BRANCH_NAME"
+              git add -A
+              git commit -m "Conflict detected - Manual review required"
+              git push origin "$BRANCH_NAME"
+
+              # ✅ Create PR
+              CONFLICTED_FILES=$(echo -e "$CONFLICTS\n$FILE" | sed '/^$/d' | tr '\n' ',' | sed 's/,$//')
+              COMMENT_BODY="🚨 **Conflict Detected!** 🚨\n\n### Please review and merge manually.\n\n#### Conflicting files:\n- $(echo -e "$CONFLICTED_FILES" | tr ',' '\n- ')"
+              gh pr create --title "Conflict detected: Parent & Child Repo Updates" \
+                          --body "$COMMENT_BODY" \
+                          --base main --head "$BRANCH_NAME" \
+                          --repo "$GITHUB_REPOSITORY"
+
+
+              echo "🚀 Conflict detected! PR created for manual resolution."
+              exit 0
+            fi
+          done
+
+          # ✅ No conflicts detected: Proceed with syncing changes
+          echo "✅ No conflicts detected. Proceeding with sync."
+
+          for FILE in $PARENT_UPDATES; do
+            if [[ -f "$FILE" ]]; then
+              echo "❌ Preventing overwrite of modified file: $FILE"
+              exit 1  # Stop execution and require manual PR
+            fi
+          done
+
+          # ✅ Apply updates from parent repo
+          rsync -av --exclude '.git' --exclude 'config/' --ignore-existing temp-clone/ ./
+
+          # ✅ Log the applied updates
+          echo "✅ Parent updates synced successfully."
+
+          # ✅ Detect remaining local modifications (these are child repo changes)
+          LOCAL_ONLY_CHANGES=""
+          for FILE in $LOCAL_CHANGES; do
+            if [[ " $PARENT_UPDATES " != *" $FILE "* ]]; then
+              LOCAL_ONLY_CHANGES+="$FILE "
+            fi
+          done
+
+          # ✅ Log the local changes but DO NOT trigger a PR
+          if [[ -n "$LOCAL_ONLY_CHANGES" ]]; then
+            echo "❌ Local changes detected in child repository: $LOCAL_ONLY_CHANGES (Not overwritten)"
+          fi
+
+          echo "✅ Workflow completed successfully."
+          exit 0
+
+      - name: Pull Latest Updates From Common Template Repo
+        run: |
+          # ✅ Ensure full history is fetched only if needed
+          if [ -f "$(git rev-parse --git-dir)/shallow" ]; then
+            echo "🔄 Repository is shallow. Fetching full commit history..."
+            git fetch --unshallow --tags --force origin main
+          else
+            echo "✅ Repository is already fully cloned. Skipping --unshallow."
+            git fetch --tags --force origin main
+          fi
+          # ✅ Ensure working tree is clean before resetting
+          if [[ -n "$(git status --porcelain)" ]]; then
+            echo "⚠️ Uncommitted changes detected! Stashing them before reset..."
+            git stash push -m "Auto-stash before reset"
+          fi
+          # ✅ Reset to ensure a clean sync
+          git reset --hard origin/main
+          git clean -fd  # Ensures no untracked files remain
+          # ✅ Restore stashed changes if they exist
+          if git stash list | grep -q "Auto-stash before reset"; then
+            echo "🔄 Restoring stashed local changes..."
+            git stash pop || echo "⚠️ Failed to restore stashed changes."
+          fi
+          # ✅ Avoid forcing `.gitignore` to be tracked again
+          echo "✅ Skipping .gitignore tracking as it was explicitly excluded."
+          # ✅ Attempt a safe merge
+          if ! git merge --no-commit --no-ff origin/main; then
+            echo "🚨 Merge conflict detected! Stopping workflow."
+            # ✅ Log conflicting files
+            CONFLICT_FILES=$(git diff --name-only --diff-filter=U)
+            echo "❌ Conflicting files: $CONFLICT_FILES"
+            git merge --abort
+            exit 1
+          fi
+
+      - name: Detect and Merge Changes
+        run: |
+          # ✅ Ensure `temp-clone/` is ignored before committing, but avoid redundant updates
+          if ! grep -qxF "temp-clone/" .gitignore; then
+            echo "temp-clone/" >> .gitignore
+            echo "✅ Added temp-clone/ to .gitignore (if missing)"
+          fi
+
+          # ✅ Ensure `.gitignore` is tracked properly (fixes sparse-checkout issues)
+          git add .gitignore 2>/dev/null || echo "✅ .gitignore is already tracked."
+
+          # ✅ Ensure Git is in sync before detecting changes
+          git fetch --all --prune --force
+
+          # ✅ Use `--hard` reset only if no local changes exist
+          if [[ -z "$(git status --porcelain)" ]]; then
+            echo "✅ No local changes. Using --hard reset..."
+            git reset --hard origin/main
+          else
+            echo "⚠️ Local changes detected. Using --soft reset..."
+            git reset --soft origin/main
+          fi
+
+          # ✅ Detect changes properly
+          if git status --porcelain | grep -q "."; then
+              echo "🔄 Detected changes, proceeding with commit."
+              git add -A
+              git commit -m "Merging latest changes" || echo "✅ No changes to commit."
+              git push origin main || echo "✅ No changes to push."
+          else
+              echo "✅ No real changes detected, skipping commit."
+              exit 0
+          fi
+
+      - name: Install Pre-Commit (If Not Installed)
+        run: |
+            echo "🚀 Ensuring dependencies are installed..."
+
+            # Install Pre-Commit
+            python3 -m pip install --upgrade pip
+            python3 -m pip install pre-commit
+
+            # Install R if missing
+            if ! command -v Rscript &> /dev/null; then
+              echo "⚠️ R is not installed. Installing R..."
+              sudo apt-get update
+              sudo apt-get install -y r-base
+            else
+              echo "✅ R is already installed."
+            fi
+
+            # Add pre-commit to PATH
+            echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Run Pre-Commit Hooks and Stage Changes
+        run: |
+          echo "🚀 Running pre-commit hooks..."
+          pre-commit run --all-files || true  # Do not fail if hooks modify files
+
+          if git diff --exit-code; then
+            echo "✅ No changes detected by pre-commit."
+          else
+            echo "🔄 Pre-commit modified files. Staging changes..."
+            git add -A
+          fi
+
+      - name: Commit and Push Changes (Only if Necessary)
+        run: |
+          LAST_COMMIT_MSG=$(git log -1 --pretty=format:'%s' 2>/dev/null || echo "")
+
+          if [[ "$LAST_COMMIT_MSG" == *"Updated template version timestamp"* ]]; then
+            echo "🚀 Skipping push to avoid workflow retriggering."
+            exit 0
+          fi
+
+          if git diff --cached --quiet; then
+            echo "✅ No real changes detected, skipping commit."
+            exit 0
+          else
+            echo "🔄 Detected changes, committing & pushing."
+          fi
+
+          git commit -m "Sync with latest template-common updates" && git push origin main || echo "⚠️ No changes to push."
+
+      - name: Store Version of Synced Template
+        run: |
+          echo "🔍 Checking for updates in parent repo..."
+
+          # ✅ Ensure the repository has a commit history before running git diff
+          if git rev-parse --is-inside-work-tree >/dev/null 2>&1 && git rev-parse HEAD^ >/dev/null 2>&1; then
+            PARENT_UPDATES=$(git diff --name-only HEAD^ HEAD)
+          else
+            echo "⚠️ No previous commits found. Skipping parent update check."
+            PARENT_UPDATES=""
+          fi
+
+          if [[ -n "$PARENT_UPDATES" ]]; then
+            echo "🔄 Parent repo has updates. Updating .template-version."
+            echo "Last updated: $(date)" > .template-version
+            git add .template-version
+          else
+            echo "✅ No parent updates detected, ensuring .template-version is checked."
+          fi
+
+          # ✅ Ensure we are not pushing if only `.template-version` was updated
+          if git diff --cached --name-only | grep -qv "^.template-version$"; then
+            echo "🔄 Committing all changes including .template-version..."
+            git commit -m "[sync-template] Updated template version timestamp"
+            git push origin main || echo "⚠️ No changes to push."
+          else
+            echo "✅ Only .template-version updated. Skipping commit to prevent workflow retrigger."
+            exit 0
+          fi
+
+      - name: Cleanup Temporary Files
+        if: always()
+        run: |
+          echo "🧹 Cleaning up temporary files..."
+          rm -rf temp-clone || echo "⚠️ temp-clone already removed or does not exist."

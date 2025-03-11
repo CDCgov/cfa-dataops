@@ -1,6 +1,6 @@
 [project]
 name = "cfa.scenarios.dataops"
-version = "2025.03.04.0"
+version = "2025.03.10.0a"
 description = "Data cataloging, ETL, modeling, verification, and validation for the CFA Scenarios Team"
 authors = [
     {name = "Phil Rogers", email = "ap66@cdc.gov"}
@@ -9,12 +9,21 @@ readme = "README.md"
 requires-python = ">=3.10,<4.0"
 dependencies = [
     "cfa-azure @ git+https://github.com/CDCgov/cfa_azure.git",
-    "tomli (>=2.2.1,<3.0.0)"
+    "tomli (>=2.2.1,<3.0.0)",
+    "httpx (>=0.28.1,<0.29.0)",
+    "mako (>=1.3.9,<2.0.0)",
+    "duckdb (>=1.2.0,<2.0.0)",
+    "tqdm (>=4.67.1,<5.0.0)",
+    "pyarrow (>=19.0.1,<20.0.0)"
 ]
 
 [tool.poetry]
 packages = [{include = "cfa"}]
 
+
+[tool.poetry.group.dev.dependencies]
+ruff = "^0.9.9"
+pytest = "^8.3.5"
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]

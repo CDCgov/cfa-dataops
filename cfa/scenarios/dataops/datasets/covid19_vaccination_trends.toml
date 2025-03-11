@@ -1,0 +1,29 @@
+# This dataset is static, and thus only needs to be extracted in it's raw form
+# once and saved to blob storage. For a human viewable we format, see:
+# https://data.cdc.gov/Vaccinations/COVID-19-Vaccination-Age-and-Sex-Trends-in-the-Uni/5i5k-6cmh/data_preview
+# Raw (extracted) and transformed (loaded) data will be stored in azure blob storage
+# which requires the account, container and path for access
+
+[properties]
+
+name = "covid19vax"
+automate = false
+
+[source]
+
+url = "https://data.cdc.gov/resource/5i5k-6cmh.csv"
+pagination = {limit = 50000, n_records = 2267820}
+
+[extract]
+
+account = "cfaazurebatchprd"
+container = "dataops"
+path = "scenarios/raw/covid19vax"
+
+[load]
+
+account = "cfaazurebatchprd"
+container = "dataops"
+path = "scenarios/transformed/covid19vax"
+
+# TODO: add some data schema validation

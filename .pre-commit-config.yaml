@@ -26,18 +26,18 @@ repos:
       args: ['--line-length', '79']
 #####
 # R
--   repo: https://github.com/lorenzwalthert/precommit
-    rev: v0.4.2
-    hooks:
-    -   id: style-files
-    -   id: lintr
+# -   repo: https://github.com/lorenzwalthert/precommit
+#     rev: v0.4.2
+#     hooks:
+#     -   id: style-files
+#     -   id: lintr
 #####
 # Java
-- repo: https://github.com/macisamuele/language-formatters-pre-commit-hooks
-  rev: v2.11.0
-  hooks:
-  - id: pretty-format-java
-    args: [--aosp,--autofix]
+# - repo: https://github.com/macisamuele/language-formatters-pre-commit-hooks
+#   rev: v2.11.0
+#   hooks:
+#   - id: pretty-format-java
+#     args: [--aosp,--autofix]
 #####
 # Julia
 # Due to lack of first-class Julia support, this needs Julia local install
