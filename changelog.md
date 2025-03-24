@@ -8,6 +8,18 @@ The versioning pattern is `YYYY.MM.DD.micro(a/b/{none if release})
 
 ---
 
+## [2025.03.24.0a]
+
+### Added
+
+- `BlobEndpoint` class to `datasets` namespace for simplified access to data
+
+### Changed
+
+- naming on first dataset config, sql template, and etl script for more specificity
+- `covid19vax_trends.py` to include new `BlobEndpoint` data read/write pattern
+- config validation to ensure no names match "extract" or "load"
+- new data version allows for skipping extraction step and pulling latest
 
 ## [2025.03.10.0a]
 

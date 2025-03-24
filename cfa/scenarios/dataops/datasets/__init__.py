@@ -5,6 +5,6 @@ format. Use the existing configuration files as a starting point. Validations
 will run on all configurations.
 """
 
-from .catalog import datasets as configs
+from .catalog import datasets
 
-__all__ = [configs]
+__all__ = [datasets]

@@ -1,60 +1,44 @@
-# cfa-repo-template
-
-A template for new CFA repos
-
-## How to use this template
-
-You can:
-
-1. On the GitHub repo web page, click the green `Use this template` button at the top-right
-2. When creating a new repo via the CDCgov request process, ask in the ticket to use this template
-3. Create a new bare repo, then manually copy material from this repo into that one
-
-After you have a repo with this material, you should:
-
-1. Edit `README.md` to delete everything above the divider line, and fill in the blanks.
-2. Edit or remove template files, including:
-   - `.pre-commit-config.yaml`: Keep only the hooks relevant to your project
-   - `.lintr`: Remove this if not an R project
-3. Follow any other guidance from the CFA Predict Handbook about opening new repos.
-
-## This template contains
-
-- [x] An Apache 2.0 license
-- [x] Issue templates for bugs, feature requests, and scientific improvements
-- [ ] A pull request (PR) template
-- [x] CI for linting and styling, following CFA's style guide for R, Python, and Java
-- [x] A .gitignore template that covers R, Python, and Java
-
-## Contributing to this repo
-
-Open an issue or PR and:
-
-- For decisions that affect the template as a whole, but don't impact the content of other repos: consult the template owner, currently Eric Rescorla `@ekr-cfa`.
-- For decisions that affect specific languages, consult the repo language owner:
-  - Python: Dina Mistry
-  - Rust: Kate Hudson
-  - R: TBD
-  - All other languages: TBD
-- For global policies, use the Predict [decision-making process](https://github.com/cdcent/cfa-predict-documentation/blob/main/docs/divisionwide_decisions.md).
-
-_Remove everything above this line when starting a new repo using this template._
-
----
-
-# {{project name}}
+# CFA Scenarios DataOps
 
 ## Overview
 
-{{Describe the purpose of your project. Add additional sections as necessary to help collaborators and potential collaborators understand and use your project.}}
+This project provides ETL (Extract, Transform, Load) pipelines for various data scenarios within the CDC's Center for Analytics (CFA). It currently includes an end-to-end ETL pipeline data, demonstrating best practices for data processing within the CFA environment.
+
+### Key Features
+
+- Configuration-driven ETL pipelines using TOML files
+- SQL-based transformations using DuckDB
+- Azure Blob Storage integration for raw and transformed data storage
+- Utilities for timestamping and template loading
+- Data validation and quality checks
 
 ## Getting started
 
-{{How should someone new to this repo use it? How do you install it? What are the entry points to run it?}}
+To use this repository:
+
+1. Clone the repository
+2. Install dependencies (**requires: `poetry >= 2.0`**):
+   ```
+   poetry install
+   ```
+3. Example: run the COVID-19 vaccination trends ETL pipeline:
+   ```
+   python -m cfa.scenarios.dataops.etl.covid19vax_trends --extract
+   ```
+4. [Optional] installing developer dependencies:
+   ```
+   poetry install --with dev
+   ```
+
+To add a new dataset:
+1. Create a new TOML configuration file in `cfa/scenarios/dataops/datasets/`
+2. Create a new ETL script in `cfa/scenarios/dataops/etl/`
+3. Add SQL transformation templates in `cfa/scenarios/dataops/etl/transform_templates/`
 
 ## Project admins
 
-- {{name}} <{{e-mail@cdc.gov}}> (CDC/IOD/ORR/CFA)
+- Thomas Hladish <utx5@cdc.gov> (CDC/OD/ORR/CFA)
+- Phillip Rogers <ap66@cdc.gov> (CDC/OD/ORR/CFA)(CTR)
 
 ## Disclaimers
 

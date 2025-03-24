@@ -5,13 +5,12 @@ from io import StringIO
 import duckdb
 import httpx
 import pandas as pd
-from cfa_azure.helpers import read_blob_stream, write_blob_stream
 from tqdm import tqdm
 
-from ..datasets import configs
+from ..datasets import datasets
 from .utils import get_timestamp, transform_template_lookup
 
-config = configs.covid19vax
+config = datasets.covid19vax_trends
 
 
 def extract() -> pd.DataFrame:
@@ -20,13 +19,12 @@ def extract() -> pd.DataFrame:
     Returns:
         pd.DataFrame: the extracted data
     """
-    offsets = range(
-        0, config.source.pagination.n_records, config.source.pagination.limit
-    )
 
-    extract_blob_account = config.extract.account
-    extract_blob_container = config.extract.container
-    extract_blob_path = f"{config.extract.path}/{get_timestamp()}"
+    r_count = httpx.get(config.source.url, params={"$select": "count(*)"})
+    dataset_len = int("".join(char for char in r_count.text if char.isdigit()))
+    offsets = range(0, dataset_len, config.source.pagination.limit)
+
+    extract_blob_version = f"{get_timestamp()}"
 
     get_dfs = []
 
@@ -38,11 +36,9 @@ def extract() -> pd.DataFrame:
 
         r = httpx.get(config.source.url, params=params)
 
-        write_blob_stream(
-            data=bytes(r.text, "utf-8"),
-            blob_url=f"{extract_blob_path}/part_{idx}.csv",
-            account_name=extract_blob_account,
-            container_name=extract_blob_container,
+        config.extract.write_blob(
+            file_buffer=bytes(r.text, "utf-8"),
+            path_after_prefix=f"{extract_blob_version}/part_{idx}.csv",
         )
 
         get_dfs.append(pd.read_csv(StringIO(r.text)))
@@ -59,7 +55,9 @@ def transform(df: pd.DataFrame) -> pd.DataFrame:  # noqa: W0613
     Returns:
         pd.DataFrame: the transformed data
     """
-    template = transform_template_lookup.get_template("covid19vax.sql")
+    template = transform_template_lookup.get_template(
+        config.properties.transform_template
+    )
     query = template.render(data_source="df")
     transformed_db = duckdb.sql(query).df()
     return transformed_db
@@ -72,15 +70,11 @@ def load(df: pd.DataFrame) -> None:
         df (pd.DataFrame): the transformed data to be loaded as parquet
     """
 
-    blob_account = config.load.account
-    blob_container = config.load.container
-    blob_path = f"{config.load.path}/{get_timestamp()}"
+    load_blob_version = f"{get_timestamp()}"
 
-    write_blob_stream(
-        data=df.to_parquet(),
-        blob_url=f"{blob_path}/data.parquet",
-        account_name=blob_account,
-        container_name=blob_container,
+    config.load.write_blob(
+        file_buffer=df.to_parquet(),
+        path_after_prefix=f"{load_blob_version}/data.parquet",
     )
 
 
@@ -92,20 +86,20 @@ def main(run_extract: bool = False) -> None:
         that the raw data is static and doesn't require update while iteration
         on the transformation of the raw data. Defaults to False.
     """
-    extract_blob_account = config.extract.account
-    extract_blob_container = config.extract.container
+
     if run_extract:
         raw_df = extract()
 
     else:
-        extract_blob_path = f"{config.extract.path}/2025-03-10T13-30-13/*.csv"
-        # TODO: this functionality needs to be added
-        buffer = read_blob_stream(
-            blob_url=extract_blob_path,
-            account_name=extract_blob_account,
-            container_name=extract_blob_container,
-        )
-        raw_df = pd.read_csv(buffer)
+        try:
+            buffers = config.extract.read_blobs()
+            raw_df = pd.concat([pd.read_csv(i) for i in buffers])
+        except IndexError as e:
+            raise AttributeError(
+                "Run extract set to False, but no latest version of extract "
+                "data to use. Run with extraction step to fetch latest raw "
+                "version."
+            ) from e
     # transform dataframe
     transformed_df = transform(raw_df)
     # load data to blob storage
@@ -120,4 +114,4 @@ if __name__ == "__main__":
     )
     parser.add_argument("--extract", "-e", action="store_true", default=False)
     args = parser.parse_args()
-    main(args.extract)
+    main(run_extract=args.extract)

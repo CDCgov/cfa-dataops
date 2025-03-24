@@ -6,7 +6,7 @@ WITH binned_and_filtered AS (
             WHEN demographic_category in ('Ages_<5yrs', 'Ages_5-11_yrs', 'Ages_12-17_yrs') THEN '0-17'
             WHEN demographic_category in ('Ages_18-24_yrs', 'Ages_25-49_yrs') THEN '18-49'
             WHEN demographic_category = 'Ages_50-64_yrs' THEN '50-64'
-            WHEN demographic_category = 'Ages_65%2B_yrs' THEN '65+'
+            WHEN demographic_category = 'Ages_65+_yrs' THEN '65+'
             ELSE null
         END as age,
         census,
@@ -20,7 +20,7 @@ WITH binned_and_filtered AS (
     WHERE demographic_category in (
         'Ages_<5yrs', 'Ages_5-11_yrs', 'Ages_12-17_yrs',
         'Ages_18-24_yrs', 'Ages_25-49_yrs', 'Ages_50-64_yrs',
-        'Ages_65%2B_yrs'
+        'Ages_65+_yrs'
     )
 )
 SELECT

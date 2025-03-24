@@ -6,24 +6,25 @@
 
 [properties]
 
-name = "covid19vax"
+name = "covid19vax_trends"
 automate = false
+transform_template = "covid19vax_trends.sql"
 
 [source]
 
 url = "https://data.cdc.gov/resource/5i5k-6cmh.csv"
-pagination = {limit = 50000, n_records = 2267820}
+pagination = {limit = 50000}
 
 [extract]
 
-account = "cfaazurebatchprd"
-container = "dataops"
-path = "scenarios/raw/covid19vax"
+account = "cfadatalakeprd"
+container = "cfapredict"
+prefix = "dataops/scenarios/raw/covid19vax_trends"
 
 [load]
 
-account = "cfaazurebatchprd"
-container = "dataops"
-path = "scenarios/transformed/covid19vax"
+account = "cfadatalakeprd"
+container = "cfapredict"
+prefix = "dataops/scenarios/transformed/covid19vax_trends"
 
 # TODO: add some data schema validation

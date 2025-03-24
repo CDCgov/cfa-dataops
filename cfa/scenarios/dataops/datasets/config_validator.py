@@ -30,17 +30,18 @@ def validate_dataset_config(config: dict) -> None:
             )
     for blob_field in ["extract", "load"]:
         match [*config[f"{blob_field}"].keys()]:
-            case ["account", "container", "path"]:
+            case ["account", "container", "prefix"]:
                 pass
             case _:
                 raise KeyError(
                     f'"{blob_field}" key in{config["_metadata"]["filename"]} is missing '
                     'keys. It should have exactly 3 keys: "account", "container", '
-                    'and "path"'
+                    'and "prefix"'
                 )
     try:
         assert config["properties"].get("name").replace("_", "").isalnum()
         assert config["properties"].get("name").islower()
+        assert config["properties"].get("name") not in ["extract", "load"]
     except AssertionError as exc:
         raise AssertionError(
             f'The property name in {config["_metadata"]["filename"]} '
