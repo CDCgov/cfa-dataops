@@ -32,14 +32,16 @@ jobs:
         run: |
           poetry build
       
+      - name: Generate Release Notes
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create temp-release --draft --generate-notes
+          gh release view temp-release --json body --jq '.body' >> changelog.md
+          gh release delete temp-release --yes
+      
       - name: Publish GitHub Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh release create ${{ github.ref }} dist/* --notes-file changelog.md --latest
-      
-      - name: Generate Release Notes
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          gh release view ${{ github.ref }} --json body --jq '.body' >> changelog.md
