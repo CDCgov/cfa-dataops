@@ -36,7 +36,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release view ${{ github.ref }} --json body --jq '.body' >> changelong.md
+          gh release view ${{ github.ref }} --json body --jq '.body' >> changelog.md
       
       - name: Publish GitHub Release
         env:
