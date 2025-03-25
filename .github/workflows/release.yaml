@@ -33,6 +33,8 @@ jobs:
           poetry build
       
       - name: Generate Release Notes
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh release view ${{ github.ref }} --json body --jq '.body' >> changelong.md
       
