@@ -2,8 +2,6 @@ name: Build Release Distribution
 
 on:
   push:
-    branches:
-      - release
     tags:
       - '*r'
 
