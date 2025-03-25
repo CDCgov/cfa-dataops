@@ -39,6 +39,8 @@ jobs:
           gh release create ${{ github.ref }} dist/* --latest
 
       - name: Check if Release Exists
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           retries=5
           for i in $(seq 1 $retries); do
@@ -49,7 +51,7 @@ jobs:
             echo "Release Not Found, Retrying in 5 Seconds"
             sleep 5
           done
-          
+
       - name: Generate and Update Release Notes
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
