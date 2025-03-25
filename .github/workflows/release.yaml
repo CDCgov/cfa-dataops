@@ -44,7 +44,7 @@ jobs:
         run: |
           retries=5
           for i in $(seq 1 $retries); do
-            if gh release view ${{ github.ref }}; then
+            if gh release view ${GITHUB_REF#refs/tags/}; then
               echo "Release Found, Proceeding to Update Notes"
               break
             fi
@@ -56,5 +56,5 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release view ${{ github.ref }} --json body --jq '.body' >> changelog.md
-          gh release edit ${{ github.ref }} --notes-file changelog.md
+          gh release view ${GITHUB_REF#refs/tags/} --json body --jq '.body' >> changelog.md
+          gh release edit ${GITHUB_REF#refs/tags/} --notes-file changelog.md
