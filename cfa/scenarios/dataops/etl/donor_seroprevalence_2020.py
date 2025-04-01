@@ -34,7 +34,7 @@ def extract() -> pd.DataFrame:
             "$offset": offset_i,
         }
 
-        r = httpx.get(config.source.url, params=params, timeout = 30)
+        r = httpx.get(config.source.url, params=params, timeout=30)
 
         config.extract.write_blob(
             file_buffer=bytes(r.text, "utf-8"),
