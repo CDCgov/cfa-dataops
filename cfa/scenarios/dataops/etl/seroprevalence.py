@@ -1,4 +1,4 @@
-"""For ETL of the SARS-CoV-2 Variant Proportions"""
+"""For ETL of the Nationwide Laboratory Seroprevalence Data"""
 
 from io import StringIO
 
@@ -10,7 +10,7 @@ from tqdm import tqdm
 from ..datasets import datasets
 from .utils import get_timestamp, transform_template_lookup
 
-config = datasets.sars_cov2_proportions
+config = datasets.seroprevalence
 
 
 def extract() -> pd.DataFrame:
@@ -110,7 +110,7 @@ if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser(
-        prog="SARS-CoV-2 Variant Proportions data etl pipeline",
+        prog="Nationwide Laboratory Seroprevalence data etl pipeline",
     )
     parser.add_argument("--extract", "-e", action="store_true", default=False)
     args = parser.parse_args()
