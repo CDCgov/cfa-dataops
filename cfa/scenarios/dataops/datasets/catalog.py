@@ -171,6 +171,18 @@ def get_data(
     type="transformed",
     output="pandas",
 ) -> pd.DataFrame | pl.DataFrame:
+    """
+    Gets the data from blob storage based on provided parameters
+
+    Args:
+        name (str): name of dataset
+        version (str, optional): version of dataset. Defaults to "latest".
+        type (str, optional): type of data, either 'raw' or 'transformed'. Defaults to "transformed".
+        output (str, optional): dataframe output type, either 'pandas' or 'polars'. Defaults to "pandas".
+
+    Returns:
+        pd.DataFrame | pl.DataFrame: pandas or polars dataframe
+    """
     # check data exists
     available_datasets = [x for x in datasets.__dict__.keys()]
     if name not in available_datasets:
@@ -232,3 +244,7 @@ def get_data(
         else:
             df = pl.read_parquet(pq_file)
         return df
+
+
+def list_datasets() -> list[str]:
+    return [x for x in datasets.__dict__.keys()]
