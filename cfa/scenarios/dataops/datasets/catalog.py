@@ -2,9 +2,12 @@
 
 import glob
 import os
+from io import BytesIO
 from types import SimpleNamespace
 from typing import Any, List
 
+import pandas as pd
+import polars as pl
 import toml
 from cfa_azure.helpers import (
     read_blob_stream,
@@ -160,3 +163,72 @@ datasets = SimpleNamespace()
 
 for i in dataset_configs:
     setattr(datasets, i["properties"]["name"], dict_to_sn(i))
+
+
+def get_data(
+    name: str,
+    version="latest",
+    type="transformed",
+    output="pandas",
+) -> pd.DataFrame | pl.DataFrame:
+    # check data exists
+    available_datasets = [x for x in datasets.__dict__.keys()]
+    if name not in available_datasets:
+        print(f"{name} not in available datasets.")
+        print("Available datasets:", available_datasets)
+        raise ValueError(f"{name} not in available datasets.")
+
+    # validate type, raise error if not raw or transformed
+    if type not in ["raw", "transformed"]:
+        raise ValueError(f"Type {type} needs to be 'raw' or 'transformed'.")
+
+    # validate output, raise error if not pandas or polars
+    if output not in ["pandas", "polars", "pd", "pl"]:
+        raise ValueError(
+            f"Output {output} needs to be 'pandas', 'polars', 'pd, or 'pl'."
+        )
+
+    # continue workflow based on raw or transformed
+    if type == "raw":
+        # get the BlobEndpoint for the raw data
+        blob_endpoint = datasets.__dict__[name].extract
+        # check version exists, raise error if not
+        if version != "latest":
+            v_list = blob_endpoint.get_versions()
+            # check if version is in the list of available versions
+            if version not in v_list:
+                print(f"Version {version} not in available versions.")
+                print("Available versions:", v_list)
+                raise ValueError(
+                    f"Version {version} not in available versions."
+                )
+        # get blobs and convert to correct df
+        blobs = blob_endpoint.read_blobs()
+        if output in ["pandas", "pd"]:
+            df = pd.concat([pd.read_csv(blob) for blob in blobs])
+        else:
+            df = pl.concat(
+                [pl.read_csv(blob.content_as_bytes()) for blob in blobs],
+                how="vertical_relaxed",
+            )
+        return df
+    else:
+        blob_endpoint = datasets.__dict__[name].load
+        # check version exists, raise error if not
+        if version != "latest":
+            v_list = blob_endpoint.get_versions()
+            if version not in v_list:
+                print(f"Version {version} not in available versions.")
+                print("Available versions:", v_list)
+                raise ValueError(
+                    f"Version {version} not in available versions."
+                )
+        # get blobs and convert to correct df
+        blobs = blob_endpoint.read_blobs()
+        pq_bytes = blobs[0].content_as_bytes()
+        pq_file = BytesIO(pq_bytes)
+        if output in ["pandas", "pd"]:
+            df = pd.read_parquet(pq_file)
+        else:
+            df = pl.read_parquet(pq_file)
+        return df
