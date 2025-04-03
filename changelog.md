@@ -7,6 +7,15 @@ and this project adheres to [Calendar Versioning](https://calver.org/).
 The versioning pattern is `YYYY.MM.DD.micro(a/b/{none if release})
 
 ---
+## [2025.04.03.0a]
+
+### Added
+
+- ETL pipeline for `covid19hospitalizations` data source
+- ETL pipeline for `donor_seroprevalance_2020` data source
+- ETL pipeline for `donor_seroprevalence_2022` data source
+- ETL pipeline for `sars_cov2_proportions` data source
+- ETL pipeline for `seroprevalence` data source
 
 ## [2025.03.24.0a]
 
