@@ -22,10 +22,11 @@ _dataset_config_paths = glob.glob(os.path.join(_here_dir, "*.toml"))
 
 dataset_configs = []
 for cp_i in _dataset_config_paths:
-    config = tomli.load(cp_i)
-    config["_metadata"] = dict(filename=os.path.split(cp_i)[1])
-    validate_dataset_config(config)
-    dataset_configs.append(config)
+    with open(cp_i, "rb") as f:
+        config = tomli.load(f)
+        config["_metadata"] = dict(filename=os.path.split(cp_i)[1])
+        validate_dataset_config(config)
+        dataset_configs.append(config)
 
 verify_no_repeats(dataset_configs)
 
