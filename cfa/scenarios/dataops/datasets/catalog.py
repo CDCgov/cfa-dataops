@@ -8,7 +8,7 @@ from typing import Any, List
 
 import pandas as pd
 import polars as pl
-import toml
+import tomli
 from cfa_azure.helpers import (
     read_blob_stream,
     walk_blobs_in_container,
@@ -22,7 +22,7 @@ _dataset_config_paths = glob.glob(os.path.join(_here_dir, "*.toml"))
 
 dataset_configs = []
 for cp_i in _dataset_config_paths:
-    config = toml.load(cp_i)
+    config = tomli.load(cp_i)
     config["_metadata"] = dict(filename=os.path.split(cp_i)[1])
     validate_dataset_config(config)
     dataset_configs.append(config)
