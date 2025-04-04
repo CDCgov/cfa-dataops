@@ -1,6 +1,6 @@
 [project]
 name = "cfa.scenarios.dataops"
-version = "2025.04.03.0a"
+version = "2025.04.03.1a"
 description = "Data cataloging, ETL, modeling, verification, and validation for the CFA Scenarios Team"
 authors = [
     {name = "Phil Rogers", email = "ap66@cdc.gov"}
@@ -16,7 +16,9 @@ dependencies = [
     "tqdm (>=4.67.1,<5.0.0)",
     "pyarrow (>=19.0.1,<20.0.0)",
     "fastparquet (>=2024.11.0,<2025.0.0)",
-    "matplotlib (>=3.10.1,<4.0.0)"
+    "matplotlib (>=3.10.1,<4.0.0)",
+    "pandas (>=2.2.3)",
+    "polars (>=1.26.0)"
 ]
 
 [tool.poetry]

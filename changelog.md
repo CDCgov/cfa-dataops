@@ -7,6 +7,15 @@ and this project adheres to [Calendar Versioning](https://calver.org/).
 The versioning pattern is `YYYY.MM.DD.micro(a/b/{none if release})
 
 ---
+
+## [2025.04.03.1a]
+
+### Added
+
+- ability to download Blob datasets to a dataframe via `get_data()` function.
+- ability to list available Blob datasets via `list_datasets()` function.
+
+
 ## [2025.04.03.0a]
 
 ### Added
