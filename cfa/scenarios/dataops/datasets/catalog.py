@@ -238,12 +238,15 @@ def get_data(
                 )
         # get blobs and convert to correct df
         blobs = blob_endpoint.read_blobs()
-        pq_bytes = blobs[0].content_as_bytes()
-        pq_file = BytesIO(pq_bytes)
+        pq_bytes = [blob.content_as_bytes() for blob in blobs]
+        pq_files = [BytesIO(pq) for pq in pq_bytes]
         if output in ["pandas", "pd"]:
-            df = pd.read_parquet(pq_file)
+            df = pd.concat([pd.read_parquet(pq_file) for pq_file in pq_files])
         else:
-            df = pl.read_parquet(pq_file)
+            df = pl.concat(
+                [pl.read_parquet(pq_file) for pq_file in pq_files],
+                how="vertical_relaxed",
+            )
         return df
 
 
