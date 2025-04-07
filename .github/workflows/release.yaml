@@ -3,7 +3,7 @@ name: Build Release Distribution
 on:
   push:
     tags:
-      - '*r'
+      - '^\d{4}\.\d{2}\.\d{2}$'
 
 jobs:
   build-and-release:
@@ -37,25 +37,3 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh release create ${{ github.ref }} dist/* --generate-notes --latest
-
-      - name: Check if Release Exists
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          retries=5
-          for i in $(seq 1 $retries); do
-            if gh release view ${GITHUB_REF#refs/tags/}; then
-              echo "Release Found, Proceeding to Update Notes"
-              break
-            fi
-            echo "Release Not Found, Retrying in 5 Seconds"
-            sleep 5
-          done
-
-      - name: Generate and Update Release Notes
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          release_tag=${GITHUB_REF#refs/tags/}
-          gh release view $release_tag --json body --jq '.body' >> changelog.md
-          gh release edit $release_tag --notes-file changelog.md
