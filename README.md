@@ -35,6 +35,39 @@ To add a new dataset:
 2. Create a new ETL script in `cfa/scenarios/dataops/etl/`
 3. Add SQL transformation templates in `cfa/scenarios/dataops/etl/transform_templates/`
 
+## Accessing Datasets
+
+When the ETL pipelines are run, the data sources (raw and/or transformed) are stored into Azure Blob Storage. There will be times when we want to access these datasets directly. The function `get_data()` found in `cfa.scenarios.dataops.datasets.catalog` helps retrieve that data, compile into a single dataframe, and return that dataframe. The parameters for `get_data()` are as follows:
+- name: the name of the data source
+- version: either 'latest' or string containing the datetime of required version. Default is 'latest'.
+- type: either 'raw' or 'transformed'. Default is 'transformed'.
+- output: the type of dataframe to output, either 'pandas' or 'polars'. Default is 'pandas'.
+
+The available datasets can be found by running `list_datasets()`, which can be found in the `cfa.scenarios.dataops.datasets.catalog` submodule.
+
+An example for getting the polars dataframes for the latest raw versions of the covid19vax_trends and seroprevalence datasets is below:
+```python
+from cfa.scenarios.dataops.datasets.catalog import get_data
+vax_df = get_data("covid19vax_trends", type = "transformed", output = "polars")
+sero_df = get_data("seroprevalence", type = "transformed", output = "polars")
+```
+
+## Creating A Release
+
+This repository contains a workflow for creating releases called release.yaml. When ready to create a new release follow the steps below.
+When creating a release tag follow the versioning pattern: `YYYY.MM.DD.micro(a/b/{none if release})
+
+```bash
+git checkout release
+git pull
+export RELEASE=YYYY.MM.DD
+git commit --allow-empty -m "Release $RELEASE"
+git tag -a $RELEASE -m "Version $RELEASE"
+git push --tags 
+```
+
+Once a release tag in format YYYY.MM.DD is pushed the workflow will automate the process of creating a new release automatically. 
+
 ## Project admins
 
 - Thomas Hladish <utx5@cdc.gov> (CDC/OD/ORR/CFA)
