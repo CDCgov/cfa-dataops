@@ -8,9 +8,6 @@ on:
 
 jobs:
   build-and-release:
-    env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    if: ${{ github.base_ref }} == 'release'
     name: Build and Release
     runs-on: ubuntu-latest
   
