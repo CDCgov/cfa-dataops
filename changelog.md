@@ -8,6 +8,24 @@ The versioning pattern is `YYYY.MM.DD.micro(a/b/{none if release})
 
 ---
 
+## [2025.04.03.1a]
+
+### Added
+
+- ability to download Blob datasets to a dataframe via `get_data()` function.
+- ability to list available Blob datasets via `list_datasets()` function.
+
+
+## [2025.04.03.0a]
+
+### Added
+
+- ETL pipeline for `covid19hospitalizations` data source
+- ETL pipeline for `donor_seroprevalance_2020` data source
+- ETL pipeline for `donor_seroprevalence_2022` data source
+- ETL pipeline for `sars_cov2_proportions` data source
+- ETL pipeline for `seroprevalence` data source
+
 ## [2025.03.24.0a]
 
 ### Added

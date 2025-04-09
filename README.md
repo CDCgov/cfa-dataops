@@ -66,7 +66,7 @@ git tag -a $RELEASE -m "Version $RELEASE"
 git push --tags 
 ```
 
-Once a release tag in format YYYY.MM.DD is pushed the workflow will automate the process of creating a new release automatically. 
+Once a release tag in format YYYY.MM.DD is pushed the workflow will automate the process of creating a new release automatically.
 
 ## Project admins
 
