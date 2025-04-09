@@ -60,7 +60,9 @@ When creating a release tag follow the versioning pattern: `YYYY.MM.DD.micro(a/b
 ```bash
 git checkout release
 git pull
+
 export RELEASE=YYYY.MM.DD
+
 git commit --allow-empty -m "Release $RELEASE"
 git tag -a $RELEASE -m "Version $RELEASE"
 git push --tags 
