@@ -65,7 +65,7 @@ export RELEASE=YYYY.MM.DD
 
 git commit --allow-empty -m "Release $RELEASE"
 git tag -a $RELEASE -m "Version $RELEASE"
-git push --tags 
+git push --tags
 ```
 
 Once a release tag in format YYYY.MM.DD is pushed the workflow will automate the process of creating a new release automatically.
