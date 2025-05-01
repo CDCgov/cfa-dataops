@@ -38,3 +38,30 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh release create ${{ github.ref }} dist/* --generate-notes --latest
+
+      - name: Update pyproject Version
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/}
+
+          sed -i.bak -E "s/^version\s*=\s*\"[^\"]+\"/version = \"${VERSION}\"/" pyproject.toml
+
+      - name: Update Change Log
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/}
+          REPO_URL="https://github.com/${{ github.repository }}"
+          RELEASE_URL="$REPO_URL/releases/tag/$VERSION"
+
+          awk -v tag="## [$VERSION]" -v url="$RELEASE_URL" '
+            !done && /---/ {
+              print ""
+              print tag
+              print url
+              print ""
+              done = 1
+              }
+              { print $0 }
+            ' changelog.md > temp.md && mv temp.md changelog.md
