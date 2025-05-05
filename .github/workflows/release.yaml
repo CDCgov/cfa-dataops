@@ -14,6 +14,13 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Checkout release
+        rune: |
+          git fetch origin adding_packaging
+          git checkout adding_packaging
 
       - name: Determine Version
         id: get-version
@@ -97,9 +104,8 @@ jobs:
         run: |
           VERSION=${{ steps.get-version.outputs.version }}
 
-          git checkout adding_packaging
           git config user.name "github-actions"
           git config user.email "github-actions@users.noreply.github.com"
           git add pyproject.toml changelog.md
           git commit -m "Update Version to ${{ steps.get-version.outputs.version }}"
-          git push adding_packaging
+          git push origin adding_packaging
