@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Calendar Versioning](https://calver.org/).
 The versioning pattern is `YYYY.MM.DD.micro(a/b/{none if release})
 
+
+## [2025.05.01.0]
+https://github.com/cdcent/cfa-scenarios-dataops/releases/tag/2025.05.01.0
+
 ---
 
 ## [2025.04.03.1a]
