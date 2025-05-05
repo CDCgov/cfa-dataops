@@ -18,7 +18,7 @@ jobs:
           fetch-depth: 0
 
       - name: Checkout release
-        rune: |
+        run: |
           git fetch origin adding_packaging
           git checkout adding_packaging
 
