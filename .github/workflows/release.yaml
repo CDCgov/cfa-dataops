@@ -89,7 +89,7 @@ jobs:
               }
               { print $0 }
             ' changelog.md > temp.md && mv temp.md changelog.md
-      
+
       - name: Commit Change Log and pyproject.toml Updates
         if: steps.get-version.outputs.should_continue == 'true'
         env:
