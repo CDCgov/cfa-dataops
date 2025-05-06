@@ -61,14 +61,15 @@ When creating a release tag follow the versioning pattern: `YYYY.MM.DD.micro(a/b
 git checkout release
 git pull
 
-export RELEASE=YYYY.MM.DD
+export RELEASE=YYYY.MM.DD.micro
 
 git commit --allow-empty -m "Release $RELEASE"
+git push
 git tag -a $RELEASE -m "Version $RELEASE"
-git push --tags
+git push -u origin $RELEASE
 ```
 
-Once a release tag in format YYYY.MM.DD is pushed the workflow will automate the process of creating a new release automatically.
+Once a release tag in format YYYY.MM.DD.micro is pushed the workflow will automate the process of creating a new release automatically.
 
 ## Project admins
 

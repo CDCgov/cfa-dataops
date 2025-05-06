@@ -27,49 +27,56 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
-            VERSION="${GITHUB_REF#refs/tags/}"
-            echo "should_continue=true" >> "$GITHUB_OUTPUT"
-          elif [[ "${GITHUB_REF}" == refs/heads/release* ]]; then
+          VERSION="${GITHUB_REF#refs/tags/}"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Determine If Tag Is From Release
+        id: is-release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG_COMMIT=$(git rev-parse ${{ github.ref }})
+          BRANCHES=$(git branch -r --contains "$TAG_COMMIT")
+
+          if echo "$BRANCHES" | grep -q 'origin/adding_packaging'; then
             echo "should_continue=true" >> "$GITHUB_OUTPUT"
           else
-            echo "Not a release tag or release branch. Exiting workflow:"
+            echo "Exiting Workflow: Tag is not from release branch"
+            echo "IF intending to create a release from tag follow steps under 'Creating A Release' in the README file"
             echo "should_continue=false" >> "$GITHUB_OUTPUT"
           fi
 
-          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-
       - name: Setup Python
-        if: steps.get-version.outputs.should_continue == 'true'
+        if: steps.is-release.outputs.should_continue == 'true'
         uses: actions/setup-python@v5
         with:
           python-version: '3.10'
 
       - name: Install Poetry
-        if: steps.get-version.outputs.should_continue == 'true'
+        if: steps.is-release.outputs.should_continue == 'true'
         run: |
           curl -sSL https://install.python-poetry.org | python3 -
           poetry --version
 
       - name: Install Dependencies
-        if: steps.get-version.outputs.should_continue == 'true'
+        if: steps.is-release.outputs.should_continue == 'true'
         run: |
           poetry install --no-root
 
       - name: Build Wheel
-        if: steps.get-version.outputs.should_continue == 'true'
+        if: steps.is-release.outputs.should_continue == 'true'
         run: |
           poetry build
 
       - name: Create Release
-        if: steps.get-version.outputs.should_continue == 'true'
+        if: steps.is-release.outputs.should_continue == 'true'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh release create ${{ github.ref }} dist/* --generate-notes --latest
 
       - name: Update pyproject.toml Version
-        if: steps.get-version.outputs.should_continue == 'true'
+        if: steps.is-release.outputs.should_continue == 'true'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -78,7 +85,7 @@ jobs:
           sed -i.bak -E "s/^version\s*=\s*\"[^\"]+\"/version = \"${VERSION}\"/" pyproject.toml
 
       - name: Update Change Log
-        if: steps.get-version.outputs.should_continue == 'true'
+        if: steps.is-release.outputs.should_continue == 'true'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -98,7 +105,7 @@ jobs:
             ' changelog.md > temp.md && mv temp.md changelog.md
 
       - name: Commit Change Log and pyproject.toml Updates
-        if: steps.get-version.outputs.should_continue == 'true'
+        if: steps.is-release.outputs.should_continue == 'true'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
