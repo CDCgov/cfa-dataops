@@ -99,7 +99,6 @@ jobs:
               print ""
               print tag
               print url
-              print ""
               done = 1
               next
               }
