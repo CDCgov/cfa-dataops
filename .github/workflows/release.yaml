@@ -95,11 +95,13 @@ jobs:
 
           awk -v tag="## [$VERSION]" -v url="$RELEASE_URL" '
             !done && /---/ {
+              print $0
               print ""
               print tag
               print url
               print ""
               done = 1
+              next
               }
               { print $0 }
             ' changelog.md > temp.md && mv temp.md changelog.md
