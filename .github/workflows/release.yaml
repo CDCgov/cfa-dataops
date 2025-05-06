@@ -19,8 +19,8 @@ jobs:
 
       - name: Checkout release
         run: |
-          git fetch origin adding_packaging
-          git checkout adding_packaging
+          git fetch origin release
+          git checkout release
 
       - name: Determine Version
         id: get-version
@@ -38,7 +38,7 @@ jobs:
           TAG_COMMIT=$(git rev-parse ${{ github.ref }})
           BRANCHES=$(git branch -r --contains "$TAG_COMMIT")
 
-          if echo "$BRANCHES" | grep -q 'origin/adding_packaging'; then
+          if echo "$BRANCHES" | grep -q 'origin/release'; then
             echo "should_continue=true" >> "$GITHUB_OUTPUT"
           else
             echo "Exiting Workflow: Tag is not from release branch"
@@ -116,4 +116,4 @@ jobs:
           git config user.email "github-actions@users.noreply.github.com"
           git add pyproject.toml changelog.md
           git commit -m "Update Version to ${{ steps.get-version.outputs.version }}"
-          git push origin adding_packaging
+          git push origin release
