@@ -8,6 +8,10 @@ The versioning pattern is `YYYY.MM.DD.micro(a/b/{none if release})
 
 ---
 
+## [2025.05.01.0]
+https://github.com/cdcent/cfa-scenarios-dataops/releases/tag/2025.05.01.0
+
+
 ## [2025.04.03.1a]
 
 ### Added
