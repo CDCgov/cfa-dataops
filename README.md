@@ -52,6 +52,25 @@ vax_df = get_data("covid19vax_trends", type = "transformed", output = "polars")
 sero_df = get_data("seroprevalence", type = "transformed", output = "polars")
 ```
 
+## Creating A Release
+
+This repository contains a workflow for creating releases called release.yaml. When ready to create a new release follow the steps below.
+When creating a release tag follow the versioning pattern: `YYYY.MM.DD.micro(a/b/{none if release})
+
+```bash
+git checkout release
+git pull
+
+export RELEASE=YYYY.MM.DD.micro
+
+git commit --allow-empty -m "Release $RELEASE"
+git push
+git tag -a $RELEASE -m "Version $RELEASE"
+git push -u origin $RELEASE
+```
+
+Once a release tag in format YYYY.MM.DD.micro is pushed the workflow will automate the process of creating a new release automatically.
+
 ## Project admins
 
 - Thomas Hladish <utx5@cdc.gov> (CDC/OD/ORR/CFA)
