@@ -8,6 +8,14 @@ The versioning pattern is `YYYY.MM.DD.micro(a/b/{none if release})
 
 ---
 
+## [2025.05.14.0a]
+
+### Added
+
+- `cfa.scenarios.dataops.visualization` submodule
+- `cfa.scenarios.dataops.visualization.y_vs_datetime` plotting functions for lines, points and intervals
+- `cfa.scenarios.dataops.visualization.composition` pdf report generation using list of altair plots
+
 ## [2025.04.03.1a]
 
 ### Added
