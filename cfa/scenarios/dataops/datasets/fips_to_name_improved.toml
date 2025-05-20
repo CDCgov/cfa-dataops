@@ -1,0 +1,24 @@
+# This dataset is static, and thus only needs to be extracted in it's raw form
+# once and saved to blob storage. For a human viewable we format, see:
+# "https://www.fema.gov/api/open/v2/FemaRegions"
+# Raw (extracted) and transformed (loaded) data will be stored in azure blob storage
+# which requires the account, container and path for access
+
+[properties]
+name = "fips_to_name_improved"
+automate = false
+transform_template = "fips_to_name_improved.sql"
+
+[source]
+url = "https://www.fema.gov/api/open/v2/FemaRegions"
+pagination = {limit = 1000}
+
+[extract]
+account = "cfadatalakeprd"
+container = "cfapredict"
+prefix = "dataops/scenarios/raw/fips_to_name_improved"
+
+[load]
+account = "cfadatalakeprd"
+container = "cfapredict"
+prefix = "dataops/scenarios/transformed/fips_to_name_improved"

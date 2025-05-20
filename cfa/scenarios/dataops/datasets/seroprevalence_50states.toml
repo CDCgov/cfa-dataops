@@ -1,0 +1,26 @@
+# This dataset is static, and thus only needs to be extracted in it's raw form
+# once and saved to blob storage. This data comes from the following deprecated location:
+# https://github.com/episphere/serohub
+# Raw (extracted) and transformed (loaded) data will be stored in azure blob storage
+# which requires the account, container and path for access
+
+[properties]
+name = "seroprevalence_50states"
+automate = false
+transform_template = ""
+
+[source]
+url = ""
+pagination = {limit = 1000}
+
+[extract]
+account = "cfadatalakeprd"
+container = "cfapredict"
+prefix = "dataops/scenarios/raw/seroprevalence_50states"
+
+[load]
+account = "cfadatalakeprd"
+container = "cfapredict"
+prefix = "dataops/scenarios/transformed/seroprevalence_50states"
+
+# TODO: add some data schema validation

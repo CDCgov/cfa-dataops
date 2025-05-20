@@ -9,7 +9,7 @@ from typing import Any, List
 import pandas as pd
 import polars as pl
 import tomli
-from cfa_azure.helpers import (
+from cfa_azure.blob_helpers import (
     read_blob_stream,
     walk_blobs_in_container,
     write_blob_stream,
@@ -81,6 +81,15 @@ class BlobEndpoint:
             for i in blobs
         ]
         return blob_bytes
+
+    def read_csv(self, suffix: str) -> pd.DataFrame:
+        blob = read_blob_stream(
+            blob_url=self.prefix + "/" + suffix,
+            account_name=self.account,
+            container_name=self.container,
+        )
+        df = pd.read_csv(blob)
+        return df
 
     def get_versions(self) -> list:
         """For getting all the versions of data blobs, assuming path is

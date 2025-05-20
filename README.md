@@ -52,24 +52,31 @@ vax_df = get_data("covid19vax_trends", type = "transformed", output = "polars")
 sero_df = get_data("seroprevalence", type = "transformed", output = "polars")
 ```
 
-## Creating A Release
+## Running Workflows
 
-This repository contains a workflow for creating releases called release.yaml. When ready to create a new release follow the steps below.
-When creating a release tag follow the versioning pattern: `YYYY.MM.DD.micro(a/b/{none if release})
+This `cfa.scenarios.dataops` repository contains a `workflows` module. The following workflows are currently available:
+- covid
 
+Workflows can be run in a python virtual environment terminal where `cfa.scenarios.dataops` is installed with the following format:
 ```bash
-git checkout release
-git pull
-
-export RELEASE=YYYY.MM.DD.micro
-
-git commit --allow-empty -m "Release $RELEASE"
-git push
-git tag -a $RELEASE -m "Version $RELEASE"
-git push -u origin $RELEASE
+python3 -m cfa.scenarios.dataops.workflows.<name>.<module> --<args>
 ```
 
-Once a release tag in format YYYY.MM.DD.micro is pushed the workflow will automate the process of creating a new release automatically.
+### Covid Workflow
+There are two modules to the covid workflow with the following optional command line arguments:
+- generate_data (this must be run before the next module)
+   - -p, --path: path to store generated data; default is covid/data. Not needed if -b flag is used.
+   - -b, --blob: whether to store generated data to Blob Storage (flag)
+- run:
+   - -c, --config: path to intialization config
+   - -b, --blob: whether to pull from and push prepped data to Blob Storage (flag)
+
+Ex:
+```bash
+python3 -m cfa.scenarios.dataops.workflows.covid.generate_data -b
+python3 -m cfa.scenarios.dataops.workflows.covid.run -b
+```
+
 
 ## Project admins
 

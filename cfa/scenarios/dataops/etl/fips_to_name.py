@@ -1,4 +1,4 @@
-"""For ETL of the SARS-CoV-2 Variant Proportions"""
+"""For ETL of the FIPS to name dataset"""
 
 from io import StringIO
 
@@ -10,7 +10,7 @@ from tqdm import tqdm
 from ..datasets import datasets
 from .utils import get_timestamp, transform_template_lookup
 
-config = datasets.sars_cov2_proportions
+config = datasets.fips_to_name
 
 
 def extract() -> pd.DataFrame:
@@ -34,7 +34,7 @@ def extract() -> pd.DataFrame:
             "$offset": offset_i,
         }
 
-        r = httpx.get(config.source.url, params=params, timeout=30)
+        r = httpx.get(config.source.url, params=params)
 
         config.extract.write_blob(
             file_buffer=bytes(r.text, "utf-8"),
@@ -58,6 +58,7 @@ def transform(df: pd.DataFrame) -> pd.DataFrame:  # noqa: W0613
     template = transform_template_lookup.get_template(
         config.properties.transform_template
     )
+    df["state_name"] = df["state_name"].str.title()
     query = template.render(data_source="df")
     transformed_db = duckdb.sql(query).df()
     return transformed_db
@@ -110,7 +111,7 @@ if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser(
-        prog="SARS-CoV-2 Variant Proportions data etl pipeline",
+        prog="FIPS to name etl pipeline",
     )
     parser.add_argument("--extract", "-e", action="store_true", default=False)
     args = parser.parse_args()

@@ -8,6 +8,12 @@ The versioning pattern is `YYYY.MM.DD.micro(a/b/{none if release})
 
 ---
 
+## [2025.05.15.0a]
+
+### Added
+- workflow for generating covid data
+- new datasets toml files
+
 ## [2025.05.14.0a]
 
 ### Added

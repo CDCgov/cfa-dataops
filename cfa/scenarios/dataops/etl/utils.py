@@ -18,3 +18,12 @@ def get_timestamp() -> str:
         str:datetime string
     """
     return datetime.now().strftime("%Y-%m-%dT%H-%M-%S")
+
+
+def get_today_date() -> str:
+    """For getting standard date format
+
+    Returns:
+        str:date string
+    """
+    return datetime.now().strftime("%Y-%m-%d")
