@@ -34,22 +34,26 @@ def line_chart(
     Returns:
         alt.Chart: An Altair chart object representing the line chart.
     """
-    chart = (
-        alt.Chart(df)
-        .mark_line(**line_kwargs)
-        .encode(
+
+    chart_base = alt.Chart(df).mark_line(**line_kwargs)
+
+    if color_col is not None:
+        chart = chart_base.encode(
             x=alt.X(dt_col, title=x_title, type="temporal"),
             y=alt.Y(y_col, title=y_title),
             color=alt.Color(color_col, title=legend_title),
         )
-        .properties(
-            width=width,
-            height=height,
-            title=title,
+    else:
+        chart = chart_base.encode(
+            x=alt.X(dt_col, title=x_title, type="temporal"),
+            y=alt.Y(y_col, title=y_title),
         )
-    )
 
-    return chart
+    return chart.properties(
+        width=width,
+        height=height,
+        title=title,
+    )
 
 
 def interval_chart(
@@ -85,23 +89,26 @@ def interval_chart(
     Returns:
         alt.Chart: An Altair chart object representing the interval chart.
     """
-    chart = (
-        alt.Chart(df)
-        .mark_errorband(**errorband_kwargs)
-        .encode(
+    chart_base = alt.Chart(df).mark_errorband(**errorband_kwargs)
+    if color_col is not None:
+        chart = chart_base.encode(
             x=alt.X(dt_col, title=x_title, type="temporal"),
             y=alt.Y(y_col_lower, title=y_title),
             y2=alt.Y2(y_col_upper, title=y_title),
             color=alt.Color(color_col, title=legend_title),
         )
-        .properties(
-            width=width,
-            height=height,
-            title=title,
+    else:
+        chart = chart_base.encode(
+            x=alt.X(dt_col, title=x_title, type="temporal"),
+            y=alt.Y(y_col_lower, title=y_title),
+            y2=alt.Y2(y_col_upper, title=y_title),
         )
-    )
 
-    return chart
+    return chart.properties(
+        width=width,
+        height=height,
+        title=title,
+    )
 
 
 def point_chart(
@@ -135,19 +142,21 @@ def point_chart(
     Returns:
         alt.Chart: An Altair chart object representing the point chart.
     """
-    chart = (
-        alt.Chart(df)
-        .mark_point(**point_kwargs)
-        .encode(
+    chart_base = alt.Chart(df).mark_point(**point_kwargs)
+    if color_col is not None:
+        chart = chart_base.encode(
             x=alt.X(dt_col, title=x_title, type="temporal"),
             y=alt.Y(y_col, title=y_title),
             color=alt.Color(color_col, title=legend_title),
         )
-        .properties(
-            width=width,
-            height=height,
-            title=title,
+    else:
+        chart = chart_base.encode(
+            x=alt.X(dt_col, title=x_title, type="temporal"),
+            y=alt.Y(y_col, title=y_title),
         )
-    )
 
-    return chart
+    return chart.properties(
+        width=width,
+        height=height,
+        title=title,
+    )
