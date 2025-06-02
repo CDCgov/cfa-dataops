@@ -1,0 +1,40 @@
+name: qaqc
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  TestAndCoverageBadgeUpdate:
+    name: Test and Coverage Badge Update
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install poetry
+        run: |
+          pip install poetry>=2.0
+
+      - name: Test
+        run: |
+          poetry install --no-root --with dev
+          poetry run pytest
+          poetry run coverage-badge -f -o docs/assets/badges/coverage.svg
+
+      - name: Check-in Coverage Badge
+        run: |
+          git config user.name "${{ github.actor }}"
+          git config user.email "${{ github.actor }}@users.noreply.github.com"
+          git add docs/assets/badges/coverage.svg
+          git commit -m "Update coverage badge"
+          git push origin HEAD:${{ github.head_ref }}

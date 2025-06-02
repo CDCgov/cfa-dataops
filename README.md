@@ -1,5 +1,7 @@
 # CFA Scenarios DataOps
 
+![](docs/assets/badges/coverage.svg)
+
 ## Overview
 
 This project provides ETL (Extract, Transform, Load) pipelines for various data scenarios within the CDC's Center for Analytics (CFA). It currently includes an end-to-end ETL pipeline data, demonstrating best practices for data processing within the CFA environment.

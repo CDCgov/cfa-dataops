@@ -8,13 +8,24 @@ The versioning pattern is `YYYY.MM.DD.micro(a/b/{none if release})
 
 ---
 
+## [2025.06.02.0a]
+
+### Added
+- pytest-cov and other testing dependencies
+- new coverage badge
+- workflow to run tests
+- First unit test
+
+### Updated
+- README to include badge
+
 ## [2025.05.28.0a]
 
-## Added
+### Added
 - `cfa.scenarios.dataops.workflows.post_processing.files_io` for some utilities to build a file tree and read json files
 - `cfa.scenarios.dataops.workflows.post_processing.state_report_pdf` report generation based on Ben's report
 
-## Updated
+### Updated
 - `cfa.scenarios.dataops.visualization.y_vs_datetime`
 
 ## [2025.05.15.0a]

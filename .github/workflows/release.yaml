@@ -61,7 +61,7 @@ jobs:
       - name: Install Dependencies
         if: steps.is-release.outputs.should_continue == 'true'
         run: |
-          poetry install --no-root
+          poetry install --no-root --with dev
 
       - name: Build Wheel
         if: steps.is-release.outputs.should_continue == 'true'
