@@ -551,6 +551,6 @@ load_schema = pa.DataFrameSchema(
         "all_age_sex_strata_had_at_least_one_negative": pa.Column(
             bool, nullable=True
         ),
-        "site_large_ci_flag": pa.Column(object, nullable=True),
+        "site_large_ci_flag": pa.Column(bool, nullable=True),
     }
 )
