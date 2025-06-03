@@ -4,7 +4,7 @@ extract_schema = pa.DataFrameSchema(
     {
         "indicator": pa.Column(str),
         "geographic_area": pa.Column(str),
-        "geographic_identifier": pa.Column(str),
+        "geographic_identifier": pa.Column(object),
         "race": pa.Column(str),
         "sex": pa.Column(str),
         "age": pa.Column(str),
@@ -20,7 +20,7 @@ load_schema = pa.DataFrameSchema(
     {
         "indicator": pa.Column(str),
         "geographic_area": pa.Column(str),
-        "geographic_identifier": pa.Column(str),
+        "geographic_identifier": pa.Column(object),
         "race": pa.Column(str),
         "sex": pa.Column(str),
         "age": pa.Column(str),
