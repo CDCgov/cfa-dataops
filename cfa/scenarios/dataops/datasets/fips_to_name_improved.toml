@@ -8,6 +8,7 @@
 name = "fips_to_name_improved"
 automate = false
 transform_template = "fips_to_name_improved.sql"
+schema = "datasets/schemas/fips_to_name_improved.py"
 
 [source]
 url = "https://www.fema.gov/api/open/v2/FemaRegions"

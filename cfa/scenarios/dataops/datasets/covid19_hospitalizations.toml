@@ -8,6 +8,7 @@
 name = "covid19hospitalizations"
 automate = false
 transform_template = "covid19hospitalizations.sql"
+schema = "datasets/schemas/covid19hospitalizations.py"
 
 [source]
 url = "https://healthdata.gov/resource/sgxm-t72h.csv"

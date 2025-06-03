@@ -8,6 +8,7 @@
 name = "seroprevalence"
 automate = false
 transform_template = "seroprevalence.sql"
+schema = "datasets/schemas/seroprevalence.py"
 
 [source]
 url = "https://data.cdc.gov/resource/d2tw-32xv.csv"

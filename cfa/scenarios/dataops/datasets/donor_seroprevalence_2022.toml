@@ -8,6 +8,7 @@
 name = "donor_seroprevalence_2022"
 automate = false
 transform_template = "donor_seroprevalence_2022.sql"
+schema = "datasets/schemas/donor_seroprevalence_2022.py"
 
 [source]
 url = "https://data.cdc.gov/resource/ar8q-3jhn.csv"

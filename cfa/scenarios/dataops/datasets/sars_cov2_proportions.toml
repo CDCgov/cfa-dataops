@@ -8,6 +8,7 @@
 name = "sars_cov2_proportions"
 automate = false
 transform_template = "sars_cov2_proportions.sql"
+schema = "datasets/schemas/sars_cov2_proportions.py"
 
 [source]
 url = "https://data.cdc.gov/resource/jr58-6ysp.csv"

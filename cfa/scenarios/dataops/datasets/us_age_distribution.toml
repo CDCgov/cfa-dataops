@@ -5,6 +5,7 @@
 name = "us_age_distribution"
 automate = false
 transform_template = ""
+schema = ""
 
 [source]
 url = ""
