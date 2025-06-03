@@ -23,9 +23,9 @@ To use this repository:
    ```
    poetry install
    ```
-3. Example: run the COVID-19 vaccination trends ETL pipeline:
+3. Example: run the COVID-19 vaccination trends ETL pipeline, with extraction, raw data schema validation (-v) and transformed data validation (-t).
    ```
-   python -m cfa.scenarios.dataops.etl.covid19vax_trends --extract
+   python -m cfa.scenarios.dataops.etl.covid19vax_trends --extract -v -t
    ```
 4. [Optional] installing developer dependencies:
    ```

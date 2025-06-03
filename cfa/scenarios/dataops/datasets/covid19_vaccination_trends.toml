@@ -9,6 +9,7 @@
 name = "covid19vax_trends"
 automate = false
 transform_template = "covid19vax_trends.sql"
+schema = "datasets/schemas/covid19vax_trends.py"
 
 [source]
 
