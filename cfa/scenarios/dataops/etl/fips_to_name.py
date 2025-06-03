@@ -11,7 +11,7 @@ from tqdm import tqdm
 from ..datasets import datasets
 
 # import schema
-from ..datasets.schemas.donor_seroprevalence_2020 import (
+from ..datasets.schemas.fips_to_name import (
     extract_schema,
     load_schema,
 )

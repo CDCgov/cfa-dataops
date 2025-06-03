@@ -12,7 +12,7 @@ from ..datasets import datasets
 from ..datasets.catalog import get_data
 
 # import schema
-from ..datasets.schemas.donor_seroprevalence_2020 import (
+from ..datasets.schemas.fips_to_name_improved import (
     extract_schema,
     load_schema,
 )
