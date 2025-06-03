@@ -8,6 +8,7 @@
 name = "omicron_variant_regions"
 automate = false
 transform_template = ""
+schema = ""
 
 [source]
 url = ""
