@@ -3,7 +3,7 @@ import pandera.pandas as pa
 extract_schema = pa.DataFrameSchema(
     {
         "name": pa.Column(str),
-        "region": pa.Column(int, nullable = True),
+        "region": pa.Column(float, nullable = True),
         "address": pa.Column(str, nullable = True),
         "city": pa.Column(str, nullable = True),
         "state": pa.Column(str, nullable = True),
