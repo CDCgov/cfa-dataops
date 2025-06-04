@@ -5,10 +5,17 @@ import json
 import duckdb
 import httpx
 import pandas as pd
+import pandera.pandas as pa
 from tqdm import tqdm
 
 from ..datasets import datasets
 from ..datasets.catalog import get_data
+
+# import schema
+from ..datasets.schemas.fips_to_name_improved import (
+    extract_schema,
+    load_schema,
+)
 from .utils import get_timestamp, transform_template_lookup
 
 config = datasets.fips_to_name_improved
@@ -84,31 +91,32 @@ def load(df: pd.DataFrame) -> None:
     )
 
 
-def main(run_extract: bool = False) -> None:
+def main(
+    run_extract: bool = False, val_raw: bool = False, val_tf: bool = False
+) -> None:
     """ETL main runner
 
     Args:
         extract (bool, optional): should the extraction run. Useful in the case
         that the raw data is static and doesn't require update while iteration
         on the transformation of the raw data. Defaults to False.
+        val_raw (bool, optional): whether to validate the raw data schema during extraction.
+        val_tf (bool, optional): whether to validate the transformed data schema before loading to Blob Storage.
     """
 
     if run_extract:
         raw_df = extract()
+        if val_raw:
+            # check raw_df against schema
+            try:
+                extract_schema.validate(raw_df)
+            except pa.errors.SchemaError as exc:
+                raise (exc)
 
     else:
         try:
             buffers = config.extract.read_blobs()
-            raw_df = pd.concat(
-                [
-                    pd.DataFrame(
-                        json.loads(i.content_as_bytes().decode("utf-8"))[
-                            "FemaRegions"
-                        ]
-                    )
-                    for i in buffers
-                ]
-            )
+            raw_df = pd.concat([pd.read_csv(i) for i in buffers])
         except IndexError as e:
             raise AttributeError(
                 "Run extract set to False, but no latest version of extract "
@@ -117,6 +125,16 @@ def main(run_extract: bool = False) -> None:
             ) from e
     # transform dataframe
     transformed_df = transform(raw_df)
+    # validate transformed df
+    if val_tf:
+        try:
+            load_schema.validate(transformed_df)
+        except pa.errors.SchemaError as exc:
+            print(
+                "Validation of tranformed dataframe failed. Data not loaded to Blob Storage."
+            )
+            print("Fix the pipeline and try again.")
+            raise exc
     # load data to blob storage
     load(transformed_df)
 
@@ -125,8 +143,18 @@ if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser(
-        prog="FIPS to name etl pipeline",
+        prog="COVID 19 vaccination trends data etl pipeline",
     )
     parser.add_argument("--extract", "-e", action="store_true", default=False)
+    parser.add_argument(
+        "--validate_raw", "-v", action="store_true", default=False
+    )
+    parser.add_argument(
+        "--validate_transf", "-t", action="store_true", default=False
+    )
     args = parser.parse_args()
-    main(run_extract=args.extract)
+    main(
+        run_extract=args.extract,
+        val_raw=args.validate_raw,
+        val_tf=args.validate_transf,
+    )

@@ -8,6 +8,7 @@
 name = "seroprevalence_50states"
 automate = false
 transform_template = ""
+schema = ""
 
 [source]
 url = ""

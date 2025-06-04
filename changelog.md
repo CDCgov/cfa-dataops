@@ -8,6 +8,11 @@ The versioning pattern is `YYYY.MM.DD.micro(a/b/{none if release})
 
 ---
 
+## [2025.06.03.0a]
+
+## Added
+- dataset schemas and validation logic
+
 ## [2025.06.02.0a]
 
 ### Added

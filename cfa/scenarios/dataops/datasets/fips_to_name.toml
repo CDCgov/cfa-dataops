@@ -8,6 +8,7 @@
 name = "fips_to_name"
 automate = false
 transform_template = "fips_to_name.sql"
+schema = "datasets/schemas/fips_to_name.py"
 
 [source]
 url = "https://data.transportation.gov/resource/eek5-pv8d.csv"
