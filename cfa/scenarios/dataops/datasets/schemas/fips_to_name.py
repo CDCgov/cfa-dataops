@@ -1,4 +1,8 @@
 import pandera.pandas as pa
+import pandas as pd
+from faker import Faker
+fake=Faker()
+df_len = 100
 
 extract_schema = pa.DataFrameSchema(
     {
@@ -21,3 +25,5 @@ load_schema = pa.DataFrameSchema(
         "stusps": pa.Column(str),
     }
 )
+
+raw_synth_data = pd.DataFrame()
