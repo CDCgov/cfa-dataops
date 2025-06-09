@@ -1,4 +1,10 @@
 import pandera.pandas as pa
+import pandas as pd
+import random
+from faker import Faker
+
+fake=Faker()
+df_len = 100
 
 extract_schema = pa.DataFrameSchema(
     {
@@ -553,4 +559,63 @@ load_schema = pa.DataFrameSchema(
         ),
         "site_large_ci_flag": pa.Column(object, coerce=True, nullable=True),
     }
+)
+site_opts = ['AK', 'AL', 'AR', 'AZ', 'CA', 'CO', 'CT', 'DC', 'DE', 'FL', 'GA', 'HI', 'IA', 'ID',
+ 'IL', 'IN', 'KS', 'KY', 'LA', 'MA', 'MD', 'ME', 'MI', 'MN', 'MO', 'MS', 'MT', 'NC',
+ 'ND', 'NE', 'NH', 'NJ', 'NM', 'NV', 'NY', 'OH', 'OK', 'OR', 'PA', 'PR', 'RI', 'SC',
+ 'SD', 'TN', 'TX', 'UT', 'VA', 'VT', 'WA', 'WI', 'WV', 'WY', 'US']
+
+raw_synthetic_data = pd.DataFrame(
+    site = [random.choice(site_opts) for _ in range(df_len)],
+    date_range_of_specimen = [fake.date_between(start_date='-2y', end_date='today').strftime('%Y-%m-%d') for _ in range(df_len)],
+    round = [random.randint(1, 50) for _ in range(df_len)],
+    catchment_fips_code = [fake.postcode() for _ in range(df_len)],
+    catchment_area_description = [fake.city() for _ in range(df_len)],
+    catchment_population = [random.randint(1000, 100000) for _ in range(df_len)],
+    n_0_4_prevalence = [random.uniform(0, 100) for _ in range(df_len)],
+    rate_0_4_prevalence = [random.uniform(0, 1) for _ in range(df_len)],
+    lower_ci_0_4_prevalence = [random.uniform(0, 50) for _ in range(df_len)],
+    upper_ci_0_4_prevalence = [random.uniform(50, 100) for _ in range(df_len)],
+    ci_flag_0_4_prevalence = [random.choice([0, 1]) for _ in range(df_len)],
+    n_5_11_prevalence = [random.uniform(0, 100) for _ in range(df_len)],
+    rate_5_11_prevalence = [random.uniform(0, 1) for _ in range(df_len)],
+    lower_ci_5_11_prevalence = [random.uniform(0, 50) for _ in range(df_len)],
+    upper_ci_5_11_prevalence = [random.uniform(50, 100) for _ in range(df_len)],
+    ci_flag_5_11_prevalence = [random.choice([0, 1]) for _ in range(df_len)],
+    n_0_11_prevalence = [random.uniform(0, 100) for _ in range(df_len)],
+    rate_0_11_prevalence = [random.uniform(0, 1) for _ in range(df_len)],
+    lower_ci_0_11_prevalence = [random.uniform(0, 50) for _ in range(df_len)],
+    upper_ci_0_11_prevalence = [random.uniform(50, 100) for _ in range(df_len)],
+    ci_flag_0_11_prevalence = [random.choice([0, 1]) for _ in range(df_len)],
+    n_12_17_prevalence = [random.uniform(0, 100) for _ in range(df_len)],
+    rate_12_17_prevalence = [random.uniform(0, 1) for _ in range(df_len)],
+    lower_ci_12_17_prevalence = [random.uniform(0, 50) for _ in range(df_len)],
+    upper_ci_12_17_prevalence = [random.uniform(50, 100) for _ in range(df_len)],
+    ci_flag_12_17_prevalence = [random.choice([0, 1]) for _ in range(df_len)],
+    n_0_17_prevalence = [random.uniform(0, 100) for _ in range(df_len)],
+    rate_0_17_prevalence = [random.uniform(0, 1) for _ in range(df_len)],
+    lower_ci_0_17_prevalence = [random.uniform(0, 50) for _ in range(df_len)],
+    upper_ci_0_17_prevalence = [random.uniform(50, 100) for _ in range(df_len)],
+    ci_flag_0_17_prevalence = [random.choice([0, 1]) for _ in range(df_len)],
+    n_18_49_prevalence = [random.uniform(0, 100) for _ in range(df_len)],
+    rate_18_49_prevalence = [random.uniform(0, 1) for _ in range(df_len)],
+    lower_ci_18_49_prevalence = [random.uniform(0, 50) for _ in range(df_len)],
+    upper_ci_18_49_prevalence = [random.uniform(50, 100) for _ in range(df_len)],
+    ci_flag_18_49_prevalence = [random.choice([0, 1]) for _ in range(df_len)],
+    n_50_64_prevalence = [random.uniform(0, 100) for _ in range(df_len)],
+    rate_50_64_prevalence = [random.uniform(0, 1) for _ in range(df_len)], 
+    lower_ci_50_64_prevalence = [random.uniform(0, 50) for _ in range(df_len)],
+    upper_ci_50_64_prevalence = [random.uniform(50, 100) for _ in range(df_len)],
+    ci_flag_50_64_prevalence = [random.choice([0, 1]) for _ in range(df_len)], 
+    n_65_prevalence = [random.uniform(0, 100) for _ in range(df_len)],
+    rate_65_prevalence = [random.uniform(0, 1) for _ in range(df_len)],
+    lower_ci_65_prevalence = [random.uniform(0, 50) for _ in range(df_len)],
+    upper_ci_65_prevalence = [random.uniform(50, 100) for _ in range(df_len)],
+    ci_flag_65_prevalence = [random.choice([0, 1]) for _ in range(df_len)],
+    n_cumulative_prevalence = [random.uniform(0, 100) for _ in range(df_len)],
+    rate_cumulative_prevalence = [random.uniform(0, 1) for _ in range(df_len)],
+    lower_ci_cumulative_prevalence = [random.uniform(0, 50) for _ in range(df_len)],
+    upper_ci_cumulative_prevalence = [random.uniform(50, 100) for _ in range(df_len)],
+    ci_flag_cumulative_prevalence = [random.choice([0, 1]) for _ in range(df_len)],
+    
 )
