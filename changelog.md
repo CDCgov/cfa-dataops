@@ -8,9 +8,20 @@ The versioning pattern is `YYYY.MM.DD.micro(a/b/{none if release})
 
 ---
 
+## [2025.06.06.0a]
+
+### Added
+- `conftest.py` placeholder
+
+### Updated
+- `cfa/scenarios/dataops/datasets/schemas/covid19vax_trends.py` to include checks and custom dtype for array columns
+
+### Fixed
+- `.github/workflows/run_qaqc.yaml` to fix error related to coverage badge creation when merging to main
+
 ## [2025.06.03.0a]
 
-## Added
+### Added
 - dataset schemas and validation logic
 
 ## [2025.06.02.0a]
