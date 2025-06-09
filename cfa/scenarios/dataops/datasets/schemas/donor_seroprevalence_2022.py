@@ -74,7 +74,7 @@ raw_synth_data = raw_synth_data.assign(
     sex = [random.choice(sex_opts) for _ in range(df_len)],
     age = [random.choice(age_opts) for _ in range(df_len)],
     time_period = [random.choice(time_per_opts) for _ in range(df_len)],
-    n_unweighted = [fake.random.randint(0, 75687) for _ in range(df_len)],
+    n_unweighted = [fake.random.uniform(0.0, 75687.0) for _ in range(df_len)],
     estimate_weighted = [fake.random.uniform(0, 100) for _ in range(df_len)],
     _2_5 = [fake.random.uniform(0, 100) for _ in range(df_len)],
     _97_5 = [fake.random.uniform(0, 100) for _ in range(df_len)],
@@ -82,4 +82,3 @@ raw_synth_data = raw_synth_data.assign(
 
 tf_synth_data = raw_synth_data.copy()
 
-print(raw_synth_data.head())
