@@ -1,6 +1,5 @@
 from typing import Iterable, Optional, Union
 
-import pandas as pd
 import pandera.pandas as pa
 import pandas as pd
 import numpy as np
