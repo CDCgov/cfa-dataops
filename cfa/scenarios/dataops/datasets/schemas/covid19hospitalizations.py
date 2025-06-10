@@ -1,11 +1,13 @@
-import pandera.pandas as pa
-import pandas as pd
 import random
-from faker import Faker
 import warnings
+
+import pandas as pd
+import pandera.pandas as pa
+from faker import Faker
+
 warnings.filterwarnings("ignore")
 
-fake=Faker()
+fake = Faker()
 df_len = 100
 
 
@@ -684,13 +686,19 @@ raw_synth_data = raw_synth_data.assign(
         random.randint(0, 100) for _ in range(df_len)
     ],
     hospital_onset_covid=[random.uniform(0, 100) for _ in range(df_len)],
-    hospital_onset_covid_coverage=[random.randint(1, 10) for _ in range(df_len)],
+    hospital_onset_covid_coverage=[
+        random.randint(1, 10) for _ in range(df_len)
+    ],
     inpatient_beds=[random.uniform(0, 1000) for _ in range(df_len)],
     inpatient_beds_coverage=[random.randint(1, 10) for _ in range(df_len)],
     inpatient_beds_used=[random.uniform(0, 1000) for _ in range(df_len)],
-    inpatient_beds_used_coverage=[random.randint(1, 10) for _ in range(df_len)],
+    inpatient_beds_used_coverage=[
+        random.randint(1, 10) for _ in range(df_len)
+    ],
     inpatient_beds_used_covid=[random.uniform(0, 500) for _ in range(df_len)],
-    inpatient_beds_used_covid_coverage=[random.randint(1, 10) for _ in range(df_len)],
+    inpatient_beds_used_covid_coverage=[
+        random.randint(1, 10) for _ in range(df_len)
+    ],
     previous_day_admission_adult_covid_confirmed=[
         random.uniform(0, 100) for _ in range(df_len)
     ],
@@ -757,7 +765,9 @@ raw_synth_data = raw_synth_data.assign(
     total_pediatric_patients_hospitalized_confirmed_covid_coverage=[
         random.randint(1, 10) for _ in range(df_len)
     ],
-    total_staffed_adult_icu_beds=[random.uniform(0, 200) for _ in range(df_len)],
+    total_staffed_adult_icu_beds=[
+        random.uniform(0, 200) for _ in range(df_len)
+    ],
     total_staffed_adult_icu_beds_coverage=[
         random.randint(1, 10) for _ in range(df_len)
     ],
@@ -774,7 +784,7 @@ raw_synth_data = raw_synth_data.assign(
     percent_of_inpatients_with_covid=[
         random.uniform(0, 100) for _ in range(df_len)
     ],
-    percent_of_inpatients_with_covid_coverage= [
+    percent_of_inpatients_with_covid_coverage=[
         random.uniform(0, 100) for _ in range(df_len)
     ],
     percent_of_inpatients_with_covid_numerator=[
@@ -783,7 +793,9 @@ raw_synth_data = raw_synth_data.assign(
     percent_of_inpatients_with_covid_denominator=[
         random.uniform(0, 1000) for _ in range(df_len)
     ],
-    inpatient_bed_covid_utilization=[random.uniform(0, 100) for _ in range(df_len)],
+    inpatient_bed_covid_utilization=[
+        random.uniform(0, 100) for _ in range(df_len)
+    ],
     inpatient_bed_covid_utilization_coverage=[
         random.uniform(0, 100) for _ in range(df_len)
     ],
@@ -793,7 +805,9 @@ raw_synth_data = raw_synth_data.assign(
     inpatient_bed_covid_utilization_denominator=[
         random.uniform(0, 1000) for _ in range(df_len)
     ],
-    adult_icu_bed_covid_utilization=[random.uniform(0, 100) for _ in range(df_len)],
+    adult_icu_bed_covid_utilization=[
+        random.uniform(0, 100) for _ in range(df_len)
+    ],
     adult_icu_bed_covid_utilization_coverage=[
         random.uniform(0, 100) for _ in range(df_len)
     ],
@@ -942,7 +956,9 @@ raw_synth_data = raw_synth_data.assign(
     previous_week_therapeutic_c_bamlanivimab_etesevimab_courses_used=[
         random.uniform(0, 100) for _ in range(df_len)
     ],
-    icu_patients_confirmed_influenza=[random.uniform(0, 50) for _ in range(df_len)],
+    icu_patients_confirmed_influenza=[
+        random.uniform(0, 50) for _ in range(df_len)
+    ],
     icu_patients_confirmed_influenza_coverage=[
         random.randint(1, 10) for _ in range(df_len)
     ],
@@ -958,7 +974,9 @@ raw_synth_data = raw_synth_data.assign(
     previous_day_deaths_covid_and_influenza_coverage=[
         random.randint(1, 10) for _ in range(df_len)
     ],
-    previous_day_deaths_influenza=[random.uniform(0, 10) for _ in range(df_len)],
+    previous_day_deaths_influenza=[
+        random.uniform(0, 10) for _ in range(df_len)
+    ],
     previous_day_deaths_influenza_coverage=[
         random.randint(1, 10) for _ in range(df_len)
     ],
@@ -980,7 +998,9 @@ raw_synth_data = raw_synth_data.assign(
     all_pediatric_inpatient_bed_occupied_coverage=[
         random.randint(1, 10) for _ in range(df_len)
     ],
-    all_pediatric_inpatient_beds=[random.uniform(0, 100) for _ in range(df_len)],
+    all_pediatric_inpatient_beds=[
+        random.uniform(0, 100) for _ in range(df_len)
+    ],
     all_pediatric_inpatient_beds_coverage=[
         random.randint(1, 10) for _ in range(df_len)
     ],
@@ -1020,7 +1040,9 @@ raw_synth_data = raw_synth_data.assign(
     staffed_pediatric_icu_bed_occupancy_coverage=[
         random.randint(1, 10) for _ in range(df_len)
     ],
-    total_staffed_pediatric_icu_beds=[random.uniform(0, 50) for _ in range(df_len)],
+    total_staffed_pediatric_icu_beds=[
+        random.uniform(0, 50) for _ in range(df_len)
+    ],
     total_staffed_pediatric_icu_beds_coverage=[
         random.randint(1, 10) for _ in range(df_len)
     ],

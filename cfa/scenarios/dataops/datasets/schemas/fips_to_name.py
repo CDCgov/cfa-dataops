@@ -1,7 +1,8 @@
-import pandera.pandas as pa
 import pandas as pd
+import pandera.pandas as pa
 from faker import Faker
-fake=Faker()
+
+fake = Faker()
 df_len = 100
 
 extract_schema = pa.DataFrameSchema(
