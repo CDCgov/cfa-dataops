@@ -47,5 +47,5 @@ build-backend = "poetry.core.masonry.api"
 [tool.poetry.scripts]
 state_report_pdf = "cfa.scenarios.dataops.workflows.post_processing.state_report_pdf:main"
 
-[tool.pytest.ini_options]
-addopts = "-vv --cov=cfa.scenarios.dataops --cov-report html --cov-report term"
+#[tool.pytest.ini_options]
+#addopts = "-vv --cov=cfa.scenarios.dataops --cov-report html --cov-report term"
