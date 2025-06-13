@@ -8,6 +8,11 @@ The versioning pattern is `YYYY.MM.DD.micro(a/b/{none if release})
 
 ---
 
+## [2025.06.10.0a]
+
+### Added
+- raw synthetic data and transformed synthetic data generation in each schema file
+
 ## [2025.06.06.0a]
 
 ### Added

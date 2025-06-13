@@ -6,7 +6,7 @@ from datetime import datetime
 
 import pandas as pd
 import requests
-
+from cfa.scenarios.dataops.datasets.catalog import get_data
 from cfa.scenarios.dataops.datasets.catalog import BlobEndpoint, get_data
 from cfa.scenarios.dataops.etl.utils import get_today_date
 
@@ -34,114 +34,15 @@ def generate_vaccination_data(
     Returns:
         pd.DataFrame: vaccination data
     """
-    given_groups = [
-        "Ages_<5yrs",
-        "Ages_5-11_yrs",
-        "Ages_12-17_yrs",
-        "Ages_18-24_yrs",
-        "Ages_25-49_yrs",
-        "Ages_50-64_yrs",
-        "Ages_65%2B_yrs",
-    ]
-    given_to_desired = [[0, 1, 2], [3, 4], [5], [6]]
-    desired_groups = ["0-17", "18-49", "50-64", "65+"]
-    for j in range(len(given_groups)):
-        text = [
-            "https://data.cdc.gov/resource/5i5k-6cmh.json?demographic_category=",
-            given_groups[j],
-            "&location=US&$limit=50000",
-        ]  # https://data.cdc.gov/Vaccinations/COVID-19-Vaccination-Age-and-Sex-Trends-in-the-Uni/5i5k-6cmh/data_preview
-        api = "".join(text)
-        response_API = requests.get(api)
-        data = response_API.text
-        data_raw = json.loads(data)
-        temp = pd.DataFrame.from_dict(data_raw, orient="columns")
-        temp.loc[:, "date"] = temp["date"].astype(str).str[0:10]
-        if len(temp.columns) == 12:
-            temp = temp.drop(
-                columns=["second_booster", "second_booster_vax_pct_agegroup"]
-            )
-        temp.columns = [
-            "date",
-            "state",
-            "age",
-            "census",
-            "dose_1",
-            "dose_2",
-            "dose_3",
-            "dose_1_percent",
-            "dose_2_percent",
-            "dose_3_percent",
-        ]
-        if j == 0:
-            output = pd.DataFrame(temp)
-        else:
-            output = pd.concat([output, temp], ignore_index=True)
-    # save to blob or data_folder_path
-    if blob:
-        load_blob_version = f"{get_today_date()}"
-        gen_data_blob.write_blob(
-            file_buffer=output.to_csv(index=False),
-            path_after_prefix=f"{load_blob_version}/vaccination_raw.csv",
-        )
-    else:
-        os.makedirs(data_folder_path, exist_ok=True)
-        filename = (
-            data_folder_path
-            + "/"
-            + datetime.today().strftime("%Y_%m_%d")
-            + "vaccination_raw.csv"
-        )
-        output.to_csv(filename, index=False)
+    vac = get_data("covid19vax_trends", type="transformed")
 
-    vac = pd.DataFrame(
-        columns=["date", "age", "census", "total", "percentage", "dose"]
-    )
-    all_days = list(set(output.date))
-    all_days.sort()
-    for i in range(len(given_to_desired)):
-        given = list(map(given_groups.__getitem__, given_to_desired[i]))
-        if given[-1] == given_groups[-1]:
-            given[-1] = "Ages_65+_yrs"
-        output_aged = output[output["age"].isin(given)].reset_index(drop=True)
-        for n in range(len(all_days)):
-            output_date = output_aged[
-                output_aged.date == all_days[n]
-            ].reset_index(drop=True)
-            census = sum([int(item) for item in set(output_date.census)])
-            for q in range(len(given)):
-                if str(output_date.dose_1[q]) == "nan":
-                    output_date.loc[q, "dose_1"] = "0"
-                if str(output_date.dose_2[q]) == "nan":
-                    output_date.loc[q, "dose_2"] = "0"
-                if str(output_date.dose_3[q]) == "nan":
-                    output_date.loc[q, "dose_3"] = "0"
-            dose1 = sum([int(item) for item in set(output_date.dose_1)])
-            dose2 = sum([int(item) for item in set(output_date.dose_2)])
-            dose3 = sum([int(item) for item in set(output_date.dose_3)])
-            dose1_percent = dose1 / census
-            dose2_percent = dose2 / census
-            dose3_percent = dose3 / census
-            vac = pd.concat(
-                [
-                    vac,
-                    pd.DataFrame(
-                        {
-                            "date": all_days[n],
-                            "age": desired_groups[i],
-                            "census": census,
-                            "total": [dose1, dose2, dose3],
-                            "percentage": [
-                                dose1_percent,
-                                dose2_percent,
-                                dose3_percent,
-                            ],
-                            "dose": [1, 2, 3],
-                        }
-                    ),
-                ],
-                ignore_index=True,
-            )
+    #filter to US
+    vac = vac[vac["state"] == "US"].reset_index(drop=True)
+    vac = vac.drop(["state"], axis = 1)
+    vac["date"] = vac['date'].apply(lambda x: str(x)[:10])  # Convert to string and keep only date part
+    vac = vac.sort_values(["age", "date"]).reset_index(drop=True)
+    #unnest the arrays
+    vac = vac.explode(["total", "percentage", "dose"]).reset_index(drop=True)
     if blob:
         load_blob_version = f"{get_today_date()}"
         gen_data_blob.write_blob(
@@ -149,10 +50,10 @@ def generate_vaccination_data(
             path_after_prefix=f"{load_blob_version}/vaccination_data.csv",
         )
     else:
+        os.makedirs(data_folder_path, exist_ok=True)
         filename = data_folder_path + "/vaccination_data.csv"
         vac.to_csv(filename, index=False)
     return vac
-
 
 def generate_hospitalization_data(
     data_folder_path: str, blob: bool
