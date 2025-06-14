@@ -1,6 +1,6 @@
 [project]
 name = "cfa.scenarios.dataops"
-version = "2025.06.10.0a"
+version = "2025.06.13.0a"
 description = "Data cataloging, ETL, modeling, verification, and validation for the CFA Scenarios Team"
 authors = [
     {name = "Phil Rogers", email = "ap66@cdc.gov"}
@@ -48,4 +48,4 @@ build-backend = "poetry.core.masonry.api"
 state_report_pdf = "cfa.scenarios.dataops.workflows.post_processing.state_report_pdf:main"
 
 [tool.pytest.ini_options]
-addopts = "-vv --cov=cfa.scenarios.dataops --cov-report html --cov-report term"
+addopts = "--doctest-modules -vv --cov=cfa --cov-report html --cov-report term"

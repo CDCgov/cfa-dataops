@@ -8,6 +8,18 @@ The versioning pattern is `YYYY.MM.DD.micro(a/b/{none if release})
 
 ---
 
+## [2025.06.13.0a]
+
+### Added
+
+- blob mocking and testing using synthetic data to increase coverage of dataset catalog
+- tests for covid19_vax_trends dataset and transform that can be duplicated for other tests
+
+### Updated
+
+- `cfa/scenarios/dataops/datasets/schemas/covid19vax_trends.py` to fix some errors with schema validation in synthetic data
+- `tests/conftest.py` to include blob write function mocking fixture so it can be reused
+
 ## [2025.06.10.0a]
 
 ### Added

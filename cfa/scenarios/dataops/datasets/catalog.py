@@ -260,4 +260,16 @@ def get_data(
 
 
 def list_datasets() -> list[str]:
+    """
+    Lists all available datasets in the catalog
+
+    Returns:
+        list[str]: list of dataset names
+
+    Examples:
+        >>> datasets = list_datasets()
+        >>> 'covid19vax_trends' in datasets
+        True
+
+    """
     return [x for x in datasets.__dict__.keys()]

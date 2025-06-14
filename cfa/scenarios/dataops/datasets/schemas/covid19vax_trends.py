@@ -46,7 +46,7 @@ extract_schema = pa.DataFrameSchema(
             str,
             checks=[
                 pa.Check.str_matches(
-                    r"^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\.[0-9]{3}$"
+                    r"^[0-9]{4}-[0-9]{2}-[0-9]{2}(T[0-9]{2}:[0-9]{2}:[0-9]{2}\.[0-9]{3})?$"
                 )
             ],
         ),
@@ -54,22 +54,34 @@ extract_schema = pa.DataFrameSchema(
             str, checks=[pa.Check.str_matches(r"^[A-Z]{2}$")]
         ),
         "demographic_category": pa.Column(
-            str, checks=[pa.Check.str_matches(r"^[A-Za-z0-9\_\-]+$")]
+            str, checks=[pa.Check.str_matches(r"^[A-Za-z0-9\_\-\+\<\>]+$")]
         ),
         "census": pa.Column(
             int, checks=[pa.Check.in_range(0, 10_000_000_000)], nullable=True
         ),
         "administered_dose1": pa.Column(
-            int, checks=[pa.Check.in_range(0, 10_000_000_000)], nullable=True
+            int,
+            checks=[pa.Check.in_range(0, 10_000_000_000)],
+            nullable=True,
+            coerce=True,
         ),
         "series_complete_yes": pa.Column(
-            int, checks=[pa.Check.in_range(0, 10_000_000_000)], nullable=True
+            int,
+            checks=[pa.Check.in_range(0, 10_000_000_000)],
+            nullable=True,
+            coerce=True,
         ),
         "booster_doses": pa.Column(
-            int, checks=[pa.Check.in_range(0, 10_000_000_000)], nullable=True
+            int,
+            checks=[pa.Check.in_range(0, 10_000_000_000)],
+            nullable=True,
+            coerce=True,
         ),
         "second_booster": pa.Column(
-            int, checks=[pa.Check.in_range(0, 10_000_000_000)], nullable=True
+            int,
+            checks=[pa.Check.in_range(0, 10_000_000_000)],
+            nullable=True,
+            coerce=True,
         ),
         "administered_dose1_pct_agegroup": pa.Column(
             float, checks=[pa.Check.in_range(0, 100)], nullable=True
@@ -92,7 +104,7 @@ load_schema = pa.DataFrameSchema(
             str,
             checks=[
                 pa.Check.str_matches(
-                    r"^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\.[0-9]{3}$"
+                    r"^[0-9]{4}-[0-9]{2}-[0-9]{2}(T[0-9]{2}:[0-9]{2}:[0-9]{2}\.[0-9]{3})?$"
                 )
             ],
         ),
