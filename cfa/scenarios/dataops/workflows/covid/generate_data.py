@@ -1,12 +1,9 @@
 import argparse
-import json
 import os
 import warnings
-from datetime import datetime
 
 import pandas as pd
-import requests
-from cfa.scenarios.dataops.datasets.catalog import get_data
+
 from cfa.scenarios.dataops.datasets.catalog import BlobEndpoint, get_data
 from cfa.scenarios.dataops.etl.utils import get_today_date
 
@@ -36,12 +33,14 @@ def generate_vaccination_data(
     """
     vac = get_data("covid19vax_trends", type="transformed")
 
-    #filter to US
+    # filter to US
     vac = vac[vac["state"] == "US"].reset_index(drop=True)
-    vac = vac.drop(["state"], axis = 1)
-    vac["date"] = vac['date'].apply(lambda x: str(x)[:10])  # Convert to string and keep only date part
+    vac = vac.drop(["state"], axis=1)
+    vac["date"] = vac["date"].apply(
+        lambda x: str(x)[:10]
+    )  # Convert to string and keep only date part
     vac = vac.sort_values(["age", "date"]).reset_index(drop=True)
-    #unnest the arrays
+    # unnest the arrays
     vac = vac.explode(["total", "percentage", "dose"]).reset_index(drop=True)
     if blob:
         load_blob_version = f"{get_today_date()}"
@@ -54,6 +53,7 @@ def generate_vaccination_data(
         filename = data_folder_path + "/vaccination_data.csv"
         vac.to_csv(filename, index=False)
     return vac
+
 
 def generate_hospitalization_data(
     data_folder_path: str, blob: bool
@@ -71,41 +71,16 @@ def generate_hospitalization_data(
     """
     if not blob:
         os.makedirs(data_folder_path, exist_ok=True)
+    df = get_data("hospitalization", type="transformed")
     region_id = get_data("fips_to_name_improved")
 
-    text = ["https://data.cdc.gov/resource/aemt-mg7g.json?$limit=50000"]
-    api = "".join(text)
-    response_API = requests.get(api)
-    data = response_API.text
-    data_raw = json.loads(data)
-    temp = pd.DataFrame.from_dict(data_raw, orient="columns")
-    temp.loc[:, "week_end_date"] = temp["week_end_date"].astype(str).str[0:10]
-    temp.loc[:, "total_admissions_all_covid_confirmed"]
-
-    subsection_data = pd.DataFrame(
-        {
-            "date": temp.week_end_date,
-            "state": temp.jurisdiction,
-            "total": temp.total_admissions_all_covid_confirmed,
-        }
-    )
-
-    for i in range(len(region_id)):
-        if region_id.stusps[i] == "US":
-            output = subsection_data[
-                subsection_data.state == "USA"
-            ].reset_index(drop=True)
-            output.state = "US"
-        else:
-            output = subsection_data[
-                subsection_data.state == region_id.stusps[i]
-            ].reset_index(drop=True)
-
-        filename = (
-            "weekly_hospital_"
-            + region_id.stname[i].lower().replace(" ", "_")
-            + ".csv"
-        )
+    # loop through all states
+    for region in region_id.stusps:
+        output = df[df["state"] == region].reset_index(drop=True)
+        # get long region name
+        long_name = output["stname"].iloc[0]
+        output = output.drop(["stname"], axis=1)
+        filename = "weekly_hospital_" + long_name + ".csv"
 
         if blob:
             load_blob_version = f"{get_today_date()}"
