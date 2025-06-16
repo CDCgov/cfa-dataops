@@ -38,6 +38,7 @@ def test_list_datasets():
         "donor_seroprevalence_2022",
         "fips_to_name_improved",
         "fips_to_name",
+        "hospitalization",
         "sars_cov2_proportions",
         "seroprevalence",
         "omicron_variant_regions",

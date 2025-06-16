@@ -9,8 +9,11 @@ from cfa.scenarios.dataops.datasets.schemas.covid19vax_trends import (
 )
 from cfa.scenarios.dataops.workflows.covid.generate_data import (
     generate_hospitalization_data,
-    generate_vaccination_data,
+    generate_vaccination_data
 )
+from cfa.scenarios.dataops.datasets.schemas.hospitalization import(
+    tf_synth_data as tf_synth_hosp_data
+    )
 
 
 @patch("cfa.scenarios.dataops.workflows.covid.generate_data.get_data")
@@ -32,29 +35,17 @@ def test_generate_vaccination_data_file(mock_get_data):
 
 
 @patch("cfa.scenarios.dataops.workflows.covid.generate_data.get_data")
-@patch("cfa.scenarios.dataops.workflows.covid.generate_data.requests.get")
-def test_generate_hospitalization_data_file(mock_requests_get, mock_get_data):
-    # Mock region_id DataFrame
-    mock_get_data.return_value = pd.DataFrame(
-        {"stusps": ["US", "CA"], "stname": ["United States", "California"]}
-    )
+def test_generate_hospitalization_data_file(mock_get_data):
+    # Mock transformed hospitalization data
+    mock_hosp = tf_synth_hosp_data.copy()
+    # Mock region_id data
+    mock_region = pd.DataFrame({
+        "stusps": ["CA", "TX", "NY", "FL", "IL"],
+        "stname": ["California" , "Texas", "New York", "Florida", "Illinois"]
+    })
 
-    # Mock CDC API response
-    fake_api_response = [
-        {
-            "week_end_date": "2024-06-01T00:00:00.000",
-            "jurisdiction": "USA",
-            "total_admissions_all_covid_confirmed": 100,
-        },
-        {
-            "week_end_date": "2024-06-01T00:00:00.000",
-            "jurisdiction": "CA",
-            "total_admissions_all_covid_confirmed": 50,
-        },
-    ]
-    mock_requests_get.return_value = MagicMock(
-        text=pd.io.json.dumps(fake_api_response)
-    )
+    # get_data is called twice: first for hospitalization, then for region_id
+    mock_get_data.side_effect = [mock_hosp, mock_region]
 
     with tempfile.TemporaryDirectory() as tmpdir:
         df = generate_hospitalization_data(tmpdir, blob=False)
