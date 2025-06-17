@@ -1,19 +1,19 @@
 import os
 import tempfile
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pandas as pd
 
 from cfa.scenarios.dataops.datasets.schemas.covid19vax_trends import (
     tf_synth_data,
 )
+from cfa.scenarios.dataops.datasets.schemas.hospitalization import (
+    tf_synth_data as tf_synth_hosp_data,
+)
 from cfa.scenarios.dataops.workflows.covid.generate_data import (
     generate_hospitalization_data,
-    generate_vaccination_data
+    generate_vaccination_data,
 )
-from cfa.scenarios.dataops.datasets.schemas.hospitalization import(
-    tf_synth_data as tf_synth_hosp_data
-    )
 
 
 @patch("cfa.scenarios.dataops.workflows.covid.generate_data.get_data")
@@ -39,10 +39,18 @@ def test_generate_hospitalization_data_file(mock_get_data):
     # Mock transformed hospitalization data
     mock_hosp = tf_synth_hosp_data.copy()
     # Mock region_id data
-    mock_region = pd.DataFrame({
-        "stusps": ["CA", "TX", "NY", "FL", "IL"],
-        "stname": ["California" , "Texas", "New York", "Florida", "Illinois"]
-    })
+    mock_region = pd.DataFrame(
+        {
+            "stusps": ["CA", "TX", "NY", "FL", "IL"],
+            "stname": [
+                "California",
+                "Texas",
+                "New York",
+                "Florida",
+                "Illinois",
+            ],
+        }
+    )
 
     # get_data is called twice: first for hospitalization, then for region_id
     mock_get_data.side_effect = [mock_hosp, mock_region]

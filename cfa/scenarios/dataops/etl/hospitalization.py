@@ -7,6 +7,7 @@ import httpx
 import pandas as pd
 import pandera.pandas as pa
 from tqdm import tqdm
+
 from cfa.scenarios.dataops.datasets.catalog import get_data
 
 from ..datasets import datasets
@@ -60,11 +61,11 @@ def transform(df: pd.DataFrame) -> pd.DataFrame:  # noqa: W0613
     Returns:
         pd.DataFrame: the transformed data
     """
-    region_id = get_data("fips_to_name_improved")
+    region_id = get_data("fips_to_name_improved")  # noqa
     template = transform_template_lookup.get_template(
         config.properties.transform_template
     )
-    query = template.render(data_source="df", region_id = "region_id")
+    query = template.render(data_source="df", region_id="region_id")
     transformed_db = duckdb.sql(query).df()
     return transformed_db
 
