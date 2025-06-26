@@ -5,9 +5,9 @@ WITH temp as (
                 THEN LEFT(CAST((strptime(Week_ending, '%Y-%m-%d') + INTERVAL 365 DAYS)::DATE AS VARCHAR), 10)
             ELSE Week_ending
             END as date,
-        "Geographic Name" as geographic_name, 
+        geographic_name,
        Demographic_Level as demographic_level,
-       "Demographic Name" as demographic_name, 
+       demographic_name,
         Indicator_category_label as indicator_category_label,
        CASE
             WHEN CAST(Week_ending as DATE) <= CAST('2024-08-01' as DATE) THEN '2023-2024'
@@ -27,7 +27,7 @@ SELECT
     CASE
         WHEN CAST(date as DATE) <= CAST('2024-08-01' as DATE)  THEN LEFT(CAST((strptime(date, '%Y-%m-%d') + INTERVAL 7 DAYS)::DATE AS VARCHAR), 10)
         ELSE date
-        END as date1 
+        END as date1
 FROM temp
 WHERE geographic_name = 'National'
     AND demographic_level = 'Overall'
