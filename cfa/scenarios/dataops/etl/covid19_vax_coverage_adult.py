@@ -11,7 +11,10 @@ from tqdm import tqdm
 from ..datasets import datasets
 
 # import schema
-from ..datasets.schemas.covid19_vax_coverage_adult import extract_schema, load_schema
+from ..datasets.schemas.covid19_vax_coverage_adult import (
+    extract_schema,
+    load_schema,
+)
 from .utils import get_timestamp, transform_template_lookup
 
 config = datasets.covid19_vax_coverage_adult

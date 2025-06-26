@@ -1,18 +1,18 @@
 WITH temp as (
-    SELECT vaccine, 
-           geographic_level, 
-           geographic_name, 
+    SELECT vaccine,
+           geographic_level,
+           geographic_name,
            demographic_level,
-           demographic_name, 
-           indicator_label, 
+           demographic_name,
+           indicator_label,
            indicator_category_label,
-           month_week, 
-           week_ending, 
-           estimate, 
+           month_week,
+           week_ending,
+           estimate,
            ci_half_width_95pct,
-           unweighted_sample_size, 
+           unweighted_sample_size,
            LEFT(current_season_week_ending, 10) as date,
-           covid_season, 
+           covid_season,
            suppression_flag
     FROM ${data_source}
 )
