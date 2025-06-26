@@ -196,7 +196,7 @@ raw_synth_data = raw_synth_data.assign(
     ],
     geographic_name=[random.choice(geo_name_opts) for _ in range(df_len)],
     demographic_level=[random.choice(demo_level_opts) for _ in range(df_len)],
-    demo_name_opts=[random.choice(demo_name_opts) for _ in range(df_len)],
+    demographic_name=[random.choice(demo_name_opts) for _ in range(df_len)],
     indicator_label=[random.choice(ind_label_opts) for _ in range(df_len)],
     indicator_category_label=[
         random.choice(ind_cat_label_opts) for _ in range(df_len)
@@ -205,22 +205,18 @@ raw_synth_data = raw_synth_data.assign(
         fake.month_name() + " " + str(random.randint(1, 52))
         for _ in range(df_len)
     ],
-    week_ending=[fake.date_this_year() for _ in range(df_len)],
+    week_ending=[str(fake.date_this_year()) for _ in range(df_len)],
     estimate=[random.uniform(0, 100) for _ in range(df_len)],
     ci_half_width_95pct=[random.uniform(0, 100) for _ in range(df_len)],
     unweighted_sample_size=[
         random.randint(1, 10_000_000) for _ in range(df_len)
     ],
     current_season_week_ending=[
-        random.choice(year_opts) for _ in range(df_len)
+        str(fake.date_this_year()) for _ in range(df_len)
     ],
-    covid_season=[fake.year() for _ in range(df_len)],
+    covid_season=[random.choice(year_opts) for _ in range(df_len)],
     suppression_flag=[random.randint(0, 99) for _ in range(df_len)],
 )
 tf_synth_data = raw_synth_data.copy()
-tf_synth_data["date"] = tf_synth_data["week_ending"].apply(
-    lambda x: x.strftime("%Y-%m-%d")
-)
-tf_synth_data["date1"] = tf_synth_data["week_ending"].apply(
-    lambda x: x.strftime("%Y-%m-%d")
-)
+tf_synth_data["date"] = tf_synth_data["week_ending"]
+tf_synth_data["date1"] = tf_synth_data["week_ending"]

@@ -11,7 +11,7 @@ WITH temp as (
            estimate,
            ci_half_width_95pct,
            unweighted_sample_size,
-           LEFT(current_season_week_ending, 10) as date,
+           LEFT(CAST(current_season_week_ending AS VARCHAR), 10) as date,
            covid_season,
            suppression_flag
     FROM ${data_source}
