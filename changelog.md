@@ -7,6 +7,11 @@ and this project adheres to [Calendar Versioning](https://calver.org/).
 The versioning pattern is `YYYY.MM.DD.micro(a/b/{none if release})
 
 ---
+## [2025.06.26.1a]
+
+### Added
+
+- more tests for datasets
 
 ## [2025.06.26.0a]
 
