@@ -8,7 +8,7 @@ The versioning pattern is `YYYY.MM.DD.micro(a/b/{none if release})
 
 ---
 
-## [2025.06.13.0a]
+## [2025.06.26.0a]
 
 ### Added
 
