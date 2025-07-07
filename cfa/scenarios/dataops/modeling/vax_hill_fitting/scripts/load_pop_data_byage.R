@@ -8,19 +8,19 @@ load_population_data <- function(pop_folder_path) {
     pattern = "United_States_subnational_.*_age_distribution_85\\.csv$",
     full.names = TRUE
   )
-  
+
   # Check if any files match the pattern
   if (length(files) == 0) {
     stop("No matching files found. Please check the folder path or file names.")
   }
-  
+
   # Initialize an empty list to store the data
   data_list <- list()
-  
+
   # Loop through each file
   for (file in files) {
     data <- read.csv(file, stringsAsFactors = FALSE, header = FALSE)
-    
+
     # extract the state name from the file name
     file_name <- basename(file)
     state_name <- sub("United_States_subnational_", "", file_name)

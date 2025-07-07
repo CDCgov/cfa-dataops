@@ -1,9 +1,10 @@
-from argparse import ArgumentParser, Namespace
-import sys
 import subprocess as sp
+import sys
+from argparse import ArgumentParser, Namespace
+
 
 def run(path):
-    #run r script from here
+    # run r script from here
     try:
         # Run the R script using subprocess
         result = sp.run(
@@ -11,23 +12,28 @@ def run(path):
             check=True,
             capture_output=True,
             text=True,
-            shell=True
+            shell=True,
         )
         print("R script output:", result.stdout)
     except sp.CalledProcessError as e:
         print("Error running R script:", e.stderr)
         sys.exit(1)
 
+
 if __name__ == "__main__":
-    #setup argparsers
+    # setup argparsers
     parser = ArgumentParser(description="Run the specified r script.")
-    parser.add_argument("-p", "--path", type=str, default = "all",required=False, help="path to the R script to run")
+    parser.add_argument(
+        "-p",
+        "--path",
+        type=str,
+        default="all",
+        required=False,
+        help="path to the R script to run",
+    )
     args = parser.parse_args()
 
-
     # Convert args to Namespace
-    args = Namespace(
-        path=args.path
-    )
+    args = Namespace(path=args.path)
     # Run the main function
-    run(path = args.path)
+    run(path=args.path)

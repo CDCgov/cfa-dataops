@@ -14,10 +14,10 @@ if (status_code(response) == 200) {
   # Parse the JSON content into an R list
   data <- content(response, as = "text")
   json_data <- fromJSON(data, flatten = TRUE)
-  
+
   # Convert the list to a data frame
   vax <- as.data.frame(json_data)
-  
+
   # Display the data
   head(vax)
 } else {
@@ -41,10 +41,10 @@ if (status_code(response) == 200) {
   # Parse the JSON content into an R list
   data <- content(response, as = "text")
   json_data <- fromJSON(data, flatten = TRUE)
-  
+
   # Convert the list to a data frame
   child_vax <- as.data.frame(json_data)
-  
+
   # Display the data
   head(child_vax)
 } else {
@@ -58,12 +58,12 @@ child_vax$estimate <- as.numeric(child_vax$estimate)
 
 
 # national level child vax data
-child_vax_usa <- child_vax %>% 
-  filter(geographic_name == "National", 
+child_vax_usa <- child_vax %>%
+  filter(geographic_name == "National",
          demographic_level == "Overall",
-         indicator_category_label == "Vaccinated") %>%  
-  group_by(date,  demographic_level, indicator_category_label, demographic_name) %>% 
-  reframe(estimate = sum(estimate, na.rm = T)) 
+         indicator_category_label == "Vaccinated") %>%
+  group_by(date,  demographic_level, indicator_category_label, demographic_name) %>%
+  reframe(estimate = sum(estimate, na.rm = T))
 
 
 child_vax_usa$covid_season <- ifelse(child_vax_usa$date <= as.Date("2024-08-01"), "2023-2024", "2024-2025")
