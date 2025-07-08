@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from cfa.scenarios.datatops.datasets.catalog import get_data
+from cfa.scenarios.dataops.datasets.catalog import get_data
 
 from .funcs import utils as utils
 
