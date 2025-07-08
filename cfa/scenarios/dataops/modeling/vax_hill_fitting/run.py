@@ -3,16 +3,14 @@ from pathlib import Path
 
 import pandas as pd
 
+from cfa.scenarios.datatops.datasets.catalog import get_data
+
 from .funcs import utils as utils
 
 
 def run(scenario, state, output, input_dir, output_dir, final_vax_date):
     # read and process source data
-    covid_vax_2324 = pd.read_csv(
-        Path(
-            "cfa/scenarios/dataops/modeling/vax_hill_fitting/data/COVID_RD18_Vaccination_curves.csv"
-        )
-    )
+    covid_vax_2324 = get_data("covid_rd18_vax_curves", type="transformed")
     covid_vax_2324 = utils.format_vax_2324(covid_vax_2324)
     print(covid_vax_2324.head())
     scenario = scenario.lower()
