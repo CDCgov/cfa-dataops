@@ -4,8 +4,9 @@ from pathlib import Path
 import pandas as pd
 
 from cfa.scenarios.dataops.datasets.catalog import get_data
-
-from .funcs import utils as utils
+from cfa.scenarios.dataops.modeling.vax_hill_fitting.funcs import (
+    utils as utils,
+)
 
 
 def run(scenario, state, output, input_dir, output_dir, final_vax_date):
