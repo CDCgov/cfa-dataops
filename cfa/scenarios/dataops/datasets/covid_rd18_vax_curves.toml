@@ -1,0 +1,26 @@
+# This dataset is static, and thus only needs to be extracted in it's raw form
+# once and saved to blob storage.
+# Raw (extracted) and transformed (loaded) data will be stored in azure blob storage
+# which requires the account, container and path for access
+
+[properties]
+name = "covid_rd18_vax_curves"
+automate = false
+transform_template = ""
+schema = ""
+
+[source]
+url = ""
+pagination = 0
+
+[extract]
+account = "cfadatalakeprd"
+container = "cfapredict"
+prefix = "dataops/scenarios/raw/covid_rd18_vax_curves"
+
+[load]
+account = "cfadatalakeprd"
+container = "cfapredict"
+prefix = "dataops/scenarios/transformed/covid_rd18_vax_curves"
+
+# TODO: add some data schema validation

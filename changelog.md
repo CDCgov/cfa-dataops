@@ -7,6 +7,12 @@ and this project adheres to [Calendar Versioning](https://calver.org/).
 The versioning pattern is `YYYY.MM.DD.micro(a/b/{none if release})
 
 ---
+## [2025.07.09.1a]
+
+### Added
+
+- vax_hill_fitting modeling capability
+
 ## [2025.06.26.1a]
 
 ### Added
