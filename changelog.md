@@ -7,6 +7,28 @@ and this project adheres to [Calendar Versioning](https://calver.org/).
 The versioning pattern is `YYYY.MM.DD.micro(a/b/{none if release})
 
 ---
+
+## [2025.07.16.0a]
+
+### Updated
+
+- **Major refactor** to namespace. This was to enable the hierarchical namespacing for various groups.  This should also support multi-layer organization.
+- `get_data` new an easy import at `cfa.scenarios.dataops` and also handles .json raw data.
+- All import paths and dataset namespaces to reflect new pattern in workflows, tests and etl scripts
+- changed `datasets` the namespace that gets created from all the available configurations files, which was also being renamed to catalog sometimes to the less
+abstract, and unique to this library: `datacat`
+
+### Added
+
+- `dataops.datasets.mcmv.respnet` dataset config
+- `dataops.etl.mcmv.respnet` dataset etl script for pulling all respnet raw data and transforming to keep specific columns and filter on categories
+- `soda.py` from [https://github.com/CDCgov/cfasodapy/tree/main/src/cfasodapy](https://github.com/CDCgov/cfasodapy/tree/main/src/cfasodapy) changing
+the backend to use httpx instead of requests and adding `clauses` argument.
+
+### Removed
+
+- `todo.md` since all the todos are done and we are capturing issues in repo
+
 ## [2025.07.09.1a]
 
 ### Added

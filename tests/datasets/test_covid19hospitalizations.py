@@ -3,13 +3,15 @@ import pandera.pandas as pa
 import pytest
 from pandera.errors import SchemaError
 
-from cfa.scenarios.dataops.datasets.schemas.covid19hospitalizations import (
+from cfa.scenarios.dataops.datasets.scenarios.schemas.covid19hospitalizations import (
     extract_schema,
     load_schema,
     raw_synth_data,
     tf_synth_data,
 )
-from cfa.scenarios.dataops.etl.covid19hospitalizations import transform
+from cfa.scenarios.dataops.etl.scenarios.covid19hospitalizations import (
+    transform,
+)
 
 
 def test_covid19hospitalizations_schemas():

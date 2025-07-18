@@ -4,10 +4,10 @@ from unittest.mock import patch
 
 import pandas as pd
 
-from cfa.scenarios.dataops.datasets.schemas.covid19vax_trends import (
+from cfa.scenarios.dataops.datasets.scenarios.schemas.covid19vax_trends import (
     tf_synth_data,
 )
-from cfa.scenarios.dataops.datasets.schemas.hospitalization import (
+from cfa.scenarios.dataops.datasets.scenarios.schemas.hospitalization import (
     tf_synth_data as tf_synth_hosp_data,
 )
 from cfa.scenarios.dataops.workflows.covid.generate_data import (

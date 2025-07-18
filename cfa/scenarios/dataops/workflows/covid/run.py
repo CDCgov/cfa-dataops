@@ -9,7 +9,7 @@ from shutil import copytree
 import pandas as pd
 from tqdm import tqdm
 
-from cfa.scenarios.dataops.datasets.catalog import BlobEndpoint, get_data
+from cfa.scenarios.dataops.catalog import BlobEndpoint, get_data
 from cfa.scenarios.dataops.etl.utils import get_today_date
 
 from .funcs.check import check_blob_date_exists

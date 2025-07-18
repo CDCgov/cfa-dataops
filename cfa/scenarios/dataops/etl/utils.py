@@ -6,8 +6,9 @@ from datetime import datetime
 from mako.lookup import TemplateLookup
 
 _here_dir = os.path.split(os.path.abspath(__file__))[0]
+template_dirs = [os.path.join(_here_dir, "transform_templates")]
 transform_template_lookup = TemplateLookup(
-    directories=[os.path.join(_here_dir, "transform_templates")]
+    directories=template_dirs, cache_enabled=False
 )
 
 

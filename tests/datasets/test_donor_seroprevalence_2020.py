@@ -3,13 +3,15 @@ import pandera.pandas as pa
 import pytest
 from pandera.errors import SchemaError
 
-from cfa.scenarios.dataops.datasets.schemas.donor_seroprevalence_2020 import (
+from cfa.scenarios.dataops.datasets.scenarios.schemas.donor_seroprevalence_2020 import (
     extract_schema,
     load_schema,
     raw_synth_data,
     tf_synth_data,
 )
-from cfa.scenarios.dataops.etl.donor_seroprevalence_2020 import transform
+from cfa.scenarios.dataops.etl.scenarios.donor_seroprevalence_2020 import (
+    transform,
+)
 
 
 def test_donor_seroprevalence_2020_schemas():

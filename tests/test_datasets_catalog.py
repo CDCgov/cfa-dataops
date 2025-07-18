@@ -5,13 +5,13 @@ import pandas as pd
 import polars as pl
 import pytest
 
-from cfa.scenarios.dataops.datasets import datasets
-from cfa.scenarios.dataops.datasets.catalog import (
+from cfa.scenarios.dataops import datacat
+from cfa.scenarios.dataops.catalog import (
     BlobEndpoint,
     dict_to_sn,
     get_data,
 )
-from cfa.scenarios.dataops.datasets.schemas.covid19vax_trends import (
+from cfa.scenarios.dataops.datasets.scenarios.schemas.covid19vax_trends import (
     extract_schema,
     load_schema,
     raw_synth_data,
@@ -46,17 +46,22 @@ def test_dict_to_sn():
 
 
 def test_datasets_catalog(mocker, mock_write_blob_stream):
-    assert hasattr(datasets, "covid19vax_trends")
-    assert datasets.covid19vax_trends.properties.name == "covid19vax_trends"
-    assert isinstance(datasets.covid19vax_trends.extract, BlobEndpoint)
-    assert isinstance(datasets.covid19vax_trends.load, BlobEndpoint)
+    assert hasattr(datacat, "scenarios")
+    assert (
+        datacat.scenarios.covid19vax_trends.properties.name
+        == "covid19vax_trends"
+    )
+    assert isinstance(
+        datacat.scenarios.covid19vax_trends.extract, BlobEndpoint
+    )
+    assert isinstance(datacat.scenarios.covid19vax_trends.load, BlobEndpoint)
 
     mocker.patch(
-        "cfa.scenarios.dataops.datasets.catalog.write_blob_stream",
+        "cfa.scenarios.dataops.catalog.write_blob_stream",
         mock_write_blob_stream,
     )
 
-    out = datasets.covid19vax_trends.extract.write_blob(
+    out = datacat.scenarios.covid19vax_trends.extract.write_blob(
         file_buffer=b"test,data\n1,2\n3,4",
         path_after_prefix=f"{get_timestamp()}/path/test_file.csv",
     )
@@ -77,21 +82,21 @@ def test_datasets_catalog(mocker, mock_write_blob_stream):
     ]
 
     mocker.patch(
-        "cfa.scenarios.dataops.datasets.catalog.read_blob_stream",
+        "cfa.scenarios.dataops.catalog.read_blob_stream",
         mock_read_blob_stream,
     )
     mocker.patch.object(
-        datasets.covid19vax_trends.load,
+        datacat.scenarios.covid19vax_trends.load,
         "get_versions",
         return_value=["2025-06-03T17-56-50"],
     )
     mocker.patch.object(
-        datasets.covid19vax_trends.load,
+        datacat.scenarios.covid19vax_trends.load,
         "_get_version_blobs",
         return_value=blobs_sig_mock,
     )
 
-    blobs_read = datasets.covid19vax_trends.load.read_blobs()
+    blobs_read = datacat.scenarios.covid19vax_trends.load.read_blobs()
     blobs_df = pd.read_parquet(BytesIO(blobs_read[0]))
     assert isinstance(load_schema(blobs_df), pd.DataFrame)
 
@@ -110,7 +115,7 @@ def test_get_data_raw(mocker):
         account_name: str,
         container_name: str,
     ) -> bytes:
-        data = raw_synth_data.to_csv(index=False).encode()
+        data = raw_synth_data.to_json(index=False).encode()
         obj = SimpleNamespace()
         obj.content_as_bytes = lambda: data
         return obj
@@ -123,24 +128,29 @@ def test_get_data_raw(mocker):
     ]
 
     mocker.patch(
-        "cfa.scenarios.dataops.datasets.catalog.read_blob_stream",
+        "cfa.scenarios.dataops.catalog.read_blob_stream",
         mock_read_blob_stream_pd,
     )
     mocker.patch.object(
-        datasets.covid19vax_trends.extract,
+        datacat.scenarios.covid19vax_trends.extract,
         "get_versions",
         return_value=["2025-06-03T17-56-50"],
     )
     mocker.patch.object(
-        datasets.covid19vax_trends.extract,
+        datacat.scenarios.covid19vax_trends.extract,
         "_get_version_blobs",
         return_value=blobs_sig_mock,
+    )
+    mocker.patch.object(
+        datacat.scenarios.covid19vax_trends.extract,
+        "get_file_ext",
+        return_value="csv",
     )
 
     # test name error handling
     with pytest.raises(ValueError):
         get_data(
-            "covid19vax_trendy_trends",
+            "scenarios.covid19vax_trendy_trends",
             version="latest",
             type="raw",
             output="pandas",
@@ -149,7 +159,7 @@ def test_get_data_raw(mocker):
     # test type error handling
     with pytest.raises(ValueError):
         get_data(
-            "covid19vax_trends",
+            "scenarios.covid19vax_trends",
             version="latest",
             type="export",
             output="pandas",
@@ -158,11 +168,17 @@ def test_get_data_raw(mocker):
     # test output error handling
     with pytest.raises(ValueError):
         get_data(
-            "covid19vax_trends", version="latest", type="raw", output="spark"
+            "scenarios.covid19vax_trends",
+            version="latest",
+            type="raw",
+            output="spark",
         )
 
     pd_data = get_data(
-        "covid19vax_trends", version="latest", type="raw", output="pandas"
+        "scenarios.covid19vax_trends",
+        version="latest",
+        type="raw",
+        output="pandas",
     )
 
     assert isinstance(extract_schema(pd_data), pd.DataFrame)
@@ -170,19 +186,28 @@ def test_get_data_raw(mocker):
     # test version error handling
     with pytest.raises(ValueError):
         get_data(
-            "covid19vax_trends",
+            "scenarios.covid19vax_trends",
             version="2025-04-04T4-49-49",
             type="raw",
             output="pandas",
         )
 
+    mocker.patch.object(
+        datacat.scenarios.covid19vax_trends.extract,
+        "get_file_ext",
+        return_value="json",
+    )
+
     mocker.patch(
-        "cfa.scenarios.dataops.datasets.catalog.read_blob_stream",
+        "cfa.scenarios.dataops.catalog.read_blob_stream",
         mock_read_blob_stream_pl,
     )
 
     pl_data = get_data(
-        "covid19vax_trends", version="latest", type="raw", output="polars"
+        "scenarios.covid19vax_trends",
+        version="latest",
+        type="raw",
+        output="polars",
     )
 
     assert isinstance(pl_data, pl.DataFrame)
@@ -207,22 +232,22 @@ def test_get_data_transformed(mocker):
     ]
 
     mocker.patch(
-        "cfa.scenarios.dataops.datasets.catalog.read_blob_stream",
+        "cfa.scenarios.dataops.catalog.read_blob_stream",
         mock_read_blob_stream,
     )
     mocker.patch.object(
-        datasets.covid19vax_trends.load,
+        datacat.scenarios.covid19vax_trends.load,
         "get_versions",
         return_value=["2025-06-03T17-56-50"],
     )
     mocker.patch.object(
-        datasets.covid19vax_trends.load,
+        datacat.scenarios.covid19vax_trends.load,
         "_get_version_blobs",
         return_value=blobs_sig_mock,
     )
 
     pd_data = get_data(
-        "covid19vax_trends",
+        "scenarios.covid19vax_trends",
         version="latest",
         type="transformed",
         output="pandas",
@@ -233,14 +258,14 @@ def test_get_data_transformed(mocker):
     # test version error handling
     with pytest.raises(ValueError):
         get_data(
-            "covid19vax_trends",
+            "scenarios.covid19vax_trends",
             version="2025-04-04T4-49-49",
             type="transformed",
             output="pandas",
         )
 
     pl_data = get_data(
-        "covid19vax_trends",
+        "scenarios.covid19vax_trends",
         version="latest",
         type="transformed",
         output="polars",

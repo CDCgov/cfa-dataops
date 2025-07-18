@@ -33,9 +33,9 @@ To use this repository:
    ```
 
 To add a new dataset:
-1. Create a new TOML configuration file in `cfa/scenarios/dataops/datasets/`
-2. Create a new ETL script in `cfa/scenarios/dataops/etl/`
-3. Add SQL transformation templates in `cfa/scenarios/dataops/etl/transform_templates/`
+1. Create a new TOML configuration file in `cfa/scenarios/dataops/datasets/{team_dir}/`
+2. Create a new ETL script in `cfa/scenarios/dataops/etl/{team_dir}/`
+3. Add SQL transformation templates in `cfa/scenarios/dataops/etl/transform_templates/{team_dir}/` (is using SQL for transforms). These are [Mako templates](https://www.makotemplates.org/)
 
 ## Accessing Datasets
 
@@ -45,13 +45,13 @@ When the ETL pipelines are run, the data sources (raw and/or transformed) are st
 - type: either 'raw' or 'transformed'. Default is 'transformed'.
 - output: the type of dataframe to output, either 'pandas' or 'polars'. Default is 'pandas'.
 
-The available datasets can be found by running `list_datasets()`, which can be found in the `cfa.scenarios.dataops.datasets.catalog` submodule.
+The available datasets can be found by running `list_datasets()`, which can be found in the `cfa.scenarios.dataops.catalog` submodule.
 
 An example for getting the polars dataframes for the latest raw versions of the covid19vax_trends and seroprevalence datasets is below:
 ```python
-from cfa.scenarios.dataops.datasets.catalog import get_data
-vax_df = get_data("covid19vax_trends", type = "transformed", output = "polars")
-sero_df = get_data("seroprevalence", type = "transformed", output = "polars")
+from cfa.scenarios.dataops import get_data
+vax_df = get_data("scenarios.covid19vax_trends", type = "transformed", output = "polars")
+sero_df = get_data("scenarios.seroprevalence", type = "transformed", output = "polars")
 ```
 
 ## Running Workflows

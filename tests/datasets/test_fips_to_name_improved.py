@@ -5,16 +5,16 @@ import pandera.pandas as pa
 import pytest
 from pandera.errors import SchemaError
 
-from cfa.scenarios.dataops.datasets.schemas.fips_to_name import (
+from cfa.scenarios.dataops.datasets.scenarios.schemas.fips_to_name import (
     tf_synth_data as fips_synth_data,
 )
-from cfa.scenarios.dataops.datasets.schemas.fips_to_name_improved import (
+from cfa.scenarios.dataops.datasets.scenarios.schemas.fips_to_name_improved import (
     extract_schema,
     load_schema,
     raw_synth_data,
     tf_synth_data,
 )
-from cfa.scenarios.dataops.etl.fips_to_name_improved import transform
+from cfa.scenarios.dataops.etl.scenarios.fips_to_name_improved import transform
 
 
 def test_fips_to_name_improved_schemas():
@@ -52,7 +52,7 @@ def test_fips_to_name_improved_transform():
 
     # Mock the get_data function to return our mock FIPS data
     with patch(
-        "cfa.scenarios.dataops.etl.fips_to_name_improved.get_data"
+        "cfa.scenarios.dataops.etl.scenarios.fips_to_name_improved.get_data"
     ) as mock_get_data:
         mock_get_data.return_value = mock_fips_data
         tf_df = transform(extract_df)

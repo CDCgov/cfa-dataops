@@ -1,0 +1,29 @@
+# This dataset is static, and thus only needs to be extracted in it's raw form
+# once and saved to blob storage. For a human viewable we format, see:
+# https://data.cdc.gov/Child-Vaccinations/Weekly-Parental-Intent-for-Vaccination-and-Cumulat/ker6-gs6z/about_data
+# Raw (extracted) and transformed (loaded) data will be stored in azure blob storage
+# which requires the account, container and path for access
+
+[properties]
+
+name = "covid19_vax_coverage_child"
+automate = false
+transform_template = "scenarios/covid19_vax_coverage_child.sql"
+schema = "datasets/schemas/covid19_vax_coverage_child.py"
+
+[source]
+
+url = "https://data.cdc.gov/resource/ker6-gs6z.csv"
+pagination = {limit = 1000}
+
+[extract]
+
+account = "cfadatalakeprd"
+container = "cfapredict"
+prefix = "dataops/scenarios/raw/covid19_vax_coverage_child"
+
+[load]
+
+account = "cfadatalakeprd"
+container = "cfapredict"
+prefix = "dataops/scenarios/transformed/covid19_vax_coverage_child"

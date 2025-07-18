@@ -1,6 +1,6 @@
 import unittest
 
-from cfa.scenarios.dataops.datasets.config_validator import (
+from cfa.scenarios.dataops.config_validator import (
     validate_dataset_config,
     verify_no_repeats,
 )
@@ -56,32 +56,11 @@ class TestConfigVal(unittest.TestCase):
 
 class TestVerifyNoRepeats(unittest.TestCase):
     def test_verify_no_repeats_no_duplicates(self):
-        configs = [
-            {
-                "properties": {"name": "dataset_one"},
-                "_metadata": {"filename": "file1.toml"},
-            },
-            {
-                "properties": {"name": "dataset_two"},
-                "_metadata": {"filename": "file2.toml"},
-            },
-        ]
+        config_nss = ["dataset1.dataset_one", "dataset2.dataset_one"]
         # Should not raise
-        self.assertIsNone(verify_no_repeats(configs))
+        self.assertIsNone(verify_no_repeats(config_nss))
 
     def test_verify_no_repeats_with_duplicates(self):
-        configs = [
-            {
-                "properties": {"name": "dataset_one"},
-                "_metadata": {"filename": "file1.toml"},
-            },
-            {
-                "properties": {"name": "dataset_one"},
-                "_metadata": {"filename": "file2.toml"},
-            },
-        ]
-        with self.assertRaises(AttributeError) as exc:
-            verify_no_repeats(configs)
-        assert "dataset_one" in str(exc.exception)
-        assert "file1.toml" in str(exc.exception)
-        assert "file2.toml" in str(exc.exception)
+        config_nss = ["dataset1.dataset_one", "dataset1.dataset_one"]
+        with self.assertRaises(AttributeError):
+            verify_no_repeats(config_nss)
