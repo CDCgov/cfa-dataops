@@ -5,19 +5,19 @@ import pandas as pd
 import polars as pl
 import pytest
 
-from cfa.scenarios.dataops import datacat
-from cfa.scenarios.dataops.catalog import (
+from cfa.dataops import datacat
+from cfa.dataops.catalog import (
     BlobEndpoint,
     dict_to_sn,
     get_data,
 )
-from cfa.scenarios.dataops.datasets.scenarios.schemas.covid19vax_trends import (
+from cfa.dataops.datasets.scenarios.schemas.covid19vax_trends import (
     extract_schema,
     load_schema,
     raw_synth_data,
     tf_synth_data,
 )
-from cfa.scenarios.dataops.etl.utils import get_timestamp
+from cfa.dataops.etl.utils import get_timestamp
 
 
 def test_dict_to_sn():
@@ -57,7 +57,7 @@ def test_datasets_catalog(mocker, mock_write_blob_stream):
     assert isinstance(datacat.scenarios.covid19vax_trends.load, BlobEndpoint)
 
     mocker.patch(
-        "cfa.scenarios.dataops.catalog.write_blob_stream",
+        "cfa.dataops.catalog.write_blob_stream",
         mock_write_blob_stream,
     )
 
@@ -82,7 +82,7 @@ def test_datasets_catalog(mocker, mock_write_blob_stream):
     ]
 
     mocker.patch(
-        "cfa.scenarios.dataops.catalog.read_blob_stream",
+        "cfa.dataops.catalog.read_blob_stream",
         mock_read_blob_stream,
     )
     mocker.patch.object(
@@ -128,7 +128,7 @@ def test_get_data_raw(mocker):
     ]
 
     mocker.patch(
-        "cfa.scenarios.dataops.catalog.read_blob_stream",
+        "cfa.dataops.catalog.read_blob_stream",
         mock_read_blob_stream_pd,
     )
     mocker.patch.object(
@@ -199,7 +199,7 @@ def test_get_data_raw(mocker):
     )
 
     mocker.patch(
-        "cfa.scenarios.dataops.catalog.read_blob_stream",
+        "cfa.dataops.catalog.read_blob_stream",
         mock_read_blob_stream_pl,
     )
 
@@ -232,7 +232,7 @@ def test_get_data_transformed(mocker):
     ]
 
     mocker.patch(
-        "cfa.scenarios.dataops.catalog.read_blob_stream",
+        "cfa.dataops.catalog.read_blob_stream",
         mock_read_blob_stream,
     )
     mocker.patch.object(

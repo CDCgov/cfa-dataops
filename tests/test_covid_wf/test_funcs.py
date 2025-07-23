@@ -3,21 +3,21 @@ from unittest.mock import MagicMock, patch
 
 import pandas as pd
 
-from cfa.scenarios.dataops.workflows.covid.funcs.check import (
+from cfa.dataops.workflows.covid.funcs.check import (
     check_blob_date_exists,
 )
-from cfa.scenarios.dataops.workflows.covid.funcs.formatting_data import (
+from cfa.dataops.workflows.covid.funcs.formatting_data import (
     format_vac_data,
     output_generation,
 )
-from cfa.scenarios.dataops.workflows.covid.funcs.import_data import (
+from cfa.dataops.workflows.covid.funcs.import_data import (
     import_hospitalization_data,
     import_population_data,
     import_sero_data,
     import_vaccination_data,
     import_variant_data,
 )
-from cfa.scenarios.dataops.workflows.covid.funcs.process_data import (
+from cfa.dataops.workflows.covid.funcs.process_data import (
     cases_by_variant,
     individual_infection_totals,
     total_cases_using_hospital_and_sero,
@@ -35,7 +35,7 @@ class DummyBlobEndpoint:
 def test_check_blob_date_exists_today(monkeypatch):
     today = "2024-06-11"
     with mock.patch(
-        "cfa.scenarios.dataops.workflows.covid.funcs.check.datetime"
+        "cfa.dataops.workflows.covid.funcs.check.datetime"
     ) as mock_datetime:
         mock_datetime.today.return_value.strftime.return_value = today
         blob_ep = DummyBlobEndpoint([today, "2024-06-10"])
@@ -45,7 +45,7 @@ def test_check_blob_date_exists_today(monkeypatch):
 def test_check_blob_date_exists_not_today(monkeypatch, capsys):
     today = "2024-06-11"
     with mock.patch(
-        "cfa.scenarios.dataops.workflows.covid.funcs.check.datetime"
+        "cfa.dataops.workflows.covid.funcs.check.datetime"
     ) as mock_datetime:
         mock_datetime.today.return_value.strftime.return_value = today
         blob_ep = DummyBlobEndpoint(["2024-06-10"])
@@ -75,7 +75,7 @@ def test_import_vaccination_data_blob():
         {"date": ["2024-06-01", "2024-06-02"], "val": [1, 2]}
     )
     with patch(
-        "cfa.scenarios.dataops.workflows.covid.funcs.import_data.get_today_date",
+        "cfa.dataops.workflows.covid.funcs.import_data.get_today_date",
         return_value="2024-06-02",
     ):
         result = import_vaccination_data(
@@ -100,7 +100,7 @@ def test_import_population_data_basic():
     )
 
     with patch(
-        "cfa.scenarios.dataops.workflows.covid.funcs.import_data.get_data"
+        "cfa.dataops.workflows.covid.funcs.import_data.get_data"
     ) as mock_get_data:
         mock_get_data.return_value = fake_age_dist
 
@@ -138,7 +138,7 @@ def test_import_variant_data_filters_and_returns():
 
     # Patch get_data to return fake data in order
     with patch(
-        "cfa.scenarios.dataops.workflows.covid.funcs.import_data.get_data"
+        "cfa.dataops.workflows.covid.funcs.import_data.get_data"
     ) as mock_get_data:
         mock_get_data.side_effect = [fake_region, fake_variant]
         result = import_variant_data("2024-06-01", state)
@@ -185,7 +185,7 @@ def test_import_hospitalization_data_blob():
     )
     state = pd.Series({"stname": "California"})
     with patch(
-        "cfa.scenarios.dataops.workflows.covid.funcs.import_data.get_today_date",
+        "cfa.dataops.workflows.covid.funcs.import_data.get_today_date",
         return_value="2024-06-02",
     ):
         result = import_hospitalization_data(
@@ -211,7 +211,7 @@ def test_import_sero_data_filters_state():
     )
 
     with patch(
-        "cfa.scenarios.dataops.workflows.covid.funcs.import_data.get_data"
+        "cfa.dataops.workflows.covid.funcs.import_data.get_data"
     ) as mock_get_data:
         mock_get_data.return_value = fake_sero
         result = import_sero_data(state)
@@ -449,7 +449,7 @@ def test_individual_infection_totals_two_variants():
 
 
 def test_get_tslie2():
-    from cfa.scenarios.dataops.workflows.covid.funcs.tslie import get_tslie2
+    from cfa.dataops.workflows.covid.funcs.tslie import get_tslie2
 
     # Minimal population DataFrame
     pop = pd.DataFrame(

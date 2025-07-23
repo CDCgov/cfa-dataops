@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from cfa.scenarios.dataops.catalog import BlobEndpoint
+from cfa.dataops.catalog import BlobEndpoint
 
 
 def check_blob_date_exists(blob_ep: BlobEndpoint) -> bool:

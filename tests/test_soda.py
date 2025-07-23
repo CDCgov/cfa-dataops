@@ -1,4 +1,4 @@
-from cfa.scenarios.dataops.soda import Query
+from cfa.dataops.soda import Query
 
 
 def test_build_url():

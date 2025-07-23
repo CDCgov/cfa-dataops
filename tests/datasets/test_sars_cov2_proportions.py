@@ -3,13 +3,13 @@ import pandera.pandas as pa
 import pytest
 from pandera.errors import SchemaError
 
-from cfa.scenarios.dataops.datasets.scenarios.schemas.sars_cov2_proportions import (
+from cfa.dataops.datasets.scenarios.schemas.sars_cov2_proportions import (
     extract_schema,
     load_schema,
     raw_synth_data,
     tf_synth_data,
 )
-from cfa.scenarios.dataops.etl.scenarios.sars_cov2_proportions import transform
+from cfa.dataops.etl.scenarios.sars_cov2_proportions import transform
 
 
 def test_sars_cov2_proportions_schemas():

@@ -4,8 +4,8 @@ import warnings
 
 import pandas as pd
 
-from cfa.scenarios.dataops.catalog import BlobEndpoint, get_data
-from cfa.scenarios.dataops.etl.utils import get_today_date
+from cfa.dataops.catalog import BlobEndpoint, get_data
+from cfa.dataops.etl.utils import get_today_date
 
 warnings.filterwarnings("ignore")
 

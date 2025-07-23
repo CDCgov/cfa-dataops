@@ -3,7 +3,7 @@ import tempfile
 
 import pytest
 
-from cfa.scenarios.dataops.workflows.covid.run import (
+from cfa.dataops.workflows.covid.run import (
     read_and_validate_config,
 )
 

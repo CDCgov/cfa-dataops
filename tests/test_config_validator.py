@@ -1,6 +1,6 @@
 import unittest
 
-from cfa.scenarios.dataops.config_validator import (
+from cfa.dataops.config_validator import (
     validate_dataset_config,
     verify_no_repeats,
 )

@@ -8,6 +8,19 @@ The versioning pattern is `YYYY.MM.DD.micro(a/b/{none if release})
 
 ---
 
+## [2025.07.21.0a]
+
+## Updated
+
+- refactored and updated namespace imports to generalize from `cfa.scenarios.dataops` --> `cfa.dataops`
+- included `list_datasets()` function to `cfa.dataops.__init__.py` for easy import
+
+## Added
+
+- Documentation:
+  - `docs/dataset_developer.md`
+  - `docs/dataset_user.md`
+
 ## [2025.07.16.0a]
 
 ### Updated

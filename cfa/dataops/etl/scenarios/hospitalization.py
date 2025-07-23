@@ -8,7 +8,7 @@ import pandas as pd
 import pandera.pandas as pa
 from tqdm import tqdm
 
-from cfa.scenarios.dataops.catalog import get_data
+from cfa.dataops.catalog import get_data
 
 from ... import datacat
 

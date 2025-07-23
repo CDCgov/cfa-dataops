@@ -25,7 +25,7 @@ To use this repository:
    ```
 3. Example: run the COVID-19 vaccination trends ETL pipeline, with extraction, raw data schema validation (-v) and transformed data validation (-t).
    ```
-   python -m cfa.scenarios.dataops.etl.covid19vax_trends --extract -v -t
+   python -m cfa.dataops.etl.covid19vax_trends --extract -v -t
    ```
 4. [Optional] installing developer dependencies:
    ```
@@ -33,35 +33,40 @@ To use this repository:
    ```
 
 To add a new dataset:
-1. Create a new TOML configuration file in `cfa/scenarios/dataops/datasets/{team_dir}/`
-2. Create a new ETL script in `cfa/scenarios/dataops/etl/{team_dir}/`
-3. Add SQL transformation templates in `cfa/scenarios/dataops/etl/transform_templates/{team_dir}/` (is using SQL for transforms). These are [Mako templates](https://www.makotemplates.org/)
+1. Create a new TOML configuration file in `cfa/dataops/datasets/{team_dir}/`
+2. Create a new ETL script in `cfa/dataops/etl/{team_dir}/`
+3. Add SQL transformation templates in `cfa/dataops/etl/transform_templates/{team_dir}/` (is using SQL for transforms). These are [Mako templates](https://www.makotemplates.org/)
+
+## Deep Dive Documentation
+
+- [Dataset Developer Guide](docs/dataset_developer.md)
+- [Dataset User Guide](docs/dataset_user.md)
 
 ## Accessing Datasets
 
-When the ETL pipelines are run, the data sources (raw and/or transformed) are stored into Azure Blob Storage. There will be times when we want to access these datasets directly. The function `get_data()` found in `cfa.scenarios.dataops.datasets.catalog` helps retrieve that data, compile into a single dataframe, and return that dataframe. The parameters for `get_data()` are as follows:
+When the ETL pipelines are run, the data sources (raw and/or transformed) are stored into Azure Blob Storage. There will be times when we want to access these datasets directly. The function `get_data()` found in `cfa.dataops.datasets.catalog` helps retrieve that data, compile into a single dataframe, and return that dataframe. The parameters for `get_data()` are as follows:
 - name: the name of the data source
 - version: either 'latest' or string containing the datetime of required version. Default is 'latest'.
 - type: either 'raw' or 'transformed'. Default is 'transformed'.
 - output: the type of dataframe to output, either 'pandas' or 'polars'. Default is 'pandas'.
 
-The available datasets can be found by running `list_datasets()`, which can be found in the `cfa.scenarios.dataops.catalog` submodule.
+The available datasets can be found by running `list_datasets()`, which can be found in the `cfa.dataops.catalog` submodule.
 
 An example for getting the polars dataframes for the latest raw versions of the covid19vax_trends and seroprevalence datasets is below:
 ```python
-from cfa.scenarios.dataops import get_data
+from cfa.dataops import get_data
 vax_df = get_data("scenarios.covid19vax_trends", type = "transformed", output = "polars")
 sero_df = get_data("scenarios.seroprevalence", type = "transformed", output = "polars")
 ```
 
 ## Running Workflows
 
-This `cfa.scenarios.dataops` repository contains a `workflows` module. The following workflows are currently available:
+This `cfa.dataops` repository contains a `workflows` module. The following workflows are currently available:
 - covid
 
-Workflows can be run in a python virtual environment terminal where `cfa.scenarios.dataops` is installed with the following format:
+Workflows can be run in a python virtual environment terminal where `cfa.dataops` is installed with the following format:
 ```bash
-python3 -m cfa.scenarios.dataops.workflows.<name>.<module> --<args>
+python3 -m cfa.dataops.workflows.<name>.<module> --<args>
 ```
 
 ### Covid Workflow
@@ -75,8 +80,8 @@ There are two modules to the covid workflow with the following optional command 
 
 Ex:
 ```bash
-python3 -m cfa.scenarios.dataops.workflows.covid.generate_data -b
-python3 -m cfa.scenarios.dataops.workflows.covid.run -b
+python3 -m cfa.dataops.workflows.covid.generate_data -b
+python3 -m cfa.dataops.workflows.covid.run -b
 ```
 
 

@@ -4,19 +4,19 @@ from unittest.mock import patch
 
 import pandas as pd
 
-from cfa.scenarios.dataops.datasets.scenarios.schemas.covid19vax_trends import (
+from cfa.dataops.datasets.scenarios.schemas.covid19vax_trends import (
     tf_synth_data,
 )
-from cfa.scenarios.dataops.datasets.scenarios.schemas.hospitalization import (
+from cfa.dataops.datasets.scenarios.schemas.hospitalization import (
     tf_synth_data as tf_synth_hosp_data,
 )
-from cfa.scenarios.dataops.workflows.covid.generate_data import (
+from cfa.dataops.workflows.covid.generate_data import (
     generate_hospitalization_data,
     generate_vaccination_data,
 )
 
 
-@patch("cfa.scenarios.dataops.workflows.covid.generate_data.get_data")
+@patch("cfa.dataops.workflows.covid.generate_data.get_data")
 def test_generate_vaccination_data_file(mock_get_data):
     # Mock get_data to return a DataFrame with the expected columns for the "raw" CDC data
     df = tf_synth_data.copy()
@@ -34,7 +34,7 @@ def test_generate_vaccination_data_file(mock_get_data):
         ).issubset(df.columns)
 
 
-@patch("cfa.scenarios.dataops.workflows.covid.generate_data.get_data")
+@patch("cfa.dataops.workflows.covid.generate_data.get_data")
 def test_generate_hospitalization_data_file(mock_get_data):
     # Mock transformed hospitalization data
     mock_hosp = tf_synth_hosp_data.copy()

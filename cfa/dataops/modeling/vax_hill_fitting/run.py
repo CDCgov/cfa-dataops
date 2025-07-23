@@ -3,8 +3,8 @@ from pathlib import Path
 
 import pandas as pd
 
-from cfa.scenarios.dataops import get_data
-from cfa.scenarios.dataops.modeling.vax_hill_fitting.funcs import (
+from cfa.dataops import get_data
+from cfa.dataops.modeling.vax_hill_fitting.funcs import (
     utils as utils,
 )
 

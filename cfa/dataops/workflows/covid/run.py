@@ -9,8 +9,8 @@ from shutil import copytree
 import pandas as pd
 from tqdm import tqdm
 
-from cfa.scenarios.dataops.catalog import BlobEndpoint, get_data
-from cfa.scenarios.dataops.etl.utils import get_today_date
+from cfa.dataops.catalog import BlobEndpoint, get_data
+from cfa.dataops.etl.utils import get_today_date
 
 from .funcs.check import check_blob_date_exists
 from .funcs.formatting_data import format_vac_data, output_generation

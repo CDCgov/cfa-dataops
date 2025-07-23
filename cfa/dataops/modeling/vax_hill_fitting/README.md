@@ -11,7 +11,7 @@ pip install git+https://github.com/cdcent/cfa-scenarios-dataops.git
 
 The workflow can be kicked off by running the following in the terminal:
 ```bash
-python3 -m cfa.scenarios.dataops.modeling.vax_hill_fitting.run
+python3 -m cfa.dataops.modeling.vax_hill_fitting.run
 ```
 
 By default, this command takes in vax data produced by the vaxfitting repo mentioned above stored in a folder called `data`. The following command line arguments can be used to customize the execution:
@@ -27,14 +27,14 @@ Suppose we want to run the vax hill fitting on low, med, and high scenarios for 
 
 The simple way:
 ```
-python3 -m cfa.scenarios.dataops.modeling.vax_hill_fitting \
+python3 -m cfa.dataops.modeling.vax_hill_fitting \
     -id vax_data \
     -od scenarios_output
 ```
 
 The more verbose way:
 ```
-python3 -m cfa.scenarios.dataops.modeling.vax_hill_fitting \
+python3 -m cfa.dataops.modeling.vax_hill_fitting \
     -s all \
     --state all \
     -id vax_data \

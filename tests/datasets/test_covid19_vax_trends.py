@@ -3,13 +3,13 @@ import pandera.pandas as pa
 import pytest
 from pandera.errors import SchemaError
 
-from cfa.scenarios.dataops.datasets.scenarios.schemas.covid19vax_trends import (
+from cfa.dataops.datasets.scenarios.schemas.covid19vax_trends import (
     extract_schema,
     load_schema,
     raw_synth_data,
     tf_synth_data,
 )
-from cfa.scenarios.dataops.etl.scenarios.covid19vax_trends import transform
+from cfa.dataops.etl.scenarios.covid19vax_trends import transform
 
 
 def test_covid19_vax_trends_schemas():
