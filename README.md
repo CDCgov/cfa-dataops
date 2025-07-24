@@ -1,18 +1,21 @@
-# CFA Scenarios DataOps
+# CFA DataOps
 
 ![](docs/assets/badges/coverage.svg)
 
 ## Overview
 
-This project provides ETL (Extract, Transform, Load) pipelines for various data scenarios within the CDC's Center for Analytics (CFA). It currently includes an end-to-end ETL pipeline data, demonstrating best practices for data processing within the CFA environment.
+This project provides data tools and low friction access to versioned datasets within CDC's Center for Forecasting and Outbreak Analytics (CFA) virtual private cloud (VPC). It includes end-to-end ETL pipelines for configured data sources, custom workflows, schema validation patterns, and submodules that expand common data visualization and modeling/interpolation patterns. The project demonstrates best practices for data processing within the CFA environment.
 
 ### Key Features
 
 - Configuration-driven ETL pipelines using TOML files
-- SQL-based transformations using DuckDB
+- SQL-based transformations using DuckDB, or Polar's built-in SQL context
 - Azure Blob Storage integration for raw and transformed data storage
-- Utilities for timestamping and template loading
+- Utilities for time-stamping and template loading
 - Data validation and quality checks
+- Custom workflows
+- Tooling for easy access to Socrata Open Data API (e.i., data.cdc.gov)
+  (copied and modified from [here](https://github.com/CDCgov/cfasodapy))
 
 ## Getting started
 
@@ -89,6 +92,7 @@ python3 -m cfa.dataops.workflows.covid.run -b
 
 - Thomas Hladish <utx5@cdc.gov> (CDC/OD/ORR/CFA)
 - Phillip Rogers <ap66@cdc.gov> (CDC/OD/ORR/CFA)(CTR)
+- Ryan Raasch <xng3@cdc.gov> (CDC/OD/ORR/CFA)(CTR)
 
 ## Disclaimers
 
