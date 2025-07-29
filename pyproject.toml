@@ -25,7 +25,15 @@ dependencies = [
     "vl-convert-python (>=1.7.0,<2.0.0)",
     "pypdf (>=5.5.0,<6.0.0)",
     "dynode @ git+https://github.com/CDCgov/DynODE@main",
-    "pandera[pandas] (>=0.24.0)"
+    "pandera[pandas] (>=0.24.0)",
+    "papermill (>=2.6.0,<3.0.0)",
+    "ipywidgets (>=8.1.7,<9.0.0)",
+    "itables (>=2.4.4,<3.0.0)",
+    "ipykernel (>=6.30.0,<7.0.0)",
+    "nbconvert (>=7.16.6,<8.0.0)",
+    "jupyter (>=1.1.1,<2.0.0)",
+    "jupyterlab (>=4.4.5,<5.0.0)",
+    "rich (>=14.1.0,<15.0.0)"
 ]
 
 [tool.poetry]
