@@ -1,5 +1,6 @@
 import glob
 import os
+import shutil
 from pprint import pprint
 from tempfile import TemporaryDirectory
 from types import SimpleNamespace
@@ -171,4 +172,11 @@ def report_dict_to_sn(d: Any) -> SimpleNamespace:
     return x
 
 
-reportcat = report_dict_to_sn(report_ns_map)
+def get_report_catalog() -> SimpleNamespace:
+    """Get the report catalog as a SimpleNamespace object.
+
+    Returns:
+        SimpleNamespace: The report catalog.
+    """
+    shutil.rmtree(os.path.join(_here_dir, "__pycache__"))
+    return report_dict_to_sn(report_ns_map)
