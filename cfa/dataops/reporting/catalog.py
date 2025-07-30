@@ -118,9 +118,9 @@ class NotebookEndpoint:
             ".html"
         ), "Output path must end with .html"
         html_content = self.nb_to_html_str(**kwargs)
-        if html_out_path:
-            with open(html_out_path, "w") as f:
-                f.write(html_content)
+        os.makedirs(os.path.dirname(html_out_path), exist_ok=True)
+        with open(html_out_path, "w") as f:
+            f.write(html_content)
         print(f"HTML report saved to {os.path.abspath(html_out_path)}")
 
     def nb_to_html_blob(
