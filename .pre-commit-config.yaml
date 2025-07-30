@@ -48,9 +48,18 @@ repos:
 #   - id: julia-formatter
 #####
 # Secrets
--   repo: https://github.com/Yelp/detect-secrets
-    rev: v1.4.0
-    hooks:
-    -   id: detect-secrets
-        args: ['--baseline', '.secrets.baseline']
-        exclude: package.lock.json
+- repo: https://github.com/Yelp/detect-secrets
+  rev: v1.4.0
+  hooks:
+  -   id: detect-secrets
+      args: ['--baseline', '.secrets.baseline']
+      exclude: package.lock.json
+
+- repo: local
+  hooks:
+    - id: jupyter-nb-clear-output
+      name: Clear Jupyter Notebook outputs
+      files: \.ipynb$
+      stages: [pre-commit]
+      language: system
+      entry: jupyter nbconvert --ClearOutputPreprocessor.enabled=True --inplace
