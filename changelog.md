@@ -8,6 +8,23 @@ The versioning pattern is `YYYY.MM.DD.micro(a/b/{none if release})
 
 ---
 
+## [2025.07.31.0a]
+
+### Added
+
+- `cfa.dataops.reporting` functionality to generate client-side rendering
+  interactive html reports authored as jupyter notebooks. This conversion is invoked
+  using the `reportcat` namespace. Example:
+
+  ```python
+  >>> from cfa.dataops.reporting import reportcat
+  >>> reportcat.examples.dataset_report_ipynb.nb_to_html_file('tmp/test3.html')
+  ```
+  ``` bash
+  Executing: 100%|█████████████████████████████████| 21/21 [00:17<00:00,  1.20cell/s]
+  HTML report saved to /.../.../.../.../tmp/test3.html
+  ```
+
 ## [2025.07.24.0a]
 
 ### Updated
