@@ -1,6 +1,5 @@
 import glob
 import os
-import shutil
 from pprint import pprint
 from tempfile import TemporaryDirectory
 from types import SimpleNamespace
@@ -64,6 +63,9 @@ def nb_to_html(nb_path: str) -> str:
     c.HTMLExporter.preprocessors = [
         "nbconvert.preprocessors.TagRemovePreprocessor"
     ]
+    c.TemplateExporter.extra_template_basedirs = os.path.join(
+        _here_dir, "jupyter_templates"
+    )
     body, _ = HTMLExporter(template_name="lab", config=c).from_filename(
         nb_path
     )
@@ -178,5 +180,4 @@ def get_report_catalog() -> SimpleNamespace:
     Returns:
         SimpleNamespace: The report catalog.
     """
-    shutil.rmtree(os.path.join(_here_dir, "__pycache__"))
     return report_dict_to_sn(report_ns_map)
