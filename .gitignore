@@ -380,3 +380,5 @@ docs/site/
 *.lock
 .vscode
 tmp/
+*/logs/
+logs/
