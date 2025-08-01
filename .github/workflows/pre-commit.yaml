@@ -18,6 +18,6 @@ jobs:
     - name: Install local dependencies
       run: |
         pip install -U pip
-        pip install jupyter
+        pip install 'jupyter>=1.1.1,<2.0.0' 'nbconvert>=7.16.6,<8.0.0'
 
     - uses: ./.github/actions/pre-commit
