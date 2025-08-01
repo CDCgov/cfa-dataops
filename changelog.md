@@ -8,6 +8,12 @@ The versioning pattern is `YYYY.MM.DD.micro(a/b/{none if release})
 
 ---
 
+## [2025.08.01.0a]
+
+### Fixes
+
+- pre-commit workflow for removing notebook outputs
+
 ## [2025.07.31.0a]
 
 ### Added
