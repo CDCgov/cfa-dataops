@@ -19,24 +19,29 @@ from .config_validator import validate_dataset_config, verify_no_repeats
 
 _here_dir = os.path.split(os.path.abspath(__file__))[0]
 _dataset_config_paths = glob.glob(
-    os.path.join(_here_dir, "datasets", "**", "*.toml")
+    os.path.join(_here_dir, "**", "*.toml"), recursive=True
 )
 
 name_paths = []
 dataset_configs = {}
 for cp_i in _dataset_config_paths:
-    ns_pre = cp_i.split(f"datasets{os.sep}")[-1].split(os.sep)[:-1]
-    with open(cp_i, "rb") as f:
-        config = tomli.load(f)
-        config["_metadata"] = dict(filename=os.path.split(cp_i)[1])
-        validate_dataset_config(config)
-        current = dataset_configs
-        for part in ns_pre:
-            if part not in current:
-                current[part] = {}
-            current = current[part]
-        current[config["properties"]["name"]] = config
-        name_paths.append(".".join(ns_pre + [config["properties"]["name"]]))
+    if cp_i.startswith(os.path.join(_here_dir, "datasets")):
+        ns_pre = cp_i.split(f"datasets{os.sep}")[-1].split(os.sep)[:-1]
+        with open(cp_i, "rb") as f:
+            config = tomli.load(f)
+            config["_metadata"] = dict(
+                filename=os.path.split(cp_i)[1], config_path=cp_i
+            )
+            validate_dataset_config(config)
+            current = dataset_configs
+            for part in ns_pre:
+                if part not in current:
+                    current[part] = {}
+                current = current[part]
+            current[config["properties"]["name"]] = config
+            name_paths.append(
+                ".".join(ns_pre + [config["properties"]["name"]])
+            )
 
 verify_no_repeats(name_paths)
 
