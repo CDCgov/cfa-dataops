@@ -1,4 +1,4 @@
-# Dataset User Guide
+# Data User Guide
 
 This guide explains how to access and use datasets in the CFA Scenarios DataOps system.
 
@@ -76,6 +76,7 @@ In order to see what versions are availabl, use the data catalog's convenient na
 ### Data Validation
 
 All datasets have schema validation for both raw and transformed data. The schemas define:
+
 - Required columns
 - Data types
 - Valid value ranges/options
@@ -115,11 +116,9 @@ sero_df = get_data(
 1. Dataset Not Found
    - Verify dataset name using `list_datasets()`
    - Check for typos in namespace path
-
 2. Version Not Found
    - Use 'latest' to get most recent version
    - Check available versions in Azure Blob Storage
-
 3. Schema Validation Errors
    - Ensure data matches expected schema
    - Check for missing required columns

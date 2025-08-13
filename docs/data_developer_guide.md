@@ -1,10 +1,11 @@
-# Dataset Developer Guide
+# Data Developer Guide
 
 This guide explains how to add new datasets to the CFA Scenarios DataOps system.
 
 This repository is designed and maintained so that if a core set of patterns are followed, adding new datasets for easy access by other teams is a straightforward procedure.
 
 This document guides you through:
+
 - Adding a new dataset
 - Creating an ETL process
 - Using Pandera schemas and synthetic data to test your ETL scripts
@@ -21,6 +22,7 @@ The code related to this example dataset can be found in these files:
 ## Overview
 
 The ETL pipeline system is built around:
+
 - TOML configuration files that define dataset properties
 - Python ETL scripts that handle extraction, transformation and loading
 - SQL templates for transformations (optional)
@@ -29,8 +31,8 @@ The ETL pipeline system is built around:
 ## Adding a New Dataset
 
 1. Create TOML Configuration:
-   ```toml
-   # filepath: cfa/dataops/datasets/{team_dir}/{dataset_name}.toml
+
+   ```toml title="cfa/dataops/datasets/{team_dir}/{dataset_name}.toml"
    [properties]
    name = "dataset_name"
    version = "1.0"
@@ -53,6 +55,7 @@ The ETL pipeline system is built around:
    ```
 
 2. Create Schema File:
+
    ```python
    # filepath: cfa/dataops/datasets/{team_dir}/schemas/{dataset_name}.py
    import pandera.pandas as pa
@@ -69,6 +72,7 @@ The ETL pipeline system is built around:
    ```
 
 3. Create ETL Script:
+
    ```python
    # filepath: cfa/dataops/etl/{team_dir}/{dataset_name}.py
    from ... import datacat
@@ -92,6 +96,7 @@ The ETL pipeline system is built around:
    ```
 
 4. Add SQL Templates (Optional):
+
    ```sql
    -- filepath: cfa/dataops/etl/transform_templates/{team_dir}/{dataset_name}.sql
    SELECT
@@ -102,42 +107,43 @@ The ETL pipeline system is built around:
    ```
 
 5. Adding schemas and synthetic data (Optional):
-    ```python
-    # filepath: cfa/dataops/datasets/{team_dir}/schemas/{dataset_name}.py
-    import numpy as np
-    import pandas as pd
-    import pandera.pandas as pa
 
-    # Define the schemas for validation
-    extract_schema = pa.DataFrameSchema({
-         "date": pa.Column(pd.DatetimeTZDtype(tz='UTC')),
-         "value": pa.Column(float, checks=pa.Check.greater_than(0)),
-         "category": pa.Column(str, checks=pa.Check.isin(['A', 'B', 'C']))
-    })
+   ```python
+   # filepath: cfa/dataops/datasets/{team_dir}/schemas/{dataset_name}.py
+   import numpy as np
+   import pandas as pd
+   import pandera.pandas as pa
 
-    load_schema = pa.DataFrameSchema({
-         "date": pa.Column(pd.DatetimeTZDtype(tz='UTC')),
-         "normalized_value": pa.Column(float),
-         "category": pa.Column(str)
-    })
+   # Define the schemas for validation
+   extract_schema = pa.DataFrameSchema({
+        "date": pa.Column(pd.DatetimeTZDtype(tz='UTC')),
+        "value": pa.Column(float, checks=pa.Check.greater_than(0)),
+        "category": pa.Column(str, checks=pa.Check.isin(['A', 'B', 'C']))
+   })
 
-    # Add synthetic data generation for testing
-    def raw_synthetic_data(n_rows: int = 100) -> pd.DataFrame:
-         return pd.DataFrame({
-              "date": pd.date_range(
-                    start="2023-01-01",
-                    periods=n_rows,
-                    tz='UTC'
-              ),
-              "value": np.random.uniform(1, 100, n_rows),
-              "category": np.random.choice(['A', 'B', 'C'], n_rows)
-         })
+   load_schema = pa.DataFrameSchema({
+        "date": pa.Column(pd.DatetimeTZDtype(tz='UTC')),
+        "normalized_value": pa.Column(float),
+        "category": pa.Column(str)
+   })
 
-    # Validate synthetic data matches schema
-    if __name__ == "__main__":
-         test_df = generate_synthetic_data()
-         extract_schema.validate(test_df)
-    ```
+   # Add synthetic data generation for testing
+   def raw_synthetic_data(n_rows: int = 100) -> pd.DataFrame:
+        return pd.DataFrame({
+             "date": pd.date_range(
+                   start="2023-01-01",
+                   periods=n_rows,
+                   tz='UTC'
+             ),
+             "value": np.random.uniform(1, 100, n_rows),
+             "category": np.random.choice(['A', 'B', 'C'], n_rows)
+        })
+
+   # Validate synthetic data matches schema
+   if __name__ == "__main__":
+        test_df = generate_synthetic_data()
+        extract_schema.validate(test_df)
+   ```
 
 ## Testing
 
@@ -235,6 +241,7 @@ df = get_data(
 ### Data Validation
 
 All datasets have schema validation for both raw and transformed data. The schemas define:
+
 - Required columns
 - Data types
 - Valid value ranges/options
@@ -272,10 +279,12 @@ sero_df = get_data(
 ## Common Issues
 
 1. Dataset Not Found
+
    - Verify dataset name using `list_datasets()`
    - Check for typos in namespace path
 
 2. Version Not Found
+
    - Use 'latest' to get most recent version
    - Check available versions in Azure Blob Storage
 
