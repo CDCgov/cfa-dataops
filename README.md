@@ -39,84 +39,13 @@ Read the [Dataset User Guide](docs/dataset_user.md) for more information about a
 
 Read the [Dataset Developer Guide](docs/dataset_developer.md) for information about how to run ETL to add new versions of an existing datasets and about how to create new datasets.
 
-2. Install dependencies (**requires: `poetry >= 2.0`**):
-   ```
-   poetry install
-   ```
-3. Example: run the COVID-19 vaccination trends ETL pipeline, with extraction, raw data schema validation (-v) and transformed data validation (-t).
-   ```
-   python -m cfa.dataops.etl.covid19vax_trends --extract -v -t
-   ```
-4. [Optional] installing developer dependencies:
-   ```
-   poetry install --with dev
-   ```
-
-To add a new dataset:
-
-1. Create a new TOML configuration file in `cfa/dataops/datasets/{team_dir}/`
-2. Create a new ETL script in `cfa/dataops/etl/{team_dir}/`
-3. Add SQL transformation templates in `cfa/dataops/etl/transform_templates/{team_dir}/` (is using SQL for transforms). These are [Mako templates](https://www.makotemplates.org/)
-
-## Deep Dive Documentation
-
-- [Dataset Developer Guide](docs/dataset_developer.md)
-- [Dataset User Guide](docs/dataset_user.md)
-
-## Accessing Datasets
-
-When the ETL pipelines are run, the data sources (raw and/or transformed) are stored into Azure Blob Storage. There will be times when we want to access these datasets directly. The function `get_data()` found in `cfa.dataops.datasets.catalog` helps retrieve that data, compile into a single dataframe, and return that dataframe. The parameters for `get_data()` are as follows:
-
-- name: the name of the data source
-- version: either 'latest' or string containing the datetime of required version. Default is 'latest'.
-- type: either 'raw' or 'transformed'. Default is 'transformed'.
-- output: the type of dataframe to output, either 'pandas' or 'polars'. Default is 'pandas'.
-
-The available datasets can be found by running `list_datasets()`, which can be found in the `cfa.dataops.catalog` submodule.
-
-An example for getting the polars dataframes for the latest raw versions of the covid19vax_trends and seroprevalence datasets is below:
-
-```python
-from cfa.dataops import get_data
-vax_df = get_data("scenarios.covid19vax_trends", type = "transformed", output = "polars")
-sero_df = get_data("scenarios.seroprevalence", type = "transformed", output = "polars")
-```
-
-## Running Workflows
-
-This `cfa.dataops` repository contains a `workflows` module. The following workflows are currently available:
-
-- covid
-
-Workflows can be run in a python virtual environment terminal where `cfa.dataops` is installed with the following format:
-
-```bash
-python3 -m cfa.dataops.workflows.<name>.<module> --<args>
-```
-
-### Covid Workflow
-
-There are two modules to the covid workflow with the following optional command line arguments:
-
-- generate_data (this must be run before the next module)
-  - -p, --path: path to store generated data; default is covid/data. Not needed if -b flag is used.
-  - -b, --blob: whether to store generated data to Blob Storage (flag)
-- run:
-  - -c, --config: path to intialization config
-  - -b, --blob: whether to pull from and push prepped data to Blob Storage (flag)
-
-Ex:
-
-```bash
-python3 -m cfa.dataops.workflows.covid.generate_data -b
-python3 -m cfa.dataops.workflows.covid.run -b
-```
-
 ## Project admins
 
 - Thomas Hladish <utx5@cdc.gov> (CDC/OD/ORR/CFA)
 - Phillip Rogers <ap66@cdc.gov> (CDC/OD/ORR/CFA)(CTR)
 - Ryan Raasch <xng3@cdc.gov> (CDC/OD/ORR/CFA)(CTR)
+
+---
 
 ## Disclaimers
 

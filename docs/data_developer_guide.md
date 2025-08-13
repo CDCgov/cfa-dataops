@@ -1,5 +1,7 @@
 # Data Developer Guide
 
+## How to use this guide
+
 This guide explains how to add new datasets to the CFA Scenarios DataOps system.
 
 This repository is designed and maintained so that if a core set of patterns are followed, adding new datasets for easy access by other teams is a straightforward procedure.
@@ -9,15 +11,7 @@ This document guides you through:
 - Adding a new dataset
 - Creating an ETL process
 - Using Pandera schemas and synthetic data to test your ETL scripts
-
-There are many dataset examples in this repository that can serve as references while creating yours. To get started, take a look at [`cfa/dataops/datasets/scenarios/covid19_vaccination_trends.toml`](../cfa/dataops/datasets/scenarios/covid19_vaccination_trends.toml).
-
-The code related to this example dataset can be found in these files:
-
-- [`cfa/dataops/datasets/scenarios/schemas/covid19vax_trends.py`](../cfa/dataops/datasets/scenarios/schemas/covid19vax_trends.py)
-- [`cfa/dataops/etl/scenarios/covid19vax_trends.py`](../cfa/dataops/etl/scenarios/covid19vax_trends.py)
-- [`cfa/dataops/etl/transform_templates/scenarios/covid19vax_trends.sql`](../cfa/dataops/etl/transform_templates/scenarios/covid19vax_trends.sql)
-- [`tests/datasets/test_covid19_vax_trends.py`](../tests/datasets/test_covid19_vax_trends.py)
+- Using workflows
 
 ## Overview
 
@@ -28,129 +22,149 @@ The ETL pipeline system is built around:
 - SQL templates for transformations (optional)
 - Schema validation using Pandera
 
+### Example
+
+There are many datasets in this repository that can serve as references while creating yours. For example, the `covid19vax_trends` dataset:
+
+- [TOML configuration](https://github.com/CDCgov/cfa-dataops/blob/main/cfa/dataops/datasets/scenarios/covid19_vaccination_trends.toml)
+- [Schema and synthetic data](https://github.com/CDCgov/cfa-dataops/blob/main/cfa/dataops/datasets/scenarios/schemas/covid19vax_trends.py)
+- [ETL script](https://github.com/CDCgov/cfa-dataops/blob/main/cfa/dataops/etl/scenarios/covid19vax_trends.py)
+- [ETL SQL](https://github.com/CDCgov/cfa-dataops/blob/main/cfa/dataops/etl/transform_templates/scenarios/covid19vax_trends.sql)
+- [Unit tests](https://github.com/CDCgov/cfa-dataops/blob/main/tests/datasets/test_covid19_vax_trends.py)
+
+## Update an existing dataset
+
+From the command line:
+
+```
+python -m cfa.dataops.etl.covid19vax_trends --extract
+```
+
 ## Adding a New Dataset
 
-1. Create TOML Configuration:
+To add a new dataset:
 
-   ```toml title="cfa/dataops/datasets/{team_dir}/{dataset_name}.toml"
-   [properties]
-   name = "dataset_name"
-   version = "1.0"
+1. Create a TOML configuration file in `cfa/dataops/datasets/{team_dir}/{dataset_name}.toml`
+1. Optionally, create a schema validation file
+1. Create a new ETL script in `cfa/dataops/etl/{team_dir}/`
+1. Add SQL transformation templates in `cfa/dataops/etl/transform_templates/{team_dir}/` (is using SQL for transforms). These are [Mako templates](https://www.makotemplates.org/)
 
-   [source]
-   # any dependencies you may want to use for your unique data source
-   # all fields are optional
-   url = "https://your.data.address/"
+### Configuration file
+
+```toml title="cfa/dataops/datasets/{team_dir}/{dataset_name}.toml"
+[properties]
+name = "dataset_name"
+version = "1.0"
+
+[source]
+# any dependencies you may want to use for your unique data source
+# all fields are optional
+url = "https://your.data.address/"
 
 
-   [extract]
-   account = "storage_account_name"
-   container = "container_name"
-   prefix = "path/to/raw/data"
+[extract]
+account = "storage_account_name"
+container = "container_name"
+prefix = "path/to/raw/data"
 
-   [load]
-   account = "storage_account_name"
-   container = "container_name"
-   prefix = "path/to/transformed/data"
-   ```
+[load]
+account = "storage_account_name"
+container = "container_name"
+prefix = "path/to/transformed/data"
+```
 
-2. Create Schema File:
+### Schema validation file
 
-   ```python
-   # filepath: cfa/dataops/datasets/{team_dir}/schemas/{dataset_name}.py
-   import pandera.pandas as pa
+```python title="cfa/dataops/datasets/{team_dir}/schemas/{dataset_name}.py"
+import pandera.pandas as pa
 
-   extract_schema = pa.DataFrameSchema({
-       "column1": pa.Column(str),
-       "column2": pa.Column(float)
-   })
+extract_schema = pa.DataFrameSchema({
+    "column1": pa.Column(str),
+    "column2": pa.Column(float)
+})
 
-   load_schema = pa.DataFrameSchema({
-       "transformed_col1": pa.Column(str),
-       "transformed_col2": pa.Column(float)
-   })
-   ```
+load_schema = pa.DataFrameSchema({
+    "transformed_col1": pa.Column(str),
+    "transformed_col2": pa.Column(float)
+})
+```
 
-3. Create ETL Script:
+### ETL script
 
-   ```python
-   # filepath: cfa/dataops/etl/{team_dir}/{dataset_name}.py
-   from ... import datacat
-   from ...datasets.{team_dir}.schemas.{dataset_name} import extract_schema, load_schema
+```python title="cfa/dataops/etl/{team_dir}/{dataset_name}.py"
+from ... import datacat
+from ...datasets.{team_dir}.schemas.{dataset_name} import extract_schema, load_schema
 
-   def extract() -> pd.DataFrame:
-       # Extract implementation
-       pass
+def extract() -> pd.DataFrame:
+    # Extract implementation
+    pass
 
-   def transform(df: pd.DataFrame) -> pd.DataFrame:
-       # Transform implementation
-       pass
+def transform(df: pd.DataFrame) -> pd.DataFrame:
+    # Transform implementation
+    pass
 
-   def load(df: pd.DataFrame) -> None:
-       # Load implementation
-       pass
+def load(df: pd.DataFrame) -> None:
+    # Load implementation
+    pass
 
-   def main(run_extract: bool = False, val_raw: bool = False, val_tf: bool = False) -> None:
-       # Main ETL runner
-       pass
-   ```
+def main(run_extract: bool = False, val_raw: bool = False, val_tf: bool = False) -> None:
+    # Main ETL runner
+    pass
+```
 
-4. Add SQL Templates (Optional):
+### [optional] SQL templates
 
-   ```sql
-   -- filepath: cfa/dataops/etl/transform_templates/{team_dir}/{dataset_name}.sql
-   SELECT
-     column1,
-     column2
-   FROM ${table_name}
-   WHERE condition = true
-   ```
+```sql title="cfa/dataops/etl/transform_templates/{team_dir}/{dataset_name}.sql"
+SELECT
+    column1,
+    column2
+FROM ${table_name}
+WHERE condition = true
+```
 
-5. Adding schemas and synthetic data (Optional):
+### [optional] Schemas and synthetic data
 
-   ```python
-   # filepath: cfa/dataops/datasets/{team_dir}/schemas/{dataset_name}.py
-   import numpy as np
-   import pandas as pd
-   import pandera.pandas as pa
+```python title="cfa/dataops/datasets/{team_dir}/schemas/{dataset_name}.py"
+import numpy as np
+import pandas as pd
+import pandera.pandas as pa
 
-   # Define the schemas for validation
-   extract_schema = pa.DataFrameSchema({
-        "date": pa.Column(pd.DatetimeTZDtype(tz='UTC')),
-        "value": pa.Column(float, checks=pa.Check.greater_than(0)),
-        "category": pa.Column(str, checks=pa.Check.isin(['A', 'B', 'C']))
-   })
+# Define the schemas for validation
+extract_schema = pa.DataFrameSchema({
+    "date": pa.Column(pd.DatetimeTZDtype(tz='UTC')),
+    "value": pa.Column(float, checks=pa.Check.greater_than(0)),
+    "category": pa.Column(str, checks=pa.Check.isin(['A', 'B', 'C']))
+})
 
-   load_schema = pa.DataFrameSchema({
-        "date": pa.Column(pd.DatetimeTZDtype(tz='UTC')),
-        "normalized_value": pa.Column(float),
-        "category": pa.Column(str)
-   })
+load_schema = pa.DataFrameSchema({
+    "date": pa.Column(pd.DatetimeTZDtype(tz='UTC')),
+    "normalized_value": pa.Column(float),
+    "category": pa.Column(str)
+})
 
-   # Add synthetic data generation for testing
-   def raw_synthetic_data(n_rows: int = 100) -> pd.DataFrame:
-        return pd.DataFrame({
-             "date": pd.date_range(
-                   start="2023-01-01",
-                   periods=n_rows,
-                   tz='UTC'
-             ),
-             "value": np.random.uniform(1, 100, n_rows),
-             "category": np.random.choice(['A', 'B', 'C'], n_rows)
-        })
+# Add synthetic data generation for testing
+def raw_synthetic_data(n_rows: int = 100) -> pd.DataFrame:
+    return pd.DataFrame({
+            "date": pd.date_range(
+                start="2023-01-01",
+                periods=n_rows,
+                tz='UTC'
+            ),
+            "value": np.random.uniform(1, 100, n_rows),
+            "category": np.random.choice(['A', 'B', 'C'], n_rows)
+    })
 
-   # Validate synthetic data matches schema
-   if __name__ == "__main__":
-        test_df = generate_synthetic_data()
-        extract_schema.validate(test_df)
-   ```
+# Validate synthetic data matches schema
+if __name__ == "__main__":
+    test_df = generate_synthetic_data()
+    extract_schema.validate(test_df)
+```
 
-## Testing
+### Testing
 
 Create unit tests for your dataset:
 
-```python
-# filepath: tests/datasets/test_{dataset_name}.py
+```python title="tests/datasets/test_{dataset_name}.py"
 import pandas as pd
 import pandera.pandas as pa
 from pandera.errors import SchemaError
@@ -167,7 +181,7 @@ def test_{dataset_name}_transform():
     pass
 ```
 
-## Best Practices
+### Best Practices
 
 1. Use meaningful dataset and column names
 2. Include comprehensive schema validation
@@ -177,118 +191,32 @@ def test_{dataset_name}_transform():
 6. Add appropriate error handling
 7. Include logging where appropriate
 
-# Dataset User Guide
+## Workflows
 
-This guide explains how to access and use datasets in the CFA Scenarios DataOps system.
+This `cfa.dataops` repository contains a `workflows` module. The following workflows are currently available:
 
-## Available Datasets
+- `covid`
 
-To list all available datasets:
+Workflows can be run in a python virtual environment terminal where `cfa.dataops` is installed with the following format:
 
-```python
-from cfa.dataops.catalog import list_datasets
-
-available_datasets = list_datasets()
-print(available_datasets)
+```bash
+python3 -m cfa.dataops.workflows.<name>.<module> --<args>
 ```
 
-## Accessing Data
+### `covid` Workflow
 
-The primary way to access datasets is through the `get_data()` function:
+There are two modules to the `covid` workflow with the following optional command line arguments:
 
-```python
-from cfa.dataops import get_data
+- generate_data (this must be run before the next module)
+  - -p, --path: path to store generated data; default is covid/data. Not needed if -b flag is used.
+  - -b, --blob: whether to store generated data to Blob Storage (flag)
+- run:
+  - -c, --config: path to intialization config
+  - -b, --blob: whether to pull from and push prepped data to Blob Storage (flag)
 
-# Get latest transformed data as pandas DataFrame
-df = get_data("scenarios.covid19vax_trends")
+Ex:
 
-# Get raw data as polars DataFrame
-df = get_data(
-    name="scenarios.seroprevalence",
-    type="raw",
-    output="polars"
-)
-
-# Get specific version
-df = get_data(
-    name="scenarios.covid19vax_trends",
-    version="2025-06-03T17-56-50"
-)
+```bash
+python3 -m cfa.dataops.workflows.covid.generate_data -b
+python3 -m cfa.dataops.workflows.covid.run -b
 ```
-
-### Parameters
-
-- `name`: Dataset identifier (required)
-- `version`: Either 'latest' or specific version timestamp (default: 'latest')
-- `type`: Either 'raw' or 'transformed' (default: 'transformed')
-- `output`: Either 'pandas' or 'polars' DataFrame (default: 'pandas')
-
-## Working with Data
-
-### Data Versions
-
-Data is versioned using timestamps. Each version represents a snapshot of the data at that point in time.
-
-To get a specific version:
-
-```python
-df = get_data(
-    "scenarios.covid19vax_trends",
-    version="2025-06-03T17-56-50"
-)
-```
-
-### Data Validation
-
-All datasets have schema validation for both raw and transformed data. The schemas define:
-
-- Required columns
-- Data types
-- Valid value ranges/options
-- Required/optional fields
-
-## Examples
-
-### COVID-19 Vaccination Trends
-
-```python
-from cfa.dataops import get_data
-
-# Get latest transformed data
-vax_df = get_data("scenarios.covid19vax_trends")
-
-# Get raw data for analysis
-raw_vax = get_data(
-    "scenarios.covid19vax_trends",
-    type="raw"
-)
-```
-
-### Seroprevalence Data
-
-```python
-from cfa.dataops import get_data
-
-# Get as polars DataFrame
-sero_df = get_data(
-    "scenarios.seroprevalence",
-    output="polars"
-)
-```
-
-## Common Issues
-
-1. Dataset Not Found
-
-   - Verify dataset name using `list_datasets()`
-   - Check for typos in namespace path
-
-2. Version Not Found
-
-   - Use 'latest' to get most recent version
-   - Check available versions in Azure Blob Storage
-
-3. Schema Validation Errors
-   - Ensure data matches expected schema
-   - Check for missing required columns
-   - Verify data types are correct
