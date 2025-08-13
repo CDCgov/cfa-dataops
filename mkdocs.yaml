@@ -4,6 +4,7 @@ nav:
   - index.md
   - data_user_guide.md
   - data_developer_guide.md
+  - api.md
 
 repo_url: https://github.com/cdcgov/cfa-dataops
 repo_name: cfa-dataops
@@ -32,9 +33,8 @@ plugins:
       handlers:
         python:
           options:
-            extra:
-              show_root_heading: true
-              show_full_root_path: true
+            show_root_heading: true
+            show_full_root_path: true
   - search
 
 markdown_extensions:
