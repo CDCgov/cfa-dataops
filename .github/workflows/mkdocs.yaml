@@ -1,0 +1,47 @@
+name: mkdocs
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+env:
+  GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/mkdocs-build
+
+  deploy:
+    if: ${{ github.event_name == 'push' && github.ref_name == 'main' }}
+
+    runs-on: ubuntu-latest
+    needs: build
+
+    permissions:
+      contents: read
+      id-token: write
+      pages: write
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/mkdocs-build
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          name: github-pages
+          path: site
+          retention-days: "3"
+      - name: deploy to gh pages
+        uses: actions/deploy-pages@v4
+        with:
+          artifact_name: github-pages
+          preview: false
