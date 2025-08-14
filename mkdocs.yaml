@@ -1,0 +1,52 @@
+site_name: CFA DataOps
+
+nav:
+  - index.md
+  - data_user_guide.md
+  - data_developer_guide.md
+  - api.md
+
+repo_url: https://github.com/cdcgov/cfa-dataops
+repo_name: cfa-dataops
+
+# advanced configuration ------------------------------------------------------
+
+theme:
+  name: "material"
+  icon:
+    repo: fontawesome/brands/github
+  features:
+    - content.tooltips
+  palette:
+    # dark/light mode toggle
+    - scheme: default
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+
+plugins:
+  - mkdocstrings:
+      handlers:
+        python:
+          options:
+            show_root_heading: true
+            show_full_root_path: true
+  - search
+
+markdown_extensions:
+  - abbr
+  - attr_list
+  - admonition
+  - toc:
+      permalink: true
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.superfences
+  - mdx_truly_sane_lists

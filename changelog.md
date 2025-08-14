@@ -8,11 +8,20 @@ The versioning pattern is `YYYY.MM.DD.micro(a/b/{none if release})
 
 ---
 
-## [2025.08.14.0a]
+## [2025.08.14.1a]
 
 ### Fixes
 
 - Conditional coverage badge update only when pulling to main
+
+## [2025.08.14.0a]
+
+- Updates to documentation
+  - Reduced Getting Started material in `README.md`
+  - Migration information that was in `README.md` to the developer guide
+  - Removed duplicated user guide that was at the bottom of the developer guide
+- Add support for mkdocs
+  - Add CI to automatically serve/update the docs on GitHub Pages
 
 ## [2025.08.01.0a]
 
