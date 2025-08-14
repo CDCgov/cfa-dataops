@@ -6,8 +6,8 @@ on:
     branches: [main]
 
 jobs:
-  TestAndCoverageBadgeUpdate:
-    name: Test and Coverage Badge Update
+  tests:
+    name: pytest
     runs-on: ubuntu-latest
 
     steps:
@@ -19,7 +19,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: "3.10"
 
       - name: Install poetry
         run: |
@@ -29,6 +29,19 @@ jobs:
         run: |
           poetry install --no-root --with dev
           poetry run pytest
+  badge:
+    # only run on pushes to main
+    if: ${{ github.event_name == 'push' && github.ref_name == 'main' }}
+
+    name: update coverage badge
+    runs-on: ubuntu-latest
+
+    # requires the pytest job above
+    needs: tests
+
+    steps:
+      - name: Build badge
+        run: |
           poetry run coverage-badge -f -o docs/assets/badges/coverage.svg
           echo '<!-- timestamp: '"$(date '+%Y-%m-%d %H:%M:%S')"' -->' >> docs/assets/badges/coverage.svg
 
