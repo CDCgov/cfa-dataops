@@ -35,4 +35,3 @@ jobs:
         run: |
           poetry run coverage-badge -f -o docs/assets/badges/coverage.svg
           echo '<!-- timestamp: '"$(date '+%Y-%m-%d %H:%M:%S')"' -->' >> docs/assets/badges/coverage.svg
-
