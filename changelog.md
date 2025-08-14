@@ -8,6 +8,12 @@ The versioning pattern is `YYYY.MM.DD.micro(a/b/{none if release})
 
 ---
 
+## [2025.08.14.2a]
+
+### Fixes
+
+- Iteration on last update since main is the default branch only neads to push to HEAD (not HEAD:<branch>)
+
 ## [2025.08.14.1a]
 
 ### Fixes
