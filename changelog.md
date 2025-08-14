@@ -12,7 +12,7 @@ The versioning pattern is `YYYY.MM.DD.micro(a/b/{none if release})
 
 ### Fixes
 
-- Iteration on last update since main is the default branch only neads to push to HEAD (not HEAD:<branch>)
+- Iteration on last update since main is the default branch only needs to push to HEAD (not HEAD:<branch>)
 - Changing condition to on pull_request closure instead of push to main
 
 ## [2025.08.14.1a]
