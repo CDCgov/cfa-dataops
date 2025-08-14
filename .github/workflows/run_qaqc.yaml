@@ -29,23 +29,15 @@ jobs:
         run: |
           poetry install --no-root --with dev
           poetry run pytest
-  badge:
-    # only run on pushes to main
-    if: ${{ github.event_name == 'push' && github.ref_name == 'main' }}
 
-    name: update coverage badge
-    runs-on: ubuntu-latest
-
-    # requires the pytest job above
-    needs: tests
-
-    steps:
       - name: Build badge
+        if: ${{ github.event_name == 'push' && github.ref_name == 'main' }}
         run: |
           poetry run coverage-badge -f -o docs/assets/badges/coverage.svg
           echo '<!-- timestamp: '"$(date '+%Y-%m-%d %H:%M:%S')"' -->' >> docs/assets/badges/coverage.svg
 
       - name: Check-in Coverage Badge
+        if: ${{ github.event_name == 'push' && github.ref_name == 'main' }}
         run: |
           if [ -z "${{ github.head_ref }}" ];
           then
