@@ -8,6 +8,12 @@ The versioning pattern is `YYYY.MM.DD.micro(a/b/{none if release})
 
 ---
 
+## [2025.08.14.0a]
+
+### Fixes
+
+- Conditional coverage badge update only when pulling to main
+
 ## [2025.08.01.0a]
 
 ### Fixes
