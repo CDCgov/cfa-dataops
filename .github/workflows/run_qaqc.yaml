@@ -32,7 +32,7 @@ jobs:
           poetry run pytest
 
       - name: Build badge
-        if: ${{ github.event_name == 'pull_request' && github.event.pull_request.types == 'synchronize'}}
+        if: ${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' }}
         run: |
           poetry run coverage-badge -f -o docs/assets/badges/coverage.svg
           echo '<!-- timestamp: '"$(date '+%Y-%m-%d %H:%M:%S')"' -->' >> docs/assets/badges/coverage.svg
