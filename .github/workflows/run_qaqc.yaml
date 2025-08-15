@@ -2,7 +2,6 @@ name: qaqc
 
 on:
   pull_request:
-    types: [opened, reopened, synchronize, closed]
   push:
     branches: [main]
 
@@ -32,7 +31,7 @@ jobs:
           poetry run pytest
 
       - name: Build badge
-        if: ${{ github.event_name == 'pull_request' && github.envent.pull_request.type == 'closed' }}
+        if: ${{ github.event.pull_request.merged == true }}
         run: |
           poetry run coverage-badge -f -o docs/assets/badges/coverage.svg
           echo '<!-- timestamp: '"$(date '+%Y-%m-%d %H:%M:%S')"' -->' >> docs/assets/badges/coverage.svg
@@ -40,4 +39,8 @@ jobs:
           git config user.email "${{ github.actor }}@users.noreply.github.com"
           git add docs/assets/badges/coverage.svg
           git commit -m "Updated coverage badge"
-          git push origin HEAD
+          if [ -z "${{ github.head_ref }}" ]; then
+            git push origin main
+          else
+            git push origin HEAD:${{ github.head_ref }}
+          fi

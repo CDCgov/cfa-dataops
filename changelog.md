@@ -8,6 +8,12 @@ The versioning pattern is `YYYY.MM.DD.micro(a/b/{none if release})
 
 ---
 
+## [2025.08.15.0a]
+
+## Fixes
+
+- Typo in QAQC github workflow and testing operation
+
 ## [2025.08.14.2a]
 
 ### Fixes
