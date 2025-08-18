@@ -179,5 +179,26 @@ def get_report_catalog() -> SimpleNamespace:
 
     Returns:
         SimpleNamespace: The report catalog.
+
+    example:
+
+        >>> reportcat = get_report_catalog()
+        >>> reportcat.examples.basics_ipynb.print_params()
+        {'intercept': {'default': '0.5',
+                       'help': 'y-intercept of the line',
+                       'inferred_type_name': 'float',
+                       'name': 'intercept'},
+         'slope': {'default': '1.2',
+                   'help': 'adding help text can be achieved with in-line comments',
+                   'inferred_type_name': 'float',
+                   'name': 'slope'},
+         'step_size': {'default': '0.5',
+                       'help': 'step size for generating x values',
+                       'inferred_type_name': 'float',
+                       'name': 'step_size'},
+         'x_range': {'default': '(-5, 5)',
+                     'help': 'range of x values to consider',
+                     'inferred_type_name': 'tuple',
+                     'name': 'x_range'}}
     """
     return report_dict_to_sn(report_ns_map)
