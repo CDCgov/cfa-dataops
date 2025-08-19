@@ -36,7 +36,8 @@ def test_catalog(data_dir):
 
     # Test saving to HTML file
     html_out_path = os.path.join(data_dir, "test_output.html")
-    example_report.nb_to_html_file(html_out_path)
+    example_report.nb_to_html_file(html_out_path, nb_title="Test Report 1234")
     with open(html_out_path, "r") as f:
         saved_content = f.read()
         assert "Basic Notebook Example" in saved_content
+        assert "Test Report 1234" in saved_content

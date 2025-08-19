@@ -14,6 +14,7 @@ The versioning pattern is `YYYY.MM.DD.micro(a/b/{none if release})
 
 - Documentation for the reporting functionality
 - Tests for reporting functionality
+- Ability to create custom notebook metadata title/HTML title for report
 
 ## [2025.08.15.0a]
 
