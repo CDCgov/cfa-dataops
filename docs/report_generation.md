@@ -90,6 +90,6 @@ dataset_namespace: str = "scenarios.covid19vax_trends"  # help string
 
 ## Screenshot Example of a Report
 
-Below is a screenshot fo the basics report highlighting just a few of the things you can do with this reporting functionality. In addition to the myriad of jupyter compatible libraries that embed JavaScript (like ITables), authoring new functionality is also pretty simple, using `IPython.display` submodule, to author all sorts of addons that can be included in reports (e.g., a floating table of contents, or a temporary annotation layer).
+Below is a screenshot for the basics report highlighting just a few of the things you can do with this reporting functionality. In addition to the myriad of jupyter compatible libraries that embed JavaScript (like ITables), authoring new functionality is also pretty simple, using `IPython.display` submodule, to author all sorts of add-ons that can be included in reports (e.g., a floating table of contents, or a temporary annotation layer).
 
 ![Simple report example](assets/annotated_report_example.png)
