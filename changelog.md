@@ -8,9 +8,17 @@ The versioning pattern is `YYYY.MM.DD.micro(a/b/{none if release})
 
 ---
 
+## [2025.08.18.0a]
+
+### Added
+
+- Documentation for the reporting functionality
+- Tests for reporting functionality
+- Ability to create custom notebook metadata title/HTML title for report
+
 ## [2025.08.15.0a]
 
-## Fixes
+### Fixes
 
 - Typo in QAQC github workflow and testing operation
 

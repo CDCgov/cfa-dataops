@@ -3,8 +3,9 @@ import os
 from pprint import pprint
 from tempfile import TemporaryDirectory
 from types import SimpleNamespace
-from typing import Any
+from typing import Any, Optional
 
+import nbformat
 import papermill as pm
 from cfa_azure.blob_helpers import write_blob_stream
 from nbconvert import HTMLExporter
@@ -49,6 +50,26 @@ for rp_i in _report_paths:
         current[ns_list[-1]] = rp_i
 
 
+def retitle_notebook(nb_loc: str, new_title: str) -> None:
+    """
+    Retitle a notebook by replacing the title in the first cell.
+
+    Args:
+        nb_loc (str): The path to the notebook file.
+        new_title (str): The new title to set for the notebook.
+    """
+    assert os.path.exists(nb_loc), f"Notebook {nb_loc} does not exist."
+    assert nb_loc.endswith(".ipynb"), "Notebook must be a .ipynb file."
+
+    with open(nb_loc, "r", encoding="utf-8") as f:
+        notebook = nbformat.read(f, as_version=4)
+
+    notebook.metadata["title"] = new_title
+
+    with open(nb_loc, "w", encoding="utf-8") as f:
+        nbformat.write(notebook, f)
+
+
 def nb_to_html(nb_path: str) -> str:
     """Convert the executed notebook to HTML format.
 
@@ -86,7 +107,7 @@ class NotebookEndpoint:
         """Pretty print the parameters of the notebook."""
         pprint(self.get_params())
 
-    def nb_to_html_str(self, **kwargs) -> str:
+    def nb_to_html_str(self, nb_title: Optional[str] = None, **kwargs) -> str:
         """Convert the notebook to HTML format and optionally save it to a file.
 
         Args:
@@ -104,11 +125,15 @@ class NotebookEndpoint:
                 parameters=kwargs,
                 progress_bar=True,
             )
+            if nb_title:
+                retitle_notebook(out_file_path, nb_title)
             html_content = nb_to_html(out_file_path)
 
         return html_content
 
-    def nb_to_html_file(self, html_out_path: str, **kwargs) -> None:
+    def nb_to_html_file(
+        self, html_out_path: str, nb_title: Optional[str] = None, **kwargs
+    ) -> None:
         """Convert the notebook to HTML format.
 
         Args:
@@ -120,14 +145,19 @@ class NotebookEndpoint:
         assert html_out_path.endswith(
             ".html"
         ), "Output path must end with .html"
-        html_content = self.nb_to_html_str(**kwargs)
+        html_content = self.nb_to_html_str(nb_title=nb_title, **kwargs)
         os.makedirs(os.path.dirname(html_out_path), exist_ok=True)
-        with open(html_out_path, "w") as f:
+        with open(html_out_path, "w", encoding="utf-8") as f:
             f.write(html_content)
         print(f"HTML report saved to {os.path.abspath(html_out_path)}")
 
     def nb_to_html_blob(
-        self, blob_account: str, blob_container: str, blob_path: str, **kwargs
+        self,
+        blob_account: str,
+        blob_container: str,
+        blob_path: str,
+        nb_title: Optional[str] = None,
+        **kwargs,
     ) -> None:
         """Convert the notebook to HTML format save to blob storage.
 
@@ -138,7 +168,7 @@ class NotebookEndpoint:
             None, saves the HTML content to a blob storage.
         """
         assert blob_path.endswith(".html"), "Output path must end with .html"
-        html_content = self.nb_to_html_str(**kwargs)
+        html_content = self.nb_to_html_str(nb_title=nb_title, **kwargs)
         write_blob_stream(
             account_name=blob_account,
             container_name=blob_container,
@@ -179,5 +209,26 @@ def get_report_catalog() -> SimpleNamespace:
 
     Returns:
         SimpleNamespace: The report catalog.
+
+    example:
+
+        >>> reportcat = get_report_catalog()
+        >>> reportcat.examples.basics_ipynb.print_params()
+        {'intercept': {'default': '0.5',
+                       'help': 'y-intercept of the line',
+                       'inferred_type_name': 'float',
+                       'name': 'intercept'},
+         'slope': {'default': '1.2',
+                   'help': 'adding help text can be achieved with in-line comments',
+                   'inferred_type_name': 'float',
+                   'name': 'slope'},
+         'step_size': {'default': '0.5',
+                       'help': 'step size for generating x values',
+                       'inferred_type_name': 'float',
+                       'name': 'step_size'},
+         'x_range': {'default': '(-5, 5)',
+                     'help': 'range of x values to consider',
+                     'inferred_type_name': 'tuple',
+                     'name': 'x_range'}}
     """
     return report_dict_to_sn(report_ns_map)
