@@ -8,6 +8,18 @@ The versioning pattern is `YYYY.MM.DD.micro(a/b/{none if release})
 
 ---
 
+## [2025.08.21.0a]
+
+### Added
+
+- Release presentation
+
+### Updated
+
+- Documentation pointers
+- Coverage badge step to only update main branch
+- tagging workflow to only attempt tag if the tag doesn't already exist
+
 ## [2025.08.18.0a]
 
 ### Added
