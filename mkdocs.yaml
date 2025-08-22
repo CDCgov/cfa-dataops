@@ -4,6 +4,7 @@ nav:
   - index.md
   - data_user_guide.md
   - data_developer_guide.md
+  - report_generation.md
   - api.md
 
 repo_url: https://github.com/cdcgov/cfa-dataops

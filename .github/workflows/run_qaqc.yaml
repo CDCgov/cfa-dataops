@@ -40,8 +40,4 @@ jobs:
           git config user.email "${{ github.actor }}@users.noreply.github.com"
           git add docs/assets/badges/coverage.svg
           git commit -m "Updated coverage badge"
-          if [ -z "${{ github.head_ref }}" ]; then
-            git push origin main
-          else
-            git push origin HEAD:${{ github.head_ref }}
-          fi
+          git push origin main
