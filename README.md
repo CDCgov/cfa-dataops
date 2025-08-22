@@ -1,7 +1,5 @@
 # CFA DataOps
 
-![](docs/assets/badges/coverage.svg)
-
 ## Overview
 
 This project provides data tools and low friction access to versioned datasets within CDC's Center for Forecasting and Outbreak Analytics (CFA) virtual private cloud (VPC). It includes end-to-end ETL pipelines for configured data sources, custom workflows, schema validation patterns, and submodules that expand common data visualization and modeling/interpolation patterns. The project demonstrates best practices for data processing within the CFA environment.
