@@ -4,4 +4,3 @@
 - [Data Developer Guide](data_developer_guide.md)
 - [Report Generation](report_generation.md)
 - [API reference](api.md)
-- [Release Presentations](release_presentations.md)
