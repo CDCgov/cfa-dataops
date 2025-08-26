@@ -2,7 +2,6 @@ name: qaqc
 
 on:
   pull_request:
-    types: [opened, synchronize, reopened, closed]
   push:
     branches: [main]
 
@@ -31,13 +30,13 @@ jobs:
           poetry install --no-root --with dev
           poetry run pytest
 
-      - name: Build badge
-        if: ${{ github.event.pull_request.merged == true }}
-        run: |
-          poetry run coverage-badge -f -o docs/assets/badges/coverage.svg
-          echo '<!-- timestamp: '"$(date '+%Y-%m-%d %H:%M:%S')"' -->' >> docs/assets/badges/coverage.svg
-          git config user.name "${{ github.actor }}"
-          git config user.email "${{ github.actor }}@users.noreply.github.com"
-          git add docs/assets/badges/coverage.svg
-          git commit -m "Updated coverage badge"
-          git push origin main
+      # - name: Build badge
+      #   if: ${{ github.event.pull_request.merged == true }}
+      #   run: |
+      #     poetry run coverage-badge -f -o docs/assets/badges/coverage.svg
+      #     echo '<!-- timestamp: '"$(date '+%Y-%m-%d %H:%M:%S')"' -->' >> docs/assets/badges/coverage.svg
+      #     git config user.name "${{ github.actor }}"
+      #     git config user.email "${{ github.actor }}@users.noreply.github.com"
+      #     git add docs/assets/badges/coverage.svg
+      #     git commit -m "Updated coverage badge"
+      #     git push origin main
