@@ -29,9 +29,19 @@ jobs:
 
       - name: Create Tag
         run: |
-          if [[ -z $(git tag -l "$VERSION") ]]; then
-            git config user.name "${{ github.actor }}"
-            git config user.email "${{ github.actor }}@users.noreply.github.com"
-            git tag "$VERSION"
-            git push origin "$VERSION"
-          fi
+            # Fetch all tags to ensure we have the latest tag information
+            git fetch --tags
+
+            if [[ -z $(git tag -l "$VERSION") ]]; then
+              echo "Creating new tag: $VERSION"
+              git config user.name "${{ github.actor }}"
+              git config user.email "${{ github.actor }}@users.noreply.github.com"
+              git tag -a "$VERSION" -m "Release version $VERSION"
+              git push origin "$VERSION" || echo "Failed to push tag, it might already exist"
+            else
+              echo "Tag $VERSION already exists. Skipping tag creation."
+            fi
+
+            # List all tags for verification
+            echo "Current tags:"
+            git tag --list
