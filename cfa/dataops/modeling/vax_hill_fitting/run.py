@@ -11,7 +11,9 @@ from cfa.dataops.modeling.vax_hill_fitting.funcs import (
 
 def run(scenario, state, output, input_dir, output_dir, final_vax_date):
     # read and process source data
-    covid_vax_2324 = get_data("covid_rd18_vax_curves", type="transformed")
+    covid_vax_2324 = get_data(
+        "scenarios.covid_rd18_vax_curves", type="transformed"
+    )
     covid_vax_2324 = utils.format_vax_2324(covid_vax_2324)
     print(covid_vax_2324.head())
     scenario = scenario.lower()
