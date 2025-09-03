@@ -7,9 +7,10 @@ from typing import Any, Optional
 
 import nbformat
 import papermill as pm
-from cfa_azure.blob_helpers import write_blob_stream
 from nbconvert import HTMLExporter
 from traitlets.config import Config
+
+from cfa.cloudops.blob_helpers import write_blob_stream
 
 _here_dir = os.path.split(os.path.abspath(__file__))[0]
 _report_paths = glob.glob(

@@ -2,7 +2,7 @@ import json
 from fnmatch import fnmatch
 from typing import Optional
 
-from cfa_azure.blob_helpers import read_blob_stream, walk_blobs_in_container
+from cfa.cloudops.blob_helpers import read_blob_stream, walk_blobs_in_container
 
 
 def get_blob_tree(

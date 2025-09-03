@@ -9,7 +9,8 @@ from typing import Any, List
 import pandas as pd
 import polars as pl
 import tomli
-from cfa_azure.blob_helpers import (
+
+from cfa.cloudops.blob_helpers import (
     read_blob_stream,
     walk_blobs_in_container,
     write_blob_stream,
