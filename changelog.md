@@ -8,6 +8,12 @@ The versioning pattern is `YYYY.MM.DD.micro(a/b/{none if release})
 
 ---
 
+## [2025.09.03.0a]
+
+### Updated
+
+- Swapped `cfa_azure` for `cfa-cloudops`
+
 ## [2025.08.21.0a]
 
 ### Added
