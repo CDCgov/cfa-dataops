@@ -63,33 +63,6 @@ def get_fs_ns_map(
                 else:
                     current[ep] = p_i
             else:
-                current[ns_list[-1][: len(file_ext) + 1]] = p_i
+                current[ns_list[-1][: -(len(file_ext) + 1)]] = p_i
 
     return fs_map
-
-
-def get_all_catalogs() -> list:
-    """Get a list of all available dataops catalogs.
-
-    Returns:
-        list[tuple]: A list of catalog names and paths.
-    """
-    import importlib
-    import pkgutil
-
-    from cfa.dataops import __catalog_namespace__
-
-    catalogs = []
-    try:
-        catalog_pkg = importlib.import_module(__catalog_namespace__)
-        for module_finder, modname, ispkg in pkgutil.iter_modules(
-            catalog_pkg.__path__
-        ):
-            if ispkg:
-                catalogs.append((modname, module_finder.path))
-    except ModuleNotFoundError as e:
-        raise ModuleNotFoundError(
-            f"No catalogs exist in namespace {__catalog_namespace__}"
-        ) from e
-
-    return catalogs
