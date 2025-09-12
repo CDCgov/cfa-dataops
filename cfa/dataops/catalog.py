@@ -2,6 +2,7 @@
 
 import glob
 import os
+from importlib import import_module
 from io import BytesIO
 from types import SimpleNamespace
 from typing import Any, List
@@ -16,7 +17,26 @@ from cfa.cloudops.blob_helpers import (
     write_blob_stream,
 )
 
+from . import get_all_catalogs
 from .config_validator import validate_dataset_config, verify_no_repeats
+
+all_catalogs = get_all_catalogs()
+
+all_dataset_ns_map = {}
+all_reports_ns_map = {}
+all_defaults = {}
+for cns, cat_name, cat_path in all_catalogs:
+    dataset_mod = import_module(f"{cns}.{cat_name}.datasets")
+    report_mod = import_module(f"{cns}.{cat_name}.reports")
+    all_dataset_ns_map.update(dataset_mod.dataset_ns_map)
+    all_reports_ns_map.update(report_mod.report_ns_map)
+    with open(
+        os.path.join(cat_path, cat_name, "catalog_defaults.toml"), "rb"
+    ) as f:
+        defaults = tomli.load(f)
+    for k in dataset_mod.dataset_ns_map.keys():
+        all_defaults.update({k: defaults})
+
 
 _here_dir = os.path.split(os.path.abspath(__file__))[0]
 _dataset_config_paths = glob.glob(
@@ -45,6 +65,39 @@ for cp_i in _dataset_config_paths:
             )
 
 verify_no_repeats(name_paths)
+
+
+class DatasetEndpoint:
+    """The DatasetEndpoint class for including in the datasets namespace"""
+
+    def __init__(self, config_path: str, defaults: dict):
+        """Basic functionality to interact with datasets to be included
+        via the datasets configs.
+
+        Args:
+            config_path (str): the path to the dataset config
+            defaults (dict): the default configuration values
+        """
+        self.config_path = config_path
+        self.defaults = defaults
+        with open(config_path, "rb") as f:
+            self.config = tomli.load(f)
+        for k, v in self.config.items():
+            if k in ["load", "extract"] or k.startswith("stage"):
+                account = v.get("account", "")
+                container = v.get("container", "")
+                if account == "":
+                    account = self.defaults["storage"]["account"]
+                if container == "":
+                    container = self.defaults["storage"]["container"]
+                self.__setattr__(
+                    k,
+                    BlobEndpoint(
+                        account=account,
+                        container=container,
+                        prefix=v["prefix"],
+                    ),
+                )
 
 
 class BlobEndpoint:
@@ -154,7 +207,7 @@ class BlobEndpoint:
         )
 
 
-def dict_to_sn(d: Any) -> SimpleNamespace:
+def dict_to_sn(d: Any, defaults: dict = None) -> SimpleNamespace:
     """Simple recursive namespace construction
 
     Args:
@@ -168,15 +221,11 @@ def dict_to_sn(d: Any) -> SimpleNamespace:
         setattr(
             x,
             k,
-            BlobEndpoint(
-                account=v["account"],
-                container=v["container"],
-                prefix=v["prefix"],
-            )
-            if isinstance(v, dict) and k in ["extract", "load"]
-            else dict_to_sn(v)
+            DatasetEndpoint(v, defaults)
+            if isinstance(v, str) and v.endswith(".toml")
+            else dict_to_sn(v, defaults)
             if isinstance(v, dict)
-            else [dict_to_sn(e) for e in v]
+            else [dict_to_sn(e, defaults) for e in v]
             if isinstance(v, list)
             else v,
         )
@@ -185,7 +234,11 @@ def dict_to_sn(d: Any) -> SimpleNamespace:
     return x
 
 
-datacat = dict_to_sn(dataset_configs)
+dc = []
+for k in all_dataset_ns_map.keys():
+    dc.append(dict_to_sn({k: all_dataset_ns_map[k]}, all_defaults.get(k, {})))
+combined_dict = {key: value for ns in dc for key, value in vars(ns).items()}
+datacat = SimpleNamespace(**combined_dict)
 
 
 def get_data(
