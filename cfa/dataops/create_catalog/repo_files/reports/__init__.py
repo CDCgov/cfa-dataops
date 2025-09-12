@@ -8,7 +8,7 @@ from .. import _catalog_ns
 
 _here = path.abspath(path.dirname(__file__))
 
-dataset_ns_map = {
+report_ns_map = {
     _catalog_ns: get_fs_ns_map(
         base_dir=_here,
         file_ext="ipynb",

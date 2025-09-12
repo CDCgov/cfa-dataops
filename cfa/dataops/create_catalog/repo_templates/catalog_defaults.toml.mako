@@ -1,7 +1,7 @@
 [storage]
 
-account = ""
-container = ""
+account = "cfadatalakeprd"
+container = "cfapredict"
 
 [access_ledger]
 

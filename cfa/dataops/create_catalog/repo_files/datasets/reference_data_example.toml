@@ -1,0 +1,43 @@
+# This is an example dataset configuration file for the dataops create_catalog tool.
+# It is designed to represent the data provenance of reference data that can be used
+# on multiple projects. Reference data is typically static or changes infrequently.
+# Thus, it is not necessary to store the raw extracted data, only the transformed
+
+############################################################################
+
+[properties]
+# The name field is the only required field here. Though other
+# files can be accessed in the datacat by key/name.
+
+name = "US_census_population_2023"
+automate = false
+transform_template = "{location for any sql applied to reference data}"
+schema = "{namespace for schema}"
+type = "reference"
+
+############################################################################
+
+[source]
+# These source fields are open to being changed based on the source type
+# and api requirements. This example uses a Socrata data source
+# which is common for CDC data sources.
+
+uid = "ACSST1Y2023.S0101"
+url = "https://api.census.gov/data/2023/acs/acs1/subject?get=group(S0101)&ucgid=pseudo(0100000US$0400000)"
+
+############################################################################
+
+[load]
+# These are the details of where to store the reference data.
+# If not included or given an empty string, the defaults in the
+# catalog_defaults.toml will be used
+
+account = "" # use default
+container = "" # use default
+prefix = "dataops/{group_user_or_repo_name}/reference/{dataset_name}"
+
+############################################################################
+
+# Changelog
+# ---------
+# 2025-09-08: Initial version created by Phil Rogers
