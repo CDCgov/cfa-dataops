@@ -82,7 +82,7 @@ class ConfigValidator(BaseModel):
 
     model_config = ConfigDict(extra="allow")
     properties: PropertiesValidation
-    load: StorageEndpointValidation
+    load: Optional[StorageEndpointValidation] = None
     source: Optional[SourceValidation] = None
     extract: Optional[StorageEndpointValidation] = None
 
