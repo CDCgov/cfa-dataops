@@ -1,73 +1,104 @@
 """The dataset config validator."""
 
-from collections import Counter
-from typing import List
+from enum import Enum
+from typing import List, Optional
+
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    ValidationError,
+    model_validator,
+)
 
 
-def validate_dataset_config(config: dict) -> None:
-    """Dataset config validator
+class DatasetType(str, Enum):
+    """Dataset types."""
 
-    Args:
-        config (dict): A dictionary created once loading the toml config file.
-
-    Raises:
-        KeyError: when toml config is missing keys
-        AssertionError: when the property "name" is not formatted in such a way
-            that it can be used as an object property/attribute
-        AttributeError: if there is no property name
-    """
-    match [*config.keys()]:
-        case ["properties", "source", "extract", "load", "_metadata"]:
-            # _metadata is added by config path loading to pass useful
-            # debugging information
-            pass
-        case _:
-            print([*config.keys()])
-            raise KeyError(
-                f'The config {config["_metadata"]["filename"]} is missing '
-                'keys. It should have exactly 4 keys: "properties", "source", '
-                '"extract", and "load"'
-            )
-    for blob_field in ["extract", "load"]:
-        match [*config[f"{blob_field}"].keys()]:
-            case ["account", "container", "prefix"]:
-                pass
-            case _:
-                raise KeyError(
-                    f'"{blob_field}" key in{config["_metadata"]["filename"]} is missing '
-                    'keys. It should have exactly 3 keys: "account", "container", '
-                    'and "prefix"'
-                )
-    try:
-        assert config["properties"].get("name").replace("_", "").isalnum()
-        assert config["properties"].get("name").islower()
-        assert config["properties"].get("name") not in ["extract", "load"]
-    except AssertionError as exc:
-        raise AssertionError(
-            f'The property name in {config["_metadata"]["filename"]} '
-            'must be lowercase alphanumeric with only underscores "_" '
-            'used to indicate whitespace.'
-        ) from exc
-    except AttributeError as exc:
-        raise AttributeError(
-            f'Config {config["_metadata"]["filename"]} lacks a properties '
-            'name.'
-        ) from exc
+    etl = "etl"
+    experiment = "experiment"
+    multistage = "multistage"
+    reference = "reference"
 
 
-def verify_no_repeats(configs: List[dict]) -> None:
-    """To make sure no config names repeat.
+class PropertiesValidation(BaseModel):
+    """Validate the properties field."""
 
-    Args:
-        configs (List[dict]): All the configs.
+    model_config = ConfigDict(extra="allow")
+    name: str = Field(
+        ...,
+        description="The name of the dataset.",
+        min_length=1,
+    )
+    type: DatasetType = Field(
+        ...,
+        description="The type of the dataset.",
+    )
+    schemas: Optional[str] = Field(
+        None,
+        description="the relative path to where the data schema(s) are defined.",
+        min_length=1,
+    )
+    transform_templates: Optional[List[str]] = Field(
+        None,
+        description="A list of transform templates to applied to raw data.",
+        min_items=1,
+    )
+    automate: Optional[bool] = Field(
+        False,
+        description="Whether to automate workflows that cache raw data and transform it.",
+    )
 
-    Raises:
-        AttributeError: When the names repeat.
-    """
-    name_counts = Counter(configs)
-    repeats = [k for k, v in name_counts.items() if v > 1]
-    if repeats:
-        raise AttributeError(
-            "More than one config shares a the same name. Here are the repeats: "
-            f"{', '.join(repeats)}"
-        )
+
+class SourceValidation(BaseModel):
+    """Validate the source field. This field is meant to be very open ended."""
+
+    model_config = ConfigDict(extra="allow")
+
+
+class StorageEndpointValidation(BaseModel):
+    """Validate the storage endpoint field. This field is meant to be very open ended."""
+
+    model_config = ConfigDict(extra="forbid")
+    account: str = Field(
+        ...,
+        description="the account name for the storage endpoint.",
+        min_length=1,
+    )
+    container: str = Field(
+        ...,
+        description="the container name for the storage endpoint.",
+        min_length=1,
+    )
+    prefix: str = Field(
+        ...,
+        description="the prefix (folder path) for the storage endpoint. A sub-directory within the this path will be created for each version/timestamped dataset.",
+        min_length=1,
+    )
+
+
+class ConfigValidator(BaseModel):
+    """Validate the dataset configuration."""
+
+    model_config = ConfigDict(extra="allow")
+    properties: PropertiesValidation
+    load: StorageEndpointValidation
+    source: Optional[SourceValidation] = None
+    extract: Optional[StorageEndpointValidation] = None
+
+    # Any stage_xx field will be validated dynamically; no need for explicit field or nesting.
+    @classmethod
+    def validate_stage_fields(cls, values):
+        # ValidationError already imported at top
+        for key, value in values.items():
+            if key.startswith("stage_") and value is not None:
+                if not isinstance(value, StorageEndpointValidation):
+                    try:
+                        values[key] = StorageEndpointValidation(**value)
+                    except Exception as e:
+                        raise ValidationError(
+                            [e], StorageEndpointValidation
+                        ) from e
+        return values
+
+    _validate_stages = model_validator(mode="before")(validate_stage_fields)
