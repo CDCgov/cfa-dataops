@@ -66,3 +66,23 @@ def get_fs_ns_map(
                 current[ns_list[-1][: -(len(file_ext) + 1)]] = p_i
 
     return fs_map
+
+
+def get_dataset_dot_path(endpoint_map: dict) -> list[str]:
+    """Get the dataset config path from the dataset name
+
+    Args:
+        endpoint_map (dict): the dataset endpoint map
+    Returns:
+        list[str]: list of dataset names
+    """
+    paths = []
+    for k, v in endpoint_map.items():
+        if isinstance(v, str) and (
+            v.endswith(".toml") or v.endswith(".ipynb")
+        ):
+            paths.append(k)
+        elif isinstance(v, dict):
+            for i in get_dataset_dot_path(v):
+                paths.append(f"{k}.{i}")
+    return paths
