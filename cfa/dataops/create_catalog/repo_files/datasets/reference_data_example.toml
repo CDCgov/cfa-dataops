@@ -11,8 +11,8 @@
 
 name = "US_census_population_2023"
 automate = false
-transform_template = "{location for any sql applied to reference data}"
-schema = "{namespace for schema}"
+transform_templates = ["{location for any sql applied to reference data}"]
+schemas = "{path file containing any dataframe schema definitions}"
 type = "reference"
 
 ############################################################################

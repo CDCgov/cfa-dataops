@@ -16,10 +16,10 @@
 # The name field is the only required field here. Though other
 # files can be accessed in the datacat by key/name.
 
-name = "{python_compatible_name}"
+name = "etl_eg"
 automate = false
-transform_template = "{location for any sql applied to reference data}"
-schema = "{namespace for schema}"
+transform_templates = ["{location for any sql applied to reference data}"]
+schemas = "{path file containing any dataframe schema definitions}"
 type = "etl"
 
 ############################################################################
