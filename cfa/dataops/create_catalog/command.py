@@ -7,7 +7,8 @@ import sys
 
 from mako.lookup import TemplateLookup
 
-from .. import __catalog_namespace__, __version__
+from .. import __version__
+from ..catalog import cns as catalog_namespace
 
 _here_dir = os.path.split(os.path.abspath(__file__))[0]
 template_dirs = [os.path.join(_here_dir, "repo_templates")]
@@ -23,7 +24,7 @@ def main():
     parser.add_argument(
         "unique_name",
         type=str,
-        help=f"Unique module name to append to the catalog namespace ({__catalog_namespace__}.<unique_name>).",
+        help=f"Unique module name to append to the catalog namespace ({catalog_namespace}.<unique_name>).",
     )
     parser.add_argument(
         "location",
@@ -48,7 +49,7 @@ def main():
 
     while namespace_ok.lower() not in ["y", "n"]:
         namespace_ok = input(
-            f"This will create a new dataops catalog module named {__catalog_namespace__}.{unique_name}. Continue? (y/n) "
+            f"This will create a new dataops catalog module named {catalog_namespace}.{unique_name}. Continue? (y/n) "
         )
 
     if namespace_ok.lower() != "y":
@@ -61,7 +62,7 @@ def main():
         os.makedirs(location)
         print(f"Creating directory {location}")
         library_modules_root = os.path.join(
-            location, *__catalog_namespace__.split("."), unique_name
+            location, *catalog_namespace.split("."), unique_name
         )
         os.makedirs(library_modules_root)
 
@@ -91,7 +92,7 @@ def main():
             f.write(
                 template.render(
                     lib_module_dir=os.path.join(
-                        *__catalog_namespace__.split("."), unique_name
+                        *catalog_namespace.split("."), unique_name
                     ),
                 )
             )
@@ -101,7 +102,7 @@ def main():
             f.write(
                 template.render(
                     unique_name=unique_name,
-                    catalog_namespace=__catalog_namespace__,
+                    catalog_namespace=catalog_namespace,
                 )
             )
 
@@ -131,6 +132,8 @@ def main():
             "DISCLAIMER.md",
             "LICENSE",
             "ruff.toml",
+            ".gitattributes",
+            ".github/",
         ]:
             shutil.copy(
                 os.path.join(repo_files_dirs, "_cfa_only", copy_i),
@@ -138,7 +141,7 @@ def main():
             )
 
     print(
-        f"Created dataops catalog module {__catalog_namespace__}.{unique_name} at {location}"
+        f"Created dataops catalog module {catalog_namespace}.{unique_name} at {location}"
         ". You can now 'cd' to this directory and run 'pip install -e .[dev]' to install the library in editable mode."
     )
 
