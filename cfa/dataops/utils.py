@@ -1,7 +1,9 @@
 """Utility functions for data operations."""
 
+import getpass
 import glob
 import os
+from datetime import datetime
 from typing import Optional
 
 
@@ -86,3 +88,24 @@ def get_dataset_dot_path(endpoint_map: dict) -> list[str]:
             for i in get_dataset_dot_path(v):
                 paths.append(f"{k}.{i}")
     return paths
+
+
+def get_timestamp() -> str:
+    """For getting standard datetime timestamp format
+
+    Returns:
+        str:datetime string
+    """
+    return datetime.now().strftime("%Y-%m-%dT%H-%M-%S")
+
+
+def get_user() -> str:
+    """Get the current system user
+
+    Returns:
+        str: the current system user
+    """
+    try:
+        return getpass.getuser()
+    except Exception:
+        return "unknown_user"

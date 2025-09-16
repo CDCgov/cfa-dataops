@@ -1,5 +1,6 @@
 """building a validated datasource namespace"""
 
+import json
 import os
 import pkgutil
 from configparser import ConfigParser
@@ -7,6 +8,7 @@ from importlib import import_module
 from io import BytesIO
 from types import SimpleNamespace
 from typing import Any, List
+from uuid import uuid4
 
 import pandas as pd
 import polars as pl
@@ -26,7 +28,7 @@ from .config_validator import (
     ValidationError,
 )
 from .reporting.catalog import report_dict_to_sn
-from .utils import get_dataset_dot_path
+from .utils import get_dataset_dot_path, get_timestamp, get_user
 
 _here = os.path.abspath(os.path.dirname(__file__))
 _config = ConfigParser()
@@ -57,6 +59,8 @@ def get_all_catalogs() -> list:
     return catalogs
 
 
+# aggregating all datasets and reports into a single mapping for namespace
+# and endpoint construction:
 all_catalogs = get_all_catalogs()
 
 all_dataset_ns_map = {}
@@ -79,18 +83,22 @@ report_namespaces = get_dataset_dot_path(all_reports_ns_map)
 
 
 class DatasetEndpoint:
-    """The DatasetEndpoint class for including in the datasets namespace"""
+    """The DatasetEndpoint class for including in the datacat namespace.
+    This ends the namespace branching at a config file and creates all the
+    blob endpoints for each 'stag' of the config (e.g., extract, load, stage_01)."""
 
-    def __init__(self, config_path: str, defaults: dict):
+    def __init__(self, config_path: str, defaults: dict, ns: str):
         """Basic functionality to interact with datasets to be included
         via the datasets configs.
 
         Args:
             config_path (str): the path to the dataset config
             defaults (dict): the default configuration values
+            ns (str): the current namespace path
         """
         self.config_path = config_path
         self.defaults = defaults
+        self.__ns_str__ = ns
         with open(config_path, "rb") as f:
             self.config = tomli.load(f)
         for k, v in self.config.items():
@@ -106,6 +114,11 @@ class DatasetEndpoint:
                         "container"
                     ]
         self.validate_dataset_config(config_path)
+        self._ledger_location = {
+            "account": self.defaults["storage"]["account"],
+            "container": self.defaults["storage"]["container"],
+            "prefix": self.defaults["access_ledger"]["path"],
+        }
         for k, v in self.config.items():
             if k in ["load", "extract"] or k.startswith("stage"):
                 self.__setattr__(
@@ -114,11 +127,14 @@ class DatasetEndpoint:
                         account=self.config[k]["account"],
                         container=self.config[k]["container"],
                         prefix=v["prefix"],
+                        ledger_location=self._ledger_location,
+                        ns=f"{self.__ns_str__}.{k}",
                     ),
                 )
 
     def validate_dataset_config(self, config_path) -> None:
-        """Validate the dataset configuration using ConfigValidator."""
+        """Validate the dataset configuration using ConfigValidator.
+        and each of the pydantic models for each section."""
         try:
             config_models = {}
             for c_key, c_value in self.config.items():
@@ -140,7 +156,14 @@ class DatasetEndpoint:
 class BlobEndpoint:
     """The BlobEndpoint class for including in the datasets namespace"""
 
-    def __init__(self, account: str, container: str, prefix: str):
+    def __init__(
+        self,
+        account: str,
+        container: str,
+        prefix: str,
+        ledger_location: dict,
+        ns: str,
+    ):
         """Basic functionality to interact with blobs to be included
         via the datasets configs.
 
@@ -148,19 +171,38 @@ class BlobEndpoint:
             account (str): the azure storage account to use
             container (str): the container in the account to use
             prefix (str): the path prefix in the container to use
+            ledger_location (dict): the location to write access logs to
+            ns (str): the current namespace path
         """
         self.account = account
         self.container = container
         self.prefix = prefix if prefix[-1] != "/" else prefix[:-1]
+        self.ledger_location = ledger_location
+        self.is_ledger = True if ns == "ledger_endpoint" else False
+        self.__ns_str__ = ns
 
-    def write_blob(self, file_buffer: bytes, path_after_prefix: str) -> None:
-        """For writing file buffers to blob storage
+    def write_blob(
+        self,
+        file_buffer: bytes,
+        path_after_prefix: str,
+        auto_version: bool = False,
+    ) -> None:
+        """For writing file buffers to blob storage. Remember to include
+        the a version to the path (i.e., {version}/{file}) or use
+        auto_version arg to include. Also, include the file extension in
+        path_after_prefix (e.g. {version}/{filename}.{ext}, where {ext} is
+        parquet, csv, or json).
 
         Args:
             file_buffer (bytes): the file buffer
             path_under_prefix (str): everything beyond the prefix
+            auto_version (bool, optional): whether to automatically version
         """
-        path_after_prefix = path_after_prefix.removesuffix("/")
+        if auto_version:
+            path_after_prefix = (
+                f"{get_timestamp()}/{path_after_prefix.lstrip('/')}"
+            )
+        path_after_prefix = path_after_prefix.lstrip("/")
         full_path = f"{self.prefix}/{path_after_prefix}"
         write_blob_stream(
             data=file_buffer,
@@ -168,6 +210,7 @@ class BlobEndpoint:
             account_name=self.account,
             container_name=self.container,
         )
+        self.ledger_entry(action="write")
         # print(f"file written to: {full_path}")
 
     def read_blobs(self, version: str = "latest") -> List[bytes]:
@@ -186,6 +229,7 @@ class BlobEndpoint:
             )
             for i in blobs
         ]
+        self.ledger_entry(action="read")
         return blob_bytes
 
     def read_csv(self, suffix: str) -> pd.DataFrame:
@@ -195,6 +239,7 @@ class BlobEndpoint:
             container_name=self.container,
         )
         df = pd.read_csv(blob)
+        self.ledger_entry(action="read")
         return df
 
     def get_versions(self) -> list:
@@ -228,10 +273,13 @@ class BlobEndpoint:
         return self._get_version_blobs()[0]["name"].split(".")[-1]
 
     def _get_version_blobs(self, version: str = "latest") -> list:
-        if version == "latest":
+        if version == "latest" and not self.is_ledger:
             version = self.get_versions()[0]
-        version = version.removesuffix("/")
-        walk_path = f"{self.prefix}/{version}/"
+        if not self.is_ledger:
+            version = version.removesuffix("/")
+            walk_path = f"{self.prefix}/{version}/"
+        else:
+            walk_path = f"{self.prefix.removesuffix('/')}/"
         return sorted(
             list(
                 walk_blobs_in_container(
@@ -297,31 +345,70 @@ class BlobEndpoint:
                 )
             return df
 
+    def ledger_entry(self, action: str) -> None:
+        """Write an access log entry to the ledger location
 
-def dict_to_sn(d: Any, defaults: dict = None) -> SimpleNamespace:
+        Args:
+            action (str): the action taken (e.g., 'read', 'write')
+        """
+        if self.is_ledger:
+            return
+        log_entry = [
+            {
+                "timestamp": get_timestamp(),
+                "username": get_user(),
+                "dataset": self.__ns_str__,
+                "action": action,
+            }
+        ]
+        log_data = (json.dumps(log_entry) + "\n").encode("utf-8")
+        write_blob_stream(
+            data=log_data,
+            blob_url=f"{self.ledger_location['prefix']}/{get_timestamp()}_{uuid4().hex}.json",
+            account_name=self.ledger_location["account"],
+            container_name=self.ledger_location["container"],
+        )
+
+
+def dict_to_sn(d: Any, defaults: dict = None, ns: str = "") -> SimpleNamespace:
     """Simple recursive namespace construction
 
     Args:
         d (Any): a dict, list or other
+        defaults (dict, optional): the default values to use if not in d.
+        ns (str, optional): the current namespace path. Defaults to ''.
 
     Returns:
         SimpleNamespace: namespace representation
     """
     x = SimpleNamespace()
+    ns_prefix = f"{ns}." if ns != "" else ""
     _ = [
         setattr(
             x,
             k,
-            DatasetEndpoint(v, defaults)
+            DatasetEndpoint(v, defaults, f"{ns_prefix}{k}")
             if isinstance(v, str) and v.endswith(".toml")
-            else dict_to_sn(v, defaults)
+            else dict_to_sn(v, defaults, f"{ns_prefix}{k}")
             if isinstance(v, dict)
-            else [dict_to_sn(e, defaults) for e in v]
+            else [dict_to_sn(e, defaults, f"{ns_prefix}{k}") for e in v]
             if isinstance(v, list)
             else v,
         )
         for k, v in d.items()
     ]
+    if ns != "" and "." not in ns:
+        setattr(
+            x,
+            "_ledger_endpoint",
+            BlobEndpoint(
+                account=defaults["storage"]["account"],
+                container=defaults["storage"]["container"],
+                prefix=defaults["access_ledger"]["path"],
+                ledger_location={},
+                ns="ledger_endpoint",
+            ),
+        )
     return x
 
 
