@@ -90,12 +90,18 @@ def get_dataset_dot_path(endpoint_map: dict) -> list[str]:
     return paths
 
 
-def get_timestamp() -> str:
+def get_timestamp(make_standard: bool = False) -> str:
     """For getting standard datetime timestamp format
+
+    Args:
+        make_standard (bool): to return a standard timestamp with colons
+            in time instead of only path-safe hyphens
 
     Returns:
         str:datetime string
     """
+    if make_standard:
+        return datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
     return datetime.now().strftime("%Y-%m-%dT%H-%M-%S")
 
 

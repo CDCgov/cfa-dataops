@@ -7,7 +7,7 @@ from configparser import ConfigParser
 from importlib import import_module
 from io import BytesIO
 from types import SimpleNamespace
-from typing import Any, List
+from typing import Any, List, Sequence
 from uuid import uuid4
 
 import pandas as pd
@@ -183,7 +183,7 @@ class BlobEndpoint:
 
     def write_blob(
         self,
-        file_buffer: bytes,
+        file_buffer: bytes | Sequence[bytes],
         path_after_prefix: str,
         auto_version: bool = False,
     ) -> None:
@@ -194,7 +194,7 @@ class BlobEndpoint:
         parquet, csv, or json).
 
         Args:
-            file_buffer (bytes): the file buffer
+            file_buffer (bytes or List[bytes]): the file buffer or list of buffers
             path_under_prefix (str): everything beyond the prefix
             auto_version (bool, optional): whether to automatically version
         """
@@ -204,12 +204,21 @@ class BlobEndpoint:
             )
         path_after_prefix = path_after_prefix.lstrip("/")
         full_path = f"{self.prefix}/{path_after_prefix}"
-        write_blob_stream(
-            data=file_buffer,
-            blob_url=full_path,
-            account_name=self.account,
-            container_name=self.container,
-        )
+        if isinstance(file_buffer, bytes):
+            file_buffer = [file_buffer]
+        total_partitions = len(file_buffer)
+        for idx, fb_i in enumerate(file_buffer):
+            if total_partitions > 1:
+                url_parts = os.path.splitext(full_path)
+                auto_full_path = f"{url_parts[0]}_{str(idx).zfill(len(str(total_partitions)))}{url_parts[1]}"
+            else:
+                auto_full_path = full_path
+            write_blob_stream(
+                data=fb_i,
+                blob_url=auto_full_path,
+                account_name=self.account,
+                container_name=self.container,
+            )
         self.ledger_entry(action="write")
         # print(f"file written to: {full_path}")
 
@@ -317,6 +326,7 @@ class BlobEndpoint:
         if file_ext == "csv":
             if output in ["pandas", "pd"]:
                 df = pd.concat([pd.read_csv(blob) for blob in blobs])
+                df.reset_index(inplace=True, drop=True)
             else:
                 df = pl.concat(
                     [pl.read_csv(blob.content_as_bytes()) for blob in blobs],
@@ -326,9 +336,24 @@ class BlobEndpoint:
         elif file_ext == "json":
             if output in ["pandas", "pd"]:
                 df = pd.concat([pd.read_json(blob) for blob in blobs])
+                df.reset_index(inplace=True, drop=True)
             else:
                 df = pl.concat(
                     [pl.read_json(blob.content_as_bytes()) for blob in blobs],
+                )
+            return df
+        elif file_ext == "jsonl":
+            if output in ["pandas", "pd"]:
+                df = pd.concat(
+                    [pd.read_json(blob, lines=True) for blob in blobs]
+                )
+                df.reset_index(inplace=True, drop=True)
+            else:
+                df = pl.concat(
+                    [
+                        pl.read_ndjson(blob.content_as_bytes())
+                        for blob in blobs
+                    ],
                 )
             return df
         elif file_ext == "parquet" or file_ext == "parq":
@@ -338,6 +363,7 @@ class BlobEndpoint:
                 df = pd.concat(
                     [pd.read_parquet(pq_file) for pq_file in pq_files]
                 )
+                df.reset_index(inplace=True, drop=True)
             else:
                 df = pl.concat(
                     [pl.read_parquet(pq_file) for pq_file in pq_files],
@@ -353,18 +379,16 @@ class BlobEndpoint:
         """
         if self.is_ledger:
             return
-        log_entry = [
-            {
-                "timestamp": get_timestamp(),
-                "username": get_user(),
-                "dataset": self.__ns_str__,
-                "action": action,
-            }
-        ]
+        log_entry = {
+            "timestamp": get_timestamp(make_standard=True),
+            "username": get_user(),
+            "dataset": self.__ns_str__,
+            "action": action,
+        }
         log_data = (json.dumps(log_entry) + "\n").encode("utf-8")
-        write_blob_stream(
+        write_blob_stream(  # TODO: make this a streaming write to a single file (one per day parsed from get_timestamp())
             data=log_data,
-            blob_url=f"{self.ledger_location['prefix']}/{get_timestamp()}_{uuid4().hex}.json",
+            blob_url=f"{self.ledger_location['prefix']}/{get_timestamp()}_{uuid4().hex}.jsonl",
             account_name=self.ledger_location["account"],
             container_name=self.ledger_location["container"],
         )
