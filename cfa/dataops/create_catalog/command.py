@@ -133,12 +133,15 @@ def main():
             "LICENSE",
             "ruff.toml",
             ".gitattributes",
-            ".github/",
         ]:
             shutil.copy(
                 os.path.join(repo_files_dirs, "_cfa_only", copy_i),
                 os.path.join(location, copy_i),
             )
+        shutil.copytree(
+            os.path.join(repo_files_dirs, "_cfa_only", ".github"),
+            os.path.join(location, ".github"),
+        )
 
     print(
         f"Created dataops catalog module {catalog_namespace}.{unique_name} at {location}"
