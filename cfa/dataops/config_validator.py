@@ -37,12 +37,10 @@ class PropertiesValidation(BaseModel):
     schemas: Optional[str] = Field(
         None,
         description="the relative path to where the data schema(s) are defined.",
-        min_length=1,
     )
     transform_templates: Optional[List[str]] = Field(
         None,
         description="A list of transform templates to applied to raw data.",
-        min_items=1,
     )
     automate: Optional[bool] = Field(
         False,
