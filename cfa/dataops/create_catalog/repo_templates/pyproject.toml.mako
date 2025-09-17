@@ -16,7 +16,10 @@ dependencies = [
     "fastparquet (>=2024.11.0,<2025.0.0)",
     "pandas (>=2.2.3)",
     "polars (>=1.26.0)",
-    "rich (>=14.1.0,<15.0.0)"
+    "nbconvert (>=7.16.6,<8.0.0)",
+    "jupyter (>=1.1.1,<2.0.0)",
+    "rich (>=14.1.0,<15.0.0)",
+    "faker (>=37.8.0,<38.0.0)",
 ]
 
 [dependency-groups]
