@@ -34,6 +34,7 @@ dependencies = [
     "jupyterlab (>=4.4.5,<5.0.0)",
     "rich (>=14.1.0,<15.0.0)",
     "pydantic (>=2.11.7,<3.0.0)",
+    "faker (>=37.8.0,<38.0.0)",
 ]
 
 [tool.poetry]
@@ -46,7 +47,6 @@ pytest = "^8.3.5"
 pytest-mock = "^3.14.0"
 pytest-cov = "^6.1.1"
 hypothesis = "^6.133.0"
-faker = "^37.3.0"
 coverage-badge = "^1.1.2"
 
 [tool.poetry.group.mkdocs.dependencies]
