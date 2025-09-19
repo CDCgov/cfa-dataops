@@ -35,7 +35,7 @@ This project provides data tools and low friction access to versioned datasets w
 
 Read the [Dataset User Guide](docs/dataset_user.md) for more information about accessing datasets.
 
-Read the [Dataset Developer Guide](docs/dataset_developer.md) for information about how to run ETL to add new versions of an existing datasets and about how to create new datasets.
+Read the [Dataset Developer Guide](docs/dataset_developer_guide.md) for information about how to run ETL to add new versions of an existing datasets and about how to create new datasets.
 
 ## Project admins
 
@@ -80,3 +80,4 @@ All comments, messages, pull requests, and other submissions received through CD
 ### Records Management Standard Notice
 
 This repository is not a source of government records but is a copy to increase collaboration and collaborative potential. All government records will be published through the [CDC web site](http://www.cdc.gov).
+
