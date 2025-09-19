@@ -323,50 +323,47 @@ class BlobEndpoint:
             )
         blobs = self.read_blobs(version)
         file_ext = self.get_file_ext()
+        blob_bytes = [blob.content_as_bytes() for blob in blobs]
+        blob_files = [BytesIO(pq) for pq in blob_bytes]
         if file_ext == "csv":
             if output in ["pandas", "pd"]:
-                df = pd.concat([pd.read_csv(blob) for blob in blobs])
+                df = pd.concat([pd.read_csv(blob) for blob in blob_files])
                 df.reset_index(inplace=True, drop=True)
             else:
                 df = pl.concat(
-                    [pl.read_csv(blob.content_as_bytes()) for blob in blobs],
+                    [pl.read_csv(blob) for blob in blob_files],
                     how="vertical_relaxed",
                 )
             return df
         elif file_ext == "json":
             if output in ["pandas", "pd"]:
-                df = pd.concat([pd.read_json(blob) for blob in blobs])
+                df = pd.concat([pd.read_json(blob) for blob in blob_files])
                 df.reset_index(inplace=True, drop=True)
             else:
                 df = pl.concat(
-                    [pl.read_json(blob.content_as_bytes()) for blob in blobs],
+                    [pl.read_json(blob) for blob in blob_files],
                 )
             return df
         elif file_ext == "jsonl":
             if output in ["pandas", "pd"]:
                 df = pd.concat(
-                    [pd.read_json(blob, lines=True) for blob in blobs]
+                    [pd.read_json(blob, lines=True) for blob in blob_files]
                 )
                 df.reset_index(inplace=True, drop=True)
             else:
                 df = pl.concat(
-                    [
-                        pl.read_ndjson(blob.content_as_bytes())
-                        for blob in blobs
-                    ],
+                    [pl.read_ndjson(blob) for blob in blob_files],
                 )
             return df
         elif file_ext == "parquet" or file_ext == "parq":
-            pq_bytes = [blob.content_as_bytes() for blob in blobs]
-            pq_files = [BytesIO(pq) for pq in pq_bytes]
             if output in ["pandas", "pd"]:
                 df = pd.concat(
-                    [pd.read_parquet(pq_file) for pq_file in pq_files]
+                    [pd.read_parquet(pq_file) for pq_file in blob_files]
                 )
                 df.reset_index(inplace=True, drop=True)
             else:
                 df = pl.concat(
-                    [pl.read_parquet(pq_file) for pq_file in pq_files],
+                    [pl.read_parquet(pq_file) for pq_file in blob_files],
                     how="vertical_relaxed",
                 )
             return df
