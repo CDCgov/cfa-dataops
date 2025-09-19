@@ -93,10 +93,10 @@ class ConfigValidator(BaseModel):
                 if not isinstance(value, StorageEndpointValidation):
                     try:
                         values[key] = StorageEndpointValidation(**value)
+                    except ValidationError as e:
+                        raise e
                     except Exception as e:
-                        raise ValidationError(
-                            [e], StorageEndpointValidation
-                        ) from e
+                        raise ValidationError.from_exception(e)
         return values
 
     _validate_stages = model_validator(mode="before")(validate_stage_fields)
