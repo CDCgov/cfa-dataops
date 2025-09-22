@@ -51,10 +51,8 @@ def get_all_catalogs() -> list:
         ):
             if ispkg:
                 catalogs.append((catalog_nspace, modname, module_finder.path))
-    except ModuleNotFoundError as e:
-        raise ModuleNotFoundError(
-            f"No catalogs exist in namespace {catalog_nspace}"
-        ) from e
+    except ModuleNotFoundError:
+        print(f"No catalogs exist in namespace {catalog_nspace}")
 
     return catalogs
 
