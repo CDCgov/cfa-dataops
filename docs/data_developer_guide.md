@@ -2,16 +2,37 @@
 
 ## How to use this guide
 
-This guide explains how to add new datasets to the CFA Scenarios DataOps system.
+This guide explains how to add new datasets to the CFA DataOps system using catalog repositories. This assumes you have already created a catalog repository using the `dataops_catalog_init` CLI tool.
 
-This repository is designed and maintained so that if a core set of patterns are followed, adding new datasets for easy access by other teams is a straightforward procedure.
+## Prerequisites
+
+Before developing datasets, you need to:
+
+1. **Create a catalog repository** using `dataops_catalog_init` (see [Catalog Creation Guide](catalog_creation.md))
+2. **Install the catalog library** in development mode:
+   ```bash
+   cd /path/to/your/catalog
+   pip install -e .[dev]
+   ```
+3. **Understand the catalog structure** - all dataset development happens within your catalog repository
+
+## Catalog-Based Development
+
+The DataOps system is designed around catalog repositories that contain:
+
+- **Dataset configurations** (TOML files in `datasets/` directory)
+- **ETL, Multistage, Reference Data workflows** (Python modules in `workflows/` directory)
+- **Report templates** (Jupyter notebooks in `reports/` directory)
+- **Schemas and validation** (Python files defining data contracts)
+
+Multiple catalog repositories can be installed in the same Python environment, and all datasets will be accessible through the unified `datacat` interface, while reports are accessible through `reportcat`.
 
 This document guides you through:
 
-- Adding a new dataset
-- Creating an ETL process
+- Adding a new dataset to your catalog repository
+- Creating an ETL process within your catalog
 - Using Pandera schemas and synthetic data to test your ETL scripts
-- Using workflows
+- Using workflows within your catalog structure
 
 ## Overview
 
@@ -22,19 +43,20 @@ The ETL pipeline system is built around:
 - SQL templates for transformations (optional)
 - Schema validation using Pandera
 
-### Example
-
-There are many datasets in this repository that can serve as references while creating yours. For example, the `covid19vax_trends` dataset:
-
-- [TOML configuration](https://github.com/CDCgov/cfa-dataops/blob/main/cfa/dataops/datasets/scenarios/covid19_vaccination_trends.toml)
-- [Schema and synthetic data](https://github.com/CDCgov/cfa-dataops/blob/main/cfa/dataops/datasets/scenarios/schemas/covid19vax_trends.py)
-- [ETL script](https://github.com/CDCgov/cfa-dataops/blob/main/cfa/dataops/etl/scenarios/covid19vax_trends.py)
-- [ETL SQL](https://github.com/CDCgov/cfa-dataops/blob/main/cfa/dataops/etl/transform_templates/scenarios/covid19vax_trends.sql)
-- [Unit tests](https://github.com/CDCgov/cfa-dataops/blob/main/tests/datasets/test_covid19_vax_trends.py)
-
 ## Update an existing dataset
 
-From the command line:
+You can update datasets using datacat or from the command line:
+
+```python
+from cfa.dataops import datacat
+
+# Trigger ETL for a specific dataset
+datacat.scenarios.covid19vax_trends.extract()
+datacat.scenarios.covid19vax_trends.transform()
+datacat.scenarios.covid19vax_trends.load()
+```
+
+Or from the command line:
 
 ```
 python -m cfa.dataops.etl.covid19vax_trends --extract
@@ -42,16 +64,16 @@ python -m cfa.dataops.etl.covid19vax_trends --extract
 
 ## Adding a New Dataset
 
-To add a new dataset:
+To add a new dataset to your catalog repository:
 
-1. Create a TOML configuration file in `cfa/dataops/datasets/{team_dir}/{dataset_name}.toml`
-1. Optionally, create a schema validation file
-1. Create a new ETL script in `cfa/dataops/etl/{team_dir}/`
-1. Add SQL transformation templates in `cfa/dataops/etl/transform_templates/{team_dir}/` (is using SQL for transforms). These are [Mako templates](https://www.makotemplates.org/)
+1. Create a TOML configuration file in `{your_catalog}/datasets/{dataset_name}.toml`
+2. Optionally, create a schema validation file in your catalog's structure
+3. Create a new ETL script in `{your_catalog}/workflows/{workflow_type}/`
+4. Add SQL transformation templates if using SQL for transforms (these are [Mako templates](https://www.makotemplates.org/))
 
 ### Configuration file
 
-```toml title="cfa/dataops/datasets/{team_dir}/{dataset_name}.toml"
+```toml title="{your_catalog}/datasets/{dataset_name}.toml"
 [properties]
 name = "dataset_name"
 version = "1.0"
@@ -91,12 +113,16 @@ load_schema = pa.DataFrameSchema({
 
 ### ETL script
 
-```python title="cfa/dataops/etl/{team_dir}/{dataset_name}.py"
-from ... import datacat
-from ...datasets.{team_dir}.schemas.{dataset_name} import extract_schema, load_schema
+```python title="{your_catalog}/workflows/{workflow_type}/{dataset_name}.py"
+from cfa.dataops import datacat
+import pandas as pd
+import io
 
 def extract() -> pd.DataFrame:
     # Extract implementation
+    # Access dataset configuration via datacat
+    config = datacat.{catalog_name}.{dataset_name}.config
+    # Extract data from source
     pass
 
 def transform(df: pd.DataFrame) -> pd.DataFrame:
@@ -104,12 +130,31 @@ def transform(df: pd.DataFrame) -> pd.DataFrame:
     pass
 
 def load(df: pd.DataFrame) -> None:
-    # Load implementation
-    pass
+    # Load implementation using datacat
+    # Convert DataFrame to bytes buffer
+    buffer = io.BytesIO()
+    df.to_parquet(buffer, index=False)
+    buffer.seek(0)
+
+    # Write to blob storage
+    datacat.{catalog_name}.{dataset_name}.load.write_blob(
+        file_buffer=buffer.getvalue(),
+        path_after_prefix="data.parquet",
+        auto_version=True
+    )
 
 def main(run_extract: bool = False, val_raw: bool = False, val_tf: bool = False) -> None:
     # Main ETL runner
-    pass
+    if run_extract:
+        raw_data = extract()
+        if val_raw:
+            # Validate raw data
+            pass
+
+    if val_tf:
+        # Transform and validate
+        transformed_data = transform(raw_data)
+        load(transformed_data)
 ```
 
 ### [optional] SQL templates

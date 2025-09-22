@@ -2,6 +2,28 @@
 
 The `cfa.dataops.reporting` module provides tools for generating parameterized reports from Jupyter notebooks. Reports can be exported as HTML files or uploaded directly to Azure Blob Storage.
 
+## Prerequisites
+
+Before using the reporting system, you need to:
+
+1. **Create a catalog repository** using `dataops_catalog_init` (see [Catalog Creation Guide](catalog_creation.md))
+2. **Install the catalog library** in your Python environment:
+   ```bash
+   cd /path/to/your/catalog
+   pip install -e .[dev]
+   ```
+3. **Create report templates** in your catalog's `reports/` directory
+
+## Catalog-Based Reporting
+
+Reports are authored and stored within catalog repositories in the `reports/` directory. When you install multiple catalog libraries in the same Python environment, all reports become accessible through the unified `reportcat` interface, regardless of which specific catalog they come from.
+
+This allows you to:
+- Organize reports by domain or project within separate catalog repositories
+- Access all reports through a single interface
+- Maintain separation of concerns between different reporting needs
+- Share reports across teams by installing their catalog libraries
+
 ## Getting Started
 
 To use the reporting system:
@@ -12,10 +34,19 @@ from cfa.dataops.reporting import reportcat
 
 ## Available Reports
 
-Reports are organized in a namespace structure. You can explore available reports by inspecting the `reportcat` object attributes:
+Reports are organized in a namespace structure. You can explore available reports using reportcat:
 
 ```python
-# List example reports
+from cfa.dataops.reporting import reportcat
+
+# List all available reports
+available_reports = reportcat.__namespace_list__
+print(available_reports)
+
+# Or explore the reportcat namespace directly
+print(dir(reportcat))  # Shows top-level catalog namespaces
+
+# Access specific reports
 reportcat.examples.basics_ipynb
 reportcat.examples.dataset_report_ipynb
 ```
@@ -63,13 +94,32 @@ report.nb_to_html_blob(
 
 ## Creating Custom Reports
 
-To create a new report:
+To create a new report in your catalog repository:
 
-1. Create a Jupyter notebook in the `cfa/dataops/reporting/reports` directory
+1. Create a Jupyter notebook in your catalog's `reports/` directory (e.g., `{your_catalog}/reports/my_report.ipynb`)
 2. Use cell tags `parameters` and `remove_input` for parameter cells
 3. Add help text as comments for parameters
 4. Use markdown cells for documentation
-5. The report will automatically be available in the `reportcat` namespace
+5. The report will automatically be available in the `reportcat` namespace after installing your catalog
+
+### Report Organization
+
+Reports can be organized within subdirectories in your catalog's `reports/` folder:
+
+```
+{your_catalog}/reports/
+├── examples/
+│   └── basics.ipynb
+├── analysis/
+│   └── trend_analysis.ipynb
+└── summary/
+    └── monthly_report.ipynb
+```
+
+These will be accessible as:
+- `reportcat.{catalog_name}.examples.basics_ipynb`
+- `reportcat.{catalog_name}.analysis.trend_analysis_ipynb`
+- `reportcat.{catalog_name}.summary.monthly_report_ipynb`
 
 ### Report Parameters
 

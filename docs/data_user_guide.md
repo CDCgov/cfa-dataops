@@ -1,48 +1,103 @@
 # Data User Guide
 
-This guide explains how to access and use datasets in the CFA Scenarios DataOps system.
+This guide explains how to access and use datasets in the CFA DataOps system. This assumes you have already created one or more catalog repositories using the `dataops_catalog_init` CLI tool and have installed them in your Python environment.
+
+## Prerequisites
+
+Before using datasets, you need to:
+
+1. **Create a catalog repository** using `dataops_catalog_init` (see [Catalog Creation Guide](catalog_creation.md))
+2. **Install the catalog library** in your Python environment:
+   ```bash
+   cd /path/to/your/catalog
+   pip install -e .[dev]
+   ```
+3. **Multiple catalogs can be installed** in the same Python environment, and all datasets will be accessible through the unified `datacat` interface
+
+## Catalog Structure
+
+Once you have created and installed catalog repositories, all datasets become accessible through the `datacat` namespace, regardless of which specific catalog library they come from. This allows you to:
+
+- Install multiple catalog libraries (e.g., `cfa.catalog.scenarios`, `cfa.catalog.surveillance`, `cfa.catalog.my_project`)
+- Access all datasets through a single interface
+- Maintain separation of concerns between different data domains
 
 ## Available Datasets
 
-To list all available datasets:
+To list all available datasets using datacat:
 
 ```python
-from cfa.dataops import list_datasets
+from cfa.dataops import datacat
 
-available_datasets = list_datasets()
+# List all available datasets
+available_datasets = datacat.__namespace_list__
 print(available_datasets)
+
+# Or explore the datacat namespace directly
+print(dir(datacat))  # Shows top-level catalog namespaces
+```
+
+## Unified Access Through datacat and reportcat
+
+The DataOps system provides unified access to all datasets and reports through two main interfaces:
+
+- **`datacat`**: Provides access to all datasets from all installed catalog libraries
+- **`reportcat`**: Provides access to all reports from all installed catalog libraries
+
+### Multiple Catalog Support
+
+You can install multiple catalog libraries in the same Python environment:
+
+```bash
+# Install multiple catalogs
+pip install -e /path/to/scenarios-catalog[dev]
+pip install -e /path/to/surveillance-catalog[dev]
+pip install -e /path/to/my-project-catalog[dev]
+```
+
+All datasets and reports become accessible through the unified interfaces:
+
+```python
+from cfa.dataops import datacat
+from cfa.dataops.reporting import reportcat
+
+# Access datasets from any installed catalog
+datacat.scenarios.covid19vax_trends.load.get_dataframe()
+datacat.surveillance.flu_trends.load.get_dataframe()
+datacat.my_project.custom_dataset.load.get_dataframe()
+
+# Access reports from any installed catalog
+reportcat.scenarios.examples.basics_ipynb
+reportcat.surveillance.weekly.summary_ipynb
+reportcat.my_project.analysis.trend_report_ipynb
 ```
 
 ## Accessing Data
 
-When the ETL pipelines are run, the data sources (raw and/or transformed) are stored into Azure Blob Storage. There will be times when we want to access these datasets directly. The function `get_data()` found in `cfa.dataops.datasets.catalog` helps retrieve that data, compile into a single dataframe, and return that dataframe:
+When the ETL pipelines are run, the data sources (raw and/or transformed) are stored into Azure Blob Storage. You can access these datasets directly using the `datacat` interface:
 
 ```python
-from cfa.dataops import get_data
+from cfa.dataops import datacat
 
 # Get latest transformed data as pandas DataFrame
-df = get_data("scenarios.covid19vax_trends")
+df = datacat.scenarios.covid19vax_trends.load.get_dataframe()
 
 # Get raw data as polars DataFrame
-df = get_data(
-    name="scenarios.seroprevalence",
-    type="raw",
-    output="polars"
-)
+df = datacat.scenarios.seroprevalence.extract.get_dataframe(output="polars")
 
 # Get specific version
-df = get_data(
-    name="scenarios.covid19vax_trends",
+df = datacat.scenarios.covid19vax_trends.load.get_dataframe(
     version="2025-06-03T17-56-50"
 )
 ```
 
-### Parameters
+### Dataset Access Methods
 
-- `name`: Dataset identifier (required)
-- `version`: Either 'latest' or specific version timestamp (default: 'latest')
-- `type`: Either 'raw' or 'transformed' (default: 'transformed')
-- `output`: Either 'pandas' or 'polars' DataFrame (default: 'pandas')
+- `datacat.{catalog}.{dataset}.load.get_dataframe()`: Access transformed data
+- `datacat.{catalog}.{dataset}.extract.get_dataframe()`: Access raw data
+- Parameters for `get_dataframe()`:
+  - `version`: Either 'latest' or specific version timestamp (default: 'latest')
+  - `output`: Either 'pandas' or 'polars' DataFrame (default: 'pandas')
 
 ## Working with Data
 
@@ -53,8 +108,7 @@ Data is versioned using timestamps. Each version represents a snapshot of the da
 To get a specific version:
 
 ```python
-df = get_data(
-    "scenarios.covid19vax_trends",
+df = datacat.scenarios.covid19vax_trends.load.get_dataframe(
     version="2025-06-03T17-59-16"
 )
 ```
@@ -87,38 +141,33 @@ All datasets have schema validation for both raw and transformed data. The schem
 ### COVID-19 Vaccination Trends
 
 ```python
-from cfa.dataops import get_data
+from cfa.dataops import datacat
 
 # Get latest transformed data
-vax_df = get_data("scenarios.covid19vax_trends")
+vax_df = datacat.scenarios.covid19vax_trends.load.get_dataframe()
 
 # Get raw data for analysis
-raw_vax = get_data(
-    "scenarios.covid19vax_trends",
-    type="raw"
-)
+raw_vax = datacat.scenarios.covid19vax_trends.extract.get_dataframe()
 ```
 
 ### Seroprevalence Data
 
 ```python
-from cfa.dataops import get_data
+from cfa.dataops import datacat
 
 # Get as polars DataFrame
-sero_df = get_data(
-    "scenarios.seroprevalence",
-    output="polars"
-)
+sero_df = datacat.scenarios.seroprevalence.load.get_dataframe(output="polars")
 ```
 
 ## Common Issues
 
 1. Dataset Not Found
-   - Verify dataset name using `list_datasets()`
+   - Verify dataset name using `datacat.__namespace_list__`
    - Check for typos in namespace path
+   - Ensure the catalog containing the dataset is installed
 2. Version Not Found
-   - Use 'latest' to get most recent version
-   - Check available versions in Azure Blob Storage
+   - Use 'latest' to get most recent version (default)
+   - Check available versions using `datacat.{catalog}.{dataset}.load.get_versions()`
 3. Schema Validation Errors
    - Ensure data matches expected schema
    - Check for missing required columns

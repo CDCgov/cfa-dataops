@@ -2,10 +2,10 @@ site_name: CFA DataOps
 
 nav:
   - index.md
+  - catalog_creation.md
   - data_user_guide.md
   - data_developer_guide.md
   - report_generation.md
-  - api.md
 
 repo_url: https://github.com/cdcgov/cfa-dataops
 repo_name: cfa-dataops
