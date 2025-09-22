@@ -62,3 +62,9 @@ def simple_dataset_ns_map():
         }
     }
     return dataset_ns_map
+
+
+@fixture(scope="session")
+def catalog_parent(tmpdir_factory):
+    """Fixture to create a temporary data directory for tests."""
+    return tmpdir_factory.mktemp("cat_parent")
