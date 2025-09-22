@@ -1,35 +1,20 @@
 # Report Generation
 
-The `cfa.dataops.reporting` module provides tools for generating parameterized reports from Jupyter notebooks. Reports can be exported as HTML files or uploaded directly to Azure Blob Storage.
+Generate parameterized reports from Jupyter notebooks stored in your catalog repositories.
 
-## Prerequisites
+> **Prerequisites**: You need to have catalog repositories with report templates created and installed. See [Managing Catalogs](managing_catalogs.md) for setup instructions.
 
-Before using the reporting system, you need to:
-
-1. **Create a catalog repository** using `dataops_catalog_init` (see [Catalog Creation Guide](catalog_creation.md))
-2. **Install the catalog library** in your Python environment:
-   ```bash
-   cd /path/to/your/catalog
-   pip install -e .[dev]
-   ```
-3. **Create report templates** in your catalog's `reports/` directory
-
-## Catalog-Based Reporting
-
-Reports are authored and stored within catalog repositories in the `reports/` directory. When you install multiple catalog libraries in the same Python environment, all reports become accessible through the unified `reportcat` interface, regardless of which specific catalog they come from.
-
-This allows you to:
-- Organize reports by domain or project within separate catalog repositories
-- Access all reports through a single interface
-- Maintain separation of concerns between different reporting needs
-- Share reports across teams by installing their catalog libraries
-
-## Getting Started
-
-To use the reporting system:
+## Quick Start
 
 ```python
-from cfa.dataops.reporting import reportcat
+from cfa.dataops import reportcat
+
+# List all available reports
+print("Available reports:", reportcat.__namespace_list__)
+
+# Generate a report
+report = reportcat.examples.basics_ipynb
+report.nb_to_html_file(html_out_path="my_report.html")
 ```
 
 ## Available Reports
@@ -37,7 +22,7 @@ from cfa.dataops.reporting import reportcat
 Reports are organized in a namespace structure. You can explore available reports using reportcat:
 
 ```python
-from cfa.dataops.reporting import reportcat
+from cfa.dataops import reportcat
 
 # List all available reports
 available_reports = reportcat.__namespace_list__

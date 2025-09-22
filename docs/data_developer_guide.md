@@ -1,38 +1,19 @@
 # Data Developer Guide
 
-## How to use this guide
+This guide explains how to add new datasets and ETL processes to your catalog repositories.
 
-This guide explains how to add new datasets to the CFA DataOps system using catalog repositories. This assumes you have already created a catalog repository using the `dataops_catalog_init` CLI tool.
+> **Prerequisites**: You need to have a catalog repository created and installed. See [Managing Catalogs](managing_catalogs.md) for setup instructions.
 
-## Prerequisites
+## Quick Start
 
-Before developing datasets, you need to:
+```python
+from cfa.dataops import datacat
 
-1. **Create a catalog repository** using `dataops_catalog_init` (see [Catalog Creation Guide](catalog_creation.md))
-2. **Install the catalog library** in development mode:
-   ```bash
-   cd /path/to/your/catalog
-   pip install -e .[dev]
-   ```
-3. **Understand the catalog structure** - all dataset development happens within your catalog repository
-
-## Catalog-Based Development
-
-The DataOps system is designed around catalog repositories that contain:
-
-- **Dataset configurations** (TOML files in `datasets/` directory)
-- **ETL, Multistage, Reference Data workflows** (Python modules in `workflows/` directory)
-- **Report templates** (Jupyter notebooks in `reports/` directory)
-- **Schemas and validation** (Python files defining data contracts)
-
-Multiple catalog repositories can be installed in the same Python environment, and all datasets will be accessible through the unified `datacat` interface, while reports are accessible through `reportcat`.
-
-This document guides you through:
-
-- Adding a new dataset to your catalog repository
-- Creating an ETL process within your catalog
-- Using Pandera schemas and synthetic data to test your ETL scripts
-- Using workflows within your catalog structure
+# Update an existing dataset
+datacat.private.scenarios.covid19vax_trends.extract()
+datacat.private.scenarios.covid19vax_trends.transform()
+datacat.private.scenarios.covid19vax_trends.load()
+```
 
 ## Overview
 
@@ -51,9 +32,9 @@ You can update datasets using datacat or from the command line:
 from cfa.dataops import datacat
 
 # Trigger ETL for a specific dataset
-datacat.scenarios.covid19vax_trends.extract()
-datacat.scenarios.covid19vax_trends.transform()
-datacat.scenarios.covid19vax_trends.load()
+datacat.private.scenarios.covid19vax_trends.extract()
+datacat.private.scenarios.covid19vax_trends.transform()
+datacat.private.scenarios.covid19vax_trends.load()
 ```
 
 Or from the command line:

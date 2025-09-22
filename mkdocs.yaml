@@ -3,6 +3,7 @@ site_name: CFA DataOps
 nav:
   - index.md
   - catalog_creation.md
+  - managing_catalogs.md
   - data_user_guide.md
   - data_developer_guide.md
   - report_generation.md
