@@ -1,4 +1,3 @@
-import glob
 import os
 from pprint import pprint
 from tempfile import TemporaryDirectory
@@ -13,9 +12,6 @@ from traitlets.config import Config
 from cfa.cloudops.blob_helpers import write_blob_stream
 
 _here_dir = os.path.split(os.path.abspath(__file__))[0]
-_report_paths = glob.glob(
-    os.path.join(_here_dir, "**", "**.ipynb"), recursive=True
-)
 
 
 def remove_ws_and_nonalpha(s: str) -> str:
@@ -33,22 +29,6 @@ def remove_ws_and_nonalpha(s: str) -> str:
     """
     s = s.replace(" ", "_").replace(".", "_").lower()
     return "".join(c for c in s if c.isalnum() or c == "_")
-
-
-# get the namespace mapping for the available reports
-report_ns_map = {}
-for rp_i in _report_paths:
-    if rp_i.startswith(os.path.join(_here_dir, "reports")):
-        ns_list = [
-            remove_ws_and_nonalpha(i)
-            for i in rp_i.split(f"reports{os.sep}")[-1].split(os.sep)
-        ]
-        current = report_ns_map
-        for part in ns_list[:-1]:
-            if part not in current:
-                current[part] = {}
-            current = current[part]
-        current[ns_list[-1]] = rp_i
 
 
 def retitle_notebook(nb_loc: str, new_title: str) -> None:
