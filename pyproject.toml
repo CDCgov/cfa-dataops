@@ -23,7 +23,6 @@ dependencies = [
     "tqdm (>=4.67.0)",
     "altair (>=5.5.0,<6.0.0)",
     "vl-convert-python (>=1.7.0,<2.0.0)",
-    "pypdf (>=5.5.0,<6.0.0)",
     "pandera[pandas] (>=0.24.0)",
     "papermill (>=2.6.0,<3.0.0)",
     "ipywidgets (>=8.1.7,<9.0.0)",
@@ -64,4 +63,4 @@ state_report_pdf = "cfa.dataops.workflows.post_processing.state_report_pdf:main"
 dataops_catalog_init = "cfa.dataops.create_catalog.command:main"
 
 [tool.pytest.ini_options]
-addopts = "--doctest-modules -vv --cov=cfa --cov-report html --cov-report term"
+addopts = "tests/ --doctest-modules -vv --cov=cfa --cov-report html --cov-report term"
