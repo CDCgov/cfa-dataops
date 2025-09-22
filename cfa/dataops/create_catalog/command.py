@@ -4,11 +4,17 @@ import argparse
 import os
 import shutil
 import sys
+from configparser import ConfigParser
 
 from mako.lookup import TemplateLookup
 
 from .. import __version__
-from ..catalog import cns as catalog_namespace
+
+# Read catalog namespace from config
+_here = os.path.abspath(os.path.dirname(__file__))
+_config = ConfigParser()
+_config.read(os.path.join(_here, "..", "config.ini"))
+catalog_namespace = _config.get("DEFAULT", "catalog_namespaces")
 
 _here_dir = os.path.split(os.path.abspath(__file__))[0]
 template_dirs = [os.path.join(_here_dir, "repo_templates")]
