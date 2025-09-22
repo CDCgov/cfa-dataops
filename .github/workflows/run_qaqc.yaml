@@ -27,8 +27,8 @@ jobs:
 
       - name: Test
         run: |
-          poetry install --no-root --with dev
-          poetry run pytest tests --doctest-modules -vv --cov=cfa --cov-report html --cov-report term
+          poetry install --with dev
+          poetry run pytest
 
       # - name: Build badge
       #   if: ${{ github.event.pull_request.merged == true }}
