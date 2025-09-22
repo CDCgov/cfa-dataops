@@ -62,4 +62,4 @@ build-backend = "poetry.core.masonry.api"
 dataops_catalog_init = "cfa.dataops.create_catalog.command:main"
 
 [tool.pytest.ini_options]
-addopts = "tests/ --doctest-modules -vv --cov=cfa --cov-report html --cov-report term"
+addopts = "tests --doctest-modules -vv --cov=cfa --cov-report html --cov-report term"
