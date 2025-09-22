@@ -8,6 +8,52 @@ The versioning pattern is `YYYY.MM.DD.micro(a/b/{none if release})
 
 ---
 
+## [2025.09.22.0a]
+
+### Added
+
+- **New catalog creation CLI**: `dataops_catalog_init` command for creating structured catalog repositories
+- **Multiple catalog support**: Ability to install and manage multiple catalog libraries in the same Python environment
+- **Unified access interfaces**: `datacat` and `reportcat` provide unified access to datasets and reports across all installed catalogs
+- **Comprehensive catalog management guide**: New `docs/managing_catalogs.md` with complete setup and multi-catalog workflows
+- **Catalog repository structure**: Standardized structure with `datasets/`, `reports/`, and `workflows/` directories
+- **Dataset access ledger**: automatically saves an log of dataset access to a *.jsonl file.
+
+### Updated
+
+- **Complete documentation restructure**: Eliminated duplication and simplified navigation across all guides
+- **API changes**:
+  - `list_datasets()` → `datacat.__namespace_list__`
+  - `get_data()` → `datacat.{catalog}.{dataset}.{load/extract/stage_##}.get_dataframe()`
+  - Added `datacat.{catalog}.{dataset}.{load/extract/stage_##}.get_dataframe()` for raw data access
+  - Added sequences of bytes to `datacat.{catalog}.{dataset}.{load/extract/stage_##}.write_blob()` for data writing multiple files and auto versioning
+- **Documentation flow**: Clear progression from setup (Managing Catalogs) to usage guides
+- **Report access**: All examples updated to use `reportcat.__namespace_list__` and namespace access
+- **ETL examples**: Updated to show proper `datacat` usage for configuration access and data operations
+
+### Changed
+
+- **Catalog-centric approach**: All development now happens within catalog repositories rather than the main cfa-dataops repo
+- **Prerequisites handling**: Centralized setup instructions in managing_catalogs.md with references from other guides
+- **Documentation organization**:
+  - `docs/index.md`: New welcome page with logical flow and quick reference
+  - `docs/data_user_guide.md`: Simplified to focus purely on data access patterns
+  - `docs/data_developer_guide.md`: Streamlined to focus on ETL development within catalogs
+  - `docs/report_generation.md`: Simplified to focus on report generation using reportcat
+- **Namespace structure**: Catalogs now use `cfa.catalog.{unique_name}` namespace pattern
+- **Storage configuration**: Default storage account and container settings in `catalog_defaults.toml`
+
+### Technical Details
+
+- **CLI implementation**: Complete command-line interface in `cfa/dataops/create_catalog/command.py`
+- **Template system**: Mako templates in `cfa/dataops/create_catalog/repo_templates/`
+- **Repository files**: Pre-configured files in `cfa/dataops/create_catalog/repo_files/`
+- **Name sanitization**: Automatic cleanup of catalog names (lowercase, underscores, alphanumeric only)
+- **Interactive confirmation**: User confirmation before catalog creation
+- **Error handling**: Proper validation for existing directories and permissions
+- **Version tracking**: Catalog creation version tracking in generated `__init__.py` files
+
+
 ## [2025.09.03.0a]
 
 ### Updated
