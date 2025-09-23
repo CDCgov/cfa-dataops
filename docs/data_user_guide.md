@@ -1,48 +1,47 @@
 # Data User Guide
 
-This guide explains how to access and use datasets in the CFA Scenarios DataOps system.
+This guide explains how to access and use datasets in the CFA DataOps system.
 
-## Available Datasets
+> **Prerequisites**: You need to have catalog repositories created and installed. See [Managing Catalogs](managing_catalogs.md) for setup instructions.
 
-To list all available datasets:
+## Quick Start
 
 ```python
-from cfa.dataops import list_datasets
+from cfa.dataops import datacat
 
-available_datasets = list_datasets()
-print(available_datasets)
+# List all available datasets
+print("Available datasets:", datacat.__namespace_list__)
+
+# Access a dataset
+df = datacat.private.scenarios.covid19vax_trends.load.get_dataframe()
 ```
 
 ## Accessing Data
 
-When the ETL pipelines are run, the data sources (raw and/or transformed) are stored into Azure Blob Storage. There will be times when we want to access these datasets directly. The function `get_data()` found in `cfa.dataops.datasets.catalog` helps retrieve that data, compile into a single dataframe, and return that dataframe:
+When the ETL pipelines are run, the data sources (raw and/or transformed) are stored into Azure Blob Storage. You can access these datasets directly using the `datacat` interface:
 
 ```python
-from cfa.dataops import get_data
+from cfa.dataops import datacat
 
 # Get latest transformed data as pandas DataFrame
-df = get_data("scenarios.covid19vax_trends")
+df = datacat.private.scenarios.covid19vax_trends.load.get_dataframe()
 
 # Get raw data as polars DataFrame
-df = get_data(
-    name="scenarios.seroprevalence",
-    type="raw",
-    output="polars"
-)
+df = datacat.private.scenarios.seroprevalence.extract.get_dataframe(output="polars")
 
 # Get specific version
-df = get_data(
-    name="scenarios.covid19vax_trends",
+df = datacat.private.scenarios.covid19vax_trends.load.get_dataframe(
     version="2025-06-03T17-56-50"
 )
 ```
 
-### Parameters
+### Dataset Access Methods
 
-- `name`: Dataset identifier (required)
-- `version`: Either 'latest' or specific version timestamp (default: 'latest')
-- `type`: Either 'raw' or 'transformed' (default: 'transformed')
-- `output`: Either 'pandas' or 'polars' DataFrame (default: 'pandas')
+- `datacat.{catalog}.{dataset}.load.get_dataframe()`: Access transformed data
+- `datacat.{catalog}.{dataset}.extract.get_dataframe()`: Access raw data
+- Parameters for `get_dataframe()`:
+  - `version`: Either 'latest' or specific version timestamp (default: 'latest')
+  - `output`: Either 'pandas' or 'polars' DataFrame (default: 'pandas')
 
 ## Working with Data
 
@@ -53,8 +52,7 @@ Data is versioned using timestamps. Each version represents a snapshot of the da
 To get a specific version:
 
 ```python
-df = get_data(
-    "scenarios.covid19vax_trends",
+df = datacat.private.scenarios.covid19vax_trends.load.get_dataframe(
     version="2025-06-03T17-59-16"
 )
 ```
@@ -66,7 +64,7 @@ In order to see what versions are available, use the data catalog's convenient n
 >>> # these follow hierarchical naming created using the dataset
 >>> # config TOML, so extract or load are the makes assigned to
 >>> # raw or transformed datasets per the get_data function
->>> datacat.scenarios.covid19vax_trends.load.get_versions()
+>>> datacat.private.scenarios.covid19vax_trends.load.get_versions()
 ['2025-06-03T17-59-16',
  '2025-05-30T19-55-51',
  '2025-05-30T14-50-36',
@@ -87,38 +85,33 @@ All datasets have schema validation for both raw and transformed data. The schem
 ### COVID-19 Vaccination Trends
 
 ```python
-from cfa.dataops import get_data
+from cfa.dataops import datacat
 
 # Get latest transformed data
-vax_df = get_data("scenarios.covid19vax_trends")
+vax_df = datacat.private.scenarios.covid19vax_trends.load.get_dataframe()
 
 # Get raw data for analysis
-raw_vax = get_data(
-    "scenarios.covid19vax_trends",
-    type="raw"
-)
+raw_vax = datacat.private.scenarios.covid19vax_trends.extract.get_dataframe()
 ```
 
 ### Seroprevalence Data
 
 ```python
-from cfa.dataops import get_data
+from cfa.dataops import datacat
 
 # Get as polars DataFrame
-sero_df = get_data(
-    "scenarios.seroprevalence",
-    output="polars"
-)
+sero_df = datacat.private.scenarios.seroprevalence.load.get_dataframe(output="polars")
 ```
 
 ## Common Issues
 
 1. Dataset Not Found
-   - Verify dataset name using `list_datasets()`
+   - Verify dataset name using `datacat.__namespace_list__`
    - Check for typos in namespace path
+   - Ensure the catalog containing the dataset is installed
 2. Version Not Found
-   - Use 'latest' to get most recent version
-   - Check available versions in Azure Blob Storage
+   - Use 'latest' to get most recent version (default)
+   - Check available versions using `datacat.{catalog}.{dataset}.load.get_versions()`
 3. Schema Validation Errors
    - Ensure data matches expected schema
    - Check for missing required columns

@@ -1,2 +1,3 @@
 recursive-include cfa/dataops/reporting/reports
 recursive-include cfa/dataops/etl/transform_templates
+include cfa/dataops/config.ini

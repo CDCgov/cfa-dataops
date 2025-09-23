@@ -1,0 +1,30 @@
+# This is an example dataset configuration file for the dataops create_catalog tool.
+# It is designed to represent the data provenance of reference data that can be used
+# on multiple projects. Reference data is typically static or changes infrequently.
+# Thus, it is not necessary to store the raw extracted data, only the transformed
+
+############################################################################
+
+[properties]
+# The name field is the only required field here. Though other
+# files can be accessed in the datacat by key/name.
+
+name = "experiment_test"
+type = "experiment"
+
+############################################################################
+
+[load]
+# These are the details of where to store the transformed and loaded data.
+# If not included or given an empty string, the defaults in the
+# catalog_defaults.toml will be used
+
+account = ""
+container = ""
+prefix = "prefix_test/transformed/test_dataset"
+
+############################################################################
+
+# Changelog
+# ---------
+# 2025-09-19: test data created

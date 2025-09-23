@@ -1,4 +1,3 @@
-import glob
 import os
 from pprint import pprint
 from tempfile import TemporaryDirectory
@@ -13,9 +12,6 @@ from traitlets.config import Config
 from cfa.cloudops.blob_helpers import write_blob_stream
 
 _here_dir = os.path.split(os.path.abspath(__file__))[0]
-_report_paths = glob.glob(
-    os.path.join(_here_dir, "**", "**.ipynb"), recursive=True
-)
 
 
 def remove_ws_and_nonalpha(s: str) -> str:
@@ -33,22 +29,6 @@ def remove_ws_and_nonalpha(s: str) -> str:
     """
     s = s.replace(" ", "_").replace(".", "_").lower()
     return "".join(c for c in s if c.isalnum() or c == "_")
-
-
-# get the namespace mapping for the available reports
-report_ns_map = {}
-for rp_i in _report_paths:
-    if rp_i.startswith(os.path.join(_here_dir, "reports")):
-        ns_list = [
-            remove_ws_and_nonalpha(i)
-            for i in rp_i.split(f"reports{os.sep}")[-1].split(os.sep)
-        ]
-        current = report_ns_map
-        for part in ns_list[:-1]:
-            if part not in current:
-                current[part] = {}
-            current = current[part]
-        current[ns_list[-1]] = rp_i
 
 
 def retitle_notebook(nb_loc: str, new_title: str) -> None:
@@ -203,33 +183,3 @@ def report_dict_to_sn(d: Any) -> SimpleNamespace:
         for k, v in d.items()
     ]
     return x
-
-
-def get_report_catalog() -> SimpleNamespace:
-    """Get the report catalog as a SimpleNamespace object.
-
-    Returns:
-        SimpleNamespace: The report catalog.
-
-    example:
-
-        >>> reportcat = get_report_catalog()
-        >>> reportcat.examples.basics_ipynb.print_params()
-        {'intercept': {'default': '0.5',
-                       'help': 'y-intercept of the line',
-                       'inferred_type_name': 'float',
-                       'name': 'intercept'},
-         'slope': {'default': '1.2',
-                   'help': 'adding help text can be achieved with in-line comments',
-                   'inferred_type_name': 'float',
-                   'name': 'slope'},
-         'step_size': {'default': '0.5',
-                       'help': 'step size for generating x values',
-                       'inferred_type_name': 'float',
-                       'name': 'step_size'},
-         'x_range': {'default': '(-5, 5)',
-                     'help': 'range of x values to consider',
-                     'inferred_type_name': 'tuple',
-                     'name': 'x_range'}}
-    """
-    return report_dict_to_sn(report_ns_map)

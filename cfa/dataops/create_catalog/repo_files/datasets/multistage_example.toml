@@ -1,0 +1,74 @@
+# This is an example/template for a multistage dataset configuration
+# It is designed to represent the data provenance of data extracted
+# from and source out in the wild, then passes through multiple stages of
+# transformation, and then loaded into your controlled data storage
+# (e.g. blob storage) over multiple stages.
+# Datasets extracted from uncontrolled sources should be
+# considered unstable and subject to change without notice.
+# Thus, it is recommended to store the raw extracted data
+# as well as the transformed data in your controlled storage.
+# This example uses a CDC data source, but you can use any
+# publicly available data source. any value in curly braces {}
+# should be replaced with your own values as needed.
+
+############################################################################
+
+[properties]
+# The name field is the only required field here. Though other
+# files can be accessed in the datacat by key/name.
+
+name = "multistage_eg"
+automate = false
+transform_templates = ["{location for any sql applied to reference data}"]
+schemas = "{path file containing any dataframe schema definitions}"
+type = "multistage"
+
+############################################################################
+
+[source]
+# These source fields are open to being changed based on the source type
+# and api requirements. This example uses a Socrata data source
+# which is common for CDC data sources.
+
+url = "https://data.cdc.gov/resource/{data_uid}.csv"
+pagination = {limit = 50000}
+
+############################################################################
+
+[stage_01]
+# These are the details of where to store the raw extracted data.
+# If not included or given an empty string, the defaults in the
+# catalog_defaults.toml will be used
+
+
+account = ""
+container = ""
+prefix = "dataops/{group_user_or_repo_name}/bronze/{dataset_name}"
+
+############################################################################
+
+[stage_02]
+# These are the details of where to store the transformed and loaded data.
+# If not included or given an empty string, the defaults in the
+# catalog_defaults.toml will be used
+
+account = ""
+container = ""
+prefix = "dataops/{group_user_or_repo_name}/silver/{dataset_name}"
+
+############################################################################
+
+[stage_03]
+# These are the details of where to store the transformed and loaded data.
+# If not included or given an empty string, the defaults in the
+# catalog_defaults.toml will be used
+
+account = ""
+container = ""
+prefix = "dataops/{group_user_or_repo_name}/gold/{dataset_name}"
+
+############################################################################
+
+# Changelog
+# ---------
+# 2025-09-08: Initial version created by Phil Rogers

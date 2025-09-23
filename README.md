@@ -13,6 +13,7 @@ This project provides data tools and low friction access to versioned datasets w
 - Data validation and quality checks
 - Custom workflows
 - Tooling for easy access to Socrata Open Data API (e.i., data.cdc.gov) (copied and modified from [here](https://github.com/CDCgov/cfasodapy))
+- Ability to initialize new dataset catalog libraries and maintain datasets in more than one repo
 
 ## Getting started
 
@@ -20,16 +21,16 @@ This project provides data tools and low friction access to versioned datasets w
 2. Ensure your have access to the relevant resources (e.g., `az login --identity`)
 3. See which datasets are available:
    ```python
-   import cfa.dataops
-   print(cfa.dataops.list_datasets())
+   from cfa.dataops import datacat
+   print(datacat.__namespace_list__)
    ```
-4. See which versions of a dataset are available:
+4. See which versions of a dataset are available (blob endpoints for datasets will be namedL `.load`, `.extract`, or `.stage_##`):
    ```python
-   print(cfa.dataops.datacat.scenarios.seroprevalence.load.get_versions())
+   print(datacat.{{dataset}}.load.get_versions())
    ```
 5. Get a specific version of a dataset:
    ```python
-   df = cfa.dataops.get_data(name="scenarios.seroprevalence", version="latest", output="polars")
+   df = datacat.{{dataset}}.load.get_dataframe()
    df.glimpse()
    ```
 
