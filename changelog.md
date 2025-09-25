@@ -8,6 +8,16 @@ The versioning pattern is `YYYY.MM.DD.micro(a/b/{none if release})
 
 ---
 
+## [2025.09.25.0a]
+
+### Updated
+
+- create_catalog pyproject.toml template for a namespace packaging requirement when not using poetry and key name update for dependency group "dev"
+
+### Fixed
+
+- Circular import error in catalogs by copying dependency over to ne catalog `__init__.py` from utils.
+
 ## [2025.09.22.0a]
 
 ### Added
