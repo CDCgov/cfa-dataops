@@ -22,7 +22,10 @@ dependencies = [
     "faker (>=37.8.0,<38.0.0)",
 ]
 
-[dependency-groups]
+[tool.setuptools.packages.find]
+include = ["${catalog_namespace}*"]
+
+[project.optional-dependencies]
 dev = [
     "pytest (>=8.3.5)",
     "pytest-mock (>=3.14.0)",
