@@ -8,7 +8,6 @@ from importlib import import_module
 from io import BytesIO
 from types import SimpleNamespace
 from typing import Any, List, Sequence
-from uuid import uuid4
 
 import pandas as pd
 import polars as pl
@@ -28,7 +27,7 @@ from .config_validator import (
     ValidationError,
 )
 from .reporting.catalog import report_dict_to_sn
-from .utils import get_dataset_dot_path, get_timestamp, get_user
+from .utils import get_dataset_dot_path, get_date, get_timestamp, get_user
 
 _here = os.path.abspath(os.path.dirname(__file__))
 _config = ConfigParser()
@@ -184,6 +183,7 @@ class BlobEndpoint:
         file_buffer: bytes | Sequence[bytes],
         path_after_prefix: str,
         auto_version: bool = False,
+        append: bool = False,
     ) -> None:
         """For writing file buffers to blob storage. Remember to include
         the a version to the path (i.e., {version}/{file}) or use
@@ -195,8 +195,9 @@ class BlobEndpoint:
             file_buffer (bytes or List[bytes]): the file buffer or list of buffers
             path_under_prefix (str): everything beyond the prefix
             auto_version (bool, optional): whether to automatically version
+            append (bool, optional): whether to append to existing file (only for single file writes).
         """
-        if auto_version:
+        if auto_version and not append:
             path_after_prefix = (
                 f"{get_timestamp()}/{path_after_prefix.lstrip('/')}"
             )
@@ -206,7 +207,7 @@ class BlobEndpoint:
             file_buffer = [file_buffer]
         total_partitions = len(file_buffer)
         for idx, fb_i in enumerate(file_buffer):
-            if total_partitions > 1:
+            if total_partitions > 1 and not append:
                 url_parts = os.path.splitext(full_path)
                 auto_full_path = f"{url_parts[0]}_{str(idx).zfill(len(str(total_partitions)))}{url_parts[1]}"
             else:
@@ -216,6 +217,7 @@ class BlobEndpoint:
                 blob_url=auto_full_path,
                 account_name=self.account,
                 container_name=self.container,
+                append_blob=append,
             )
         self.ledger_entry(action="write")
         # print(f"file written to: {full_path}")
@@ -383,9 +385,11 @@ class BlobEndpoint:
         log_data = (json.dumps(log_entry) + "\n").encode("utf-8")
         write_blob_stream(  # TODO: make this a streaming write to a single file (one per day parsed from get_timestamp())
             data=log_data,
-            blob_url=f"{self.ledger_location['prefix']}/{get_timestamp()}_{uuid4().hex}.jsonl",
+            blob_url=f"{self.ledger_location['prefix']}/{get_date()}.jsonl",
             account_name=self.ledger_location["account"],
             container_name=self.ledger_location["container"],
+            append_blob=True,
+            overwrite=False,
         )
 
     def save_dataframe(

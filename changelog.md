@@ -8,6 +8,16 @@ The versioning pattern is `YYYY.MM.DD.micro(a/b/{none if release})
 
 ---
 
+## [2025.10.03.0a]
+
+### Added
+
+- Save helper methods to BlobEndpoint
+
+### Updated
+
+- Made ledger append to date files
+
 ## [2025.09.25.0a]
 
 ### Updated
