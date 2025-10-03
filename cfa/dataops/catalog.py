@@ -388,6 +388,147 @@ class BlobEndpoint:
             container_name=self.ledger_location["container"],
         )
 
+    def save_dataframe(
+        self,
+        df: pd.DataFrame | pl.DataFrame,
+        path_after_prefix: str,
+        file_format: str = "parquet",
+        auto_version: bool = False,
+    ) -> None:
+        """Save a dataframe to the blob endpoint
+
+        Args:
+            df (pd.DataFrame | pl.DataFrame): the dataframe to save
+            path_after_prefix (str): the path after the prefix to save to
+            file_format (str, optional): the file format to save as.
+            Defaults to "parquet".
+            auto_version (bool, optional): whether to automatically version
+            the data. Defaults to True.
+            partition_cols (List[str], optional): columns to partition by
+            when saving. Defaults to None.
+        """
+        if file_format not in ["parquet", "csv", "json", "jsonl"]:
+            raise ValueError(
+                f"File format {file_format} not supported. Use 'parquet', 'csv', 'json', or 'jsonl'."
+            )
+        if file_format in ["json", "jsonl"] and path_after_prefix.endswith(
+            ".json"
+        ):
+            path_after_prefix = path_after_prefix[:-5] + ".jsonl"
+            print("Changing file extension to .jsonl for line-delimited JSON.")
+        if isinstance(df, pd.DataFrame):
+            if file_format == "parquet":
+                pq_bytes = df.to_parquet(index=False, compression="snappy")
+                self.write_blob(
+                    file_buffer=pq_bytes,
+                    path_after_prefix=path_after_prefix
+                    if path_after_prefix.endswith(".parquet")
+                    else path_after_prefix + ".parquet",
+                    auto_version=auto_version,
+                )
+            elif file_format == "csv":
+                csv_bytes = df.to_csv(index=False).encode("utf-8")
+                self.write_blob(
+                    file_buffer=csv_bytes,
+                    path_after_prefix=path_after_prefix
+                    if path_after_prefix.endswith(".csv")
+                    else path_after_prefix + ".csv",
+                    auto_version=auto_version,
+                )
+            elif file_format in ["json", "jsonl"]:
+                json_bytes = df.to_json(orient="records", lines=True).encode(
+                    "utf-8"
+                )
+                self.write_blob(
+                    file_buffer=json_bytes,
+                    path_after_prefix=path_after_prefix
+                    if path_after_prefix.endswith(".jsonl")
+                    else path_after_prefix + ".jsonl",
+                    auto_version=auto_version,
+                )
+        elif isinstance(df, pl.DataFrame):
+            if file_format == "parquet":
+                buffer = BytesIO()
+                df.write_parquet(buffer, compression="snappy")
+                pq_bytes = buffer.getvalue()
+                self.write_blob(
+                    file_buffer=pq_bytes,
+                    path_after_prefix=path_after_prefix
+                    if path_after_prefix.endswith(".parquet")
+                    else path_after_prefix + ".parquet",
+                    auto_version=auto_version,
+                )
+            elif file_format == "csv":
+                csv_bytes = df.write_csv().encode("utf-8")
+                self.write_blob(
+                    file_buffer=csv_bytes,
+                    path_after_prefix=path_after_prefix
+                    if path_after_prefix.endswith(".csv")
+                    else path_after_prefix + ".csv",
+                    auto_version=auto_version,
+                )
+            elif file_format in ["json", "jsonl"]:
+                json_bytes = df.write_ndjson().encode("utf-8")
+                self.write_blob(
+                    file_buffer=json_bytes,
+                    path_after_prefix=path_after_prefix
+                    if path_after_prefix.endswith(".jsonl")
+                    else path_after_prefix + ".jsonl",
+                    auto_version=auto_version,
+                )
+
+    def save_file_to_blob(
+        self,
+        file_path: str,
+        path_after_prefix: str,
+        auto_version: bool = False,
+    ) -> None:
+        """Save a local file to the blob endpoint
+
+        Args:
+            file_path (str): the local file path to save
+            path_after_prefix (str): the path after the prefix to save to
+            auto_version (bool, optional): whether to automatically version
+            the data. Defaults to False.
+        """
+        if not os.path.isfile(file_path):
+            raise ValueError(f"File {file_path} does not exist.")
+        with open(file_path, "rb") as f:
+            file_bytes = f.read()
+        self.write_blob(
+            file_buffer=file_bytes,
+            path_after_prefix=path_after_prefix,
+            auto_version=auto_version,
+        )
+
+    def save_dir_to_blob(
+        self,
+        dir_path: str,
+        path_after_prefix: str,
+        auto_version: bool = False,
+    ) -> None:
+        """Save a local directory to the blob endpoint
+
+        Args:
+            dir_path (str): the local directory path to save
+            path_after_prefix (str): the path after the prefix to save to
+            auto_version (bool, optional): whether to automatically version
+            the data. Defaults to False.
+        """
+        if not os.path.isdir(dir_path):
+            raise ValueError(f"Directory {dir_path} does not exist.")
+        file_buffers = []
+        for root, _, files in os.walk(dir_path):
+            for file in files:
+                file_path = os.path.join(root, file)
+                with open(file_path, "rb") as f:
+                    file_buffers.append(f.read())
+        self.write_blob(
+            file_buffer=file_buffers,
+            path_after_prefix=path_after_prefix,
+            auto_version=auto_version,
+        )
+
 
 def dict_to_sn(d: Any, defaults: dict = None, ns: str = "") -> SimpleNamespace:
     """Simple recursive namespace construction
