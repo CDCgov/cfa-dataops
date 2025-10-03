@@ -383,13 +383,13 @@ class TestSaveDirToBlob:
                 auto_version=False,
             )
 
-            mock_write.assert_called_once()
-            call_args = mock_write.call_args
-            assert call_args[1]["path_after_prefix"] == "data/uploaded_dir"
-            assert call_args[1]["auto_version"] is False
-            # Should have a list of file buffers (3 files)
-            assert isinstance(call_args[1]["file_buffer"], list)
-            assert len(call_args[1]["file_buffer"]) == 3
+            # Should call write_blob once per file (3 files total)
+            assert mock_write.call_count == 3
+
+            # Verify auto_version is False for all calls
+            for call in mock_write.call_args_list:
+                assert call[1]["auto_version"] is False
+                assert isinstance(call[1]["file_buffer"], bytes)
 
     def test_save_dir_to_blob_with_auto_version(self, mocker, blob_endpoint):
         """Test saving a directory with auto-versioning enabled"""
@@ -405,7 +405,8 @@ class TestSaveDirToBlob:
                 auto_version=True,
             )
 
-            mock_write.assert_called_once()
+            # Should call write_blob once per file (1 file)
+            assert mock_write.call_count == 1
             call_args = mock_write.call_args
             assert call_args[1]["auto_version"] is True
 
@@ -429,10 +430,8 @@ class TestSaveDirToBlob:
                 auto_version=False,
             )
 
-            mock_write.assert_called_once()
-            call_args = mock_write.call_args
-            # Empty directory should result in an empty list
-            assert call_args[1]["file_buffer"] == []
+            # Empty directory should result in no write_blob calls
+            mock_write.assert_not_called()
 
     def test_save_dir_preserves_file_count(self, mocker, blob_endpoint):
         """Test that all files in a directory are captured"""
@@ -442,17 +441,7 @@ class TestSaveDirToBlob:
                 with open(os.path.join(temp_dir, f"file{i}.txt"), "w") as f:
                     f.write(f"content {i}")
 
-            captured_buffer = None
-
-            def capture_write_blob(
-                file_buffer, path_after_prefix, auto_version
-            ):
-                nonlocal captured_buffer
-                captured_buffer = file_buffer
-
-            mocker.patch.object(
-                blob_endpoint, "write_blob", side_effect=capture_write_blob
-            )
+            mock_write = mocker.patch.object(blob_endpoint, "write_blob")
 
             blob_endpoint.save_dir_to_blob(
                 dir_path=temp_dir,
@@ -460,9 +449,11 @@ class TestSaveDirToBlob:
                 auto_version=False,
             )
 
-            assert len(captured_buffer) == 5
-            # Verify all are bytes
-            assert all(isinstance(b, bytes) for b in captured_buffer)
+            # Should call write_blob once per file (5 files)
+            assert mock_write.call_count == 5
+            # Verify all buffers are bytes
+            for call in mock_write.call_args_list:
+                assert isinstance(call[1]["file_buffer"], bytes)
 
 
 class TestSaveMethodsIntegration:

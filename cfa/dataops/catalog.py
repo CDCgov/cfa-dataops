@@ -521,17 +521,17 @@ class BlobEndpoint:
         """
         if not os.path.isdir(dir_path):
             raise ValueError(f"Directory {dir_path} does not exist.")
-        file_buffers = []
         for root, _, files in os.walk(dir_path):
             for file in files:
                 file_path = os.path.join(root, file)
                 with open(file_path, "rb") as f:
-                    file_buffers.append(f.read())
-        self.write_blob(
-            file_buffer=file_buffers,
-            path_after_prefix=path_after_prefix,
-            auto_version=auto_version,
-        )
+                    file_buffer = f.read()
+                rel_path = f"{'/'.join([i for i in os.path.split(root) if i])}/{'/'.join([i for i in os.path.split(file) if i])}"
+                self.write_blob(
+                    file_buffer=file_buffer,
+                    path_after_prefix=f"{path_after_prefix}/{rel_path}",
+                    auto_version=auto_version,
+                )
 
 
 def dict_to_sn(d: Any, defaults: dict = None, ns: str = "") -> SimpleNamespace:
