@@ -19,6 +19,8 @@ def mock_write_blob_stream():
         blob_url: str,
         account_name: str,
         container_name: str,
+        append_blob: bool = False,
+        overwrite: bool = True,
     ) -> None:
         return None
 

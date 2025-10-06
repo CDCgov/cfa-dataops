@@ -105,6 +105,15 @@ def get_timestamp(make_standard: bool = False) -> str:
     return datetime.now().strftime("%Y-%m-%dT%H-%M-%S")
 
 
+def get_date() -> str:
+    """Get the current date in YYYY-MM-DD format.
+
+    Returns:
+        str: the current date as a string in YYYY-MM-DD format.
+    """
+    return datetime.now().strftime("%Y-%m-%d")
+
+
 def get_user() -> str:
     """Get the current system user
 
