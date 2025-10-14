@@ -301,15 +301,17 @@ class BlobEndpoint:
         )
 
     def get_dataframe(
-        self, output="pandas", version="latest"
+        self, output="pandas", version="latest", pl_lazy: bool = False
     ) -> pd.DataFrame | pl.DataFrame:
         """Get the data as a pandas or polars dataframe
 
         Args:
             output (str, optional): the type of dataframe to return,
-            either 'pandas' or 'polars'. Defaults to "pandas".
+                either 'pandas' or 'polars'. Defaults to "pandas".
             version (str, optional): the version of the data to get.
-            Defaults to "latest".
+                Defaults to "latest".
+            pl_lazy (bool, optional): whether to return a lazy polars dataframe.
+                Defaults to False.
 
         Raises:
             ValueError: if output is not 'pandas' or 'polars'
@@ -334,6 +336,8 @@ class BlobEndpoint:
                     [pl.read_csv(blob) for blob in blob_files],
                     how="vertical_relaxed",
                 )
+                if pl_lazy:
+                    df = df.lazy()
             return df
         elif file_ext == "json":
             if output in ["pandas", "pd"]:
@@ -343,6 +347,8 @@ class BlobEndpoint:
                 df = pl.concat(
                     [pl.read_json(blob) for blob in blob_files],
                 )
+                if pl_lazy:
+                    df = df.lazy()
             return df
         elif file_ext == "jsonl":
             if output in ["pandas", "pd"]:
@@ -354,6 +360,8 @@ class BlobEndpoint:
                 df = pl.concat(
                     [pl.read_ndjson(blob) for blob in blob_files],
                 )
+                if pl_lazy:
+                    df = df.lazy()
             return df
         elif file_ext == "parquet" or file_ext == "parq":
             if output in ["pandas", "pd"]:
@@ -366,6 +374,8 @@ class BlobEndpoint:
                     [pl.read_parquet(pq_file) for pq_file in blob_files],
                     how="vertical_relaxed",
                 )
+                if pl_lazy:
+                    df = df.lazy()
             return df
 
     def ledger_entry(self, action: str) -> None:
