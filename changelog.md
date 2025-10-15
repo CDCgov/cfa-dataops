@@ -8,6 +8,12 @@ The versioning pattern is `YYYY.MM.DD.micro(a/b/{none if release})
 
 ---
 
+## [2025.10.14.0a]
+
+### Added
+
+- Support for getting polars LazyFrames
+
 ## [2025.10.03.0a]
 
 ### Added
