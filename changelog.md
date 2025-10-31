@@ -20,6 +20,7 @@ The versioning pattern is `YYYY.MM.DD.micro(a/b/{none if release})
 - **Tree utility function**: New `tree()` function in `utils.py` for displaying directory structures
 - **Local data download**: `download_version_to_local()` method for BlobEndpoint to download datasets to local filesystem
 - **Tests**: Comprehensive test coverage for new CLI commands and utilities
+- New docs for CLI-tools
 
 ### Updated
 
