@@ -4,6 +4,8 @@ import getpass
 import glob
 import os
 from datetime import datetime
+from itertools import islice
+from pathlib import Path
 from typing import Optional
 
 
@@ -124,3 +126,66 @@ def get_user() -> str:
         return getpass.getuser()
     except Exception:
         return "unknown_user"
+
+
+def tree(
+    dir_path: Path,
+    level: int = -1,
+    limit_to_directories: bool = False,
+    length_limit: int = 1000,
+    show_hidden: bool = False,
+):
+    """Given a directory Path object print a visual tree structure
+
+    Args:
+        dir_path (Path): the root directory path
+        level (int): how many levels deep to traverse, -1 for unlimited
+        limit_to_directories (bool): whether to only show directories
+        length_limit (int): maximum number of lines to print
+        show_hidden (bool): whether to show hidden files and directories
+    Returns:
+        str: visual tree structure
+    """
+    space = "    "
+    branch = "│   "
+    tee = "├── "
+    last = "└── "
+    dir_path = Path(dir_path)  # accept string coercible to Path
+    files = 0
+    directories = 0
+
+    def inner(dir_path: Path, prefix: str = "", level=-1):
+        nonlocal files, directories
+        if not level:
+            return  # 0, stop iterating
+        if limit_to_directories:
+            contents = [d for d in dir_path.iterdir() if d.is_dir()]
+        else:
+            contents = list(dir_path.iterdir())
+        pointers = [tee] * (len(contents) - 1) + [last]
+        for pointer, path in zip(pointers, contents):
+            if not show_hidden and path.name.startswith("."):
+                continue
+            if path.is_dir():
+                yield prefix + pointer + path.name
+                directories += 1
+                extension = branch if pointer == tee else space
+                yield from inner(
+                    path, prefix=prefix + extension, level=level - 1
+                )
+            elif not limit_to_directories:
+                yield prefix + pointer + path.name
+                files += 1
+
+    lines = []
+    lines.append(dir_path.name)
+    iterator = inner(dir_path, level=level)
+    for line in islice(iterator, length_limit):
+        lines.append(line)
+    if next(iterator, None):
+        lines.append(f"... length_limit, {length_limit}, reached, counted:")
+    return (
+        "\n".join(lines)
+        + f"\n{directories} directories"
+        + (f", {files} files" if files else "")
+    )
