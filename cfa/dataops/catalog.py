@@ -300,6 +300,44 @@ class BlobEndpoint:
             key=lambda x: x["creation_time"],
         )
 
+    def download_version_to_local(
+        self, local_path: str, version: str = "latest", force: bool = False
+    ) -> bool:
+        """Download a specific version of the data to a local path
+
+        Args:
+            local_path (str): the local path to download to
+            version (str, optional): the version to download. Defaults to "latest".
+            force (bool, optional): whether to force re-download if local.
+        Returns:
+            bool: whether any files were written
+        """
+        written = False
+        blobs = self._get_version_blobs(version)
+        for blob in blobs:
+            blob_data = read_blob_stream(
+                blob_url=blob["name"],
+                account_name=self.account,
+                container_name=self.container,
+            )
+            relative_path = blob["name"].removeprefix(f"{self.prefix}/")
+            local_file_path = os.path.join(local_path, relative_path)
+            local_dir = os.path.dirname(local_file_path)
+            os.makedirs(local_dir, exist_ok=True)
+            if os.path.exists(local_file_path) and not force:
+                continue
+            # Handle both raw bytes and objects with content_as_bytes() method
+            if isinstance(blob_data, bytes):
+                file_bytes = blob_data
+            else:
+                file_bytes = blob_data.content_as_bytes()
+            with open(local_file_path, "wb") as f:
+                f.write(file_bytes)
+                written = True
+        if written:
+            self.ledger_entry(action="read")
+        return written
+
     def get_dataframe(
         self, output="pandas", version="latest", pl_lazy: bool = False
     ) -> pd.DataFrame | pl.DataFrame:

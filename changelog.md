@@ -8,6 +8,24 @@ The versioning pattern is `YYYY.MM.DD.micro(a/b/{none if release})
 
 ---
 
+## [2025.10.31.0a]
+
+### Added
+
+- **New CLI commands** for dataset management:
+  - `dataops_datasets`: List available datasets with optional prefix filtering
+  - `dataops_stages`: View available stages for a specific dataset
+  - `dataops_versions`: List available versions for a dataset stage
+  - `dataops_save`: Download and save dataset versions locally
+- **Tree utility function**: New `tree()` function in `utils.py` for displaying directory structures
+- **Local data download**: `download_version_to_local()` method for BlobEndpoint to download datasets to local filesystem
+- **Tests**: Comprehensive test coverage for new CLI commands and utilities
+- New docs for CLI-tools
+
+### Updated
+
+- Documentation formatting: Changed "Description" to "Summary" with adjusted heading levels
+
 ## [2025.10.14.0a]
 
 ### Added

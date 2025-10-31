@@ -9,9 +9,10 @@ Welcome to the CFA DataOps system - a catalog-based approach to data management,
 
 ## Using the System
 
-3. **[Data User Guide](data_user_guide.md)** - Access and work with datasets using `datacat`
-4. **[Data Developer Guide](data_developer_guide.md)** - Add datasets and ETL processes to catalogs
-5. **[Report Generation](report_generation.md)** - Create and generate reports using `reportcat`
+3. **[CLI Tools Reference](cli_tools.md)** - Command-line tools for exploring and downloading datasets
+4. **[Data User Guide](data_user_guide.md)** - Access and work with datasets using `datacat`
+5. **[Data Developer Guide](data_developer_guide.md)** - Add datasets and ETL processes to catalogs
+6. **[Report Generation](report_generation.md)** - Create and generate reports using `reportcat`
 
 ## Quick Reference
 

@@ -1,6 +1,6 @@
 [project]
 name = "cfa.dataops"
-version = "2025.10.14.0a"
+version = "2025.10.31.0a"
 description = "Data cataloging, ETL, modeling, verification, and validation for CFA"
 authors = [
     { name = "Phil Rogers", email = "ap66@cdc.gov" },
@@ -60,6 +60,11 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.scripts]
 dataops_catalog_init = "cfa.dataops.create_catalog.command:main"
+dataops_datasets = "cfa.dataops.command:get_available_data"
+dataops_stages = "cfa.dataops.command:get_dataset_stages"
+dataops_versions = "cfa.dataops.command:get_dataset_versions"
+dataops_save = "cfa.dataops.command:save_data_locally"
+
 
 [tool.pytest.ini_options]
 addopts = "tests --doctest-modules -vv --cov=cfa --cov-report html --cov-report term"
