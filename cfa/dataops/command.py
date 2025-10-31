@@ -57,7 +57,14 @@ def get_available_data():
     """
     Retrieve a list of available datasets for CFA.
     """
+    args = ArgumentParser(description="Get list of available datasets")
+    args.add_argument(
+        "--prefix", "-p", help="optional prefix filter", default=None
+    )
+    args.parse_args()
     datasets = datacat.__namespace_list__
+    if args.prefix is not None:
+        datasets = [ds for ds in datasets if ds.startswith(args.prefix)]
     formatted_list = "\n".join(f"- {dataset}" for dataset in sorted(datasets))
     Console().print(f"[bold]Available Datasets:[/bold]\n{formatted_list}")
 
