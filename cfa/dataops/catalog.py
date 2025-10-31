@@ -302,13 +302,15 @@ class BlobEndpoint:
 
     def download_version_to_local(
         self, local_path: str, version: str = "latest", force: bool = False
-    ) -> None:
+    ) -> bool:
         """Download a specific version of the data to a local path
 
         Args:
             local_path (str): the local path to download to
             version (str, optional): the version to download. Defaults to "latest".
             force (bool, optional): whether to force re-download if local.
+        Returns:
+            bool: whether any files were written
         """
         written = False
         blobs = self._get_version_blobs(version)
