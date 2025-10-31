@@ -326,8 +326,13 @@ class BlobEndpoint:
             os.makedirs(local_dir, exist_ok=True)
             if os.path.exists(local_file_path) and not force:
                 continue
+            # Handle both raw bytes and objects with content_as_bytes() method
+            if isinstance(blob_data, bytes):
+                file_bytes = blob_data
+            else:
+                file_bytes = blob_data.content_as_bytes()
             with open(local_file_path, "wb") as f:
-                f.write(blob_data.content_as_bytes())
+                f.write(file_bytes)
                 written = True
         if written:
             self.ledger_entry(action="read")
