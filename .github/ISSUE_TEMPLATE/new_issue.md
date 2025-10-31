@@ -7,15 +7,15 @@ assignees: ''
 
 ---
 
-## Description
+### Summary
 A clear and concise description of what the problem is.
 
-## Considerations
+### Considerations
 Make sure not to forget about these.
 
-## Sub-tasks
+### Sub-tasks
 List any sub-tasks that might help create a clear flow or sub-issues.
 
-## Definition of Done
+### Definition of Done
 This might help in cases when what is to be delivered is more than just one
 piece of functional code.
