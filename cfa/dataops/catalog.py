@@ -327,7 +327,7 @@ class BlobEndpoint:
             if os.path.exists(local_file_path) and not force:
                 continue
             with open(local_file_path, "wb") as f:
-                f.write(blob_data)
+                f.write(blob_data.content_as_bytes())
                 written = True
         if written:
             self.ledger_entry(action="read")

@@ -60,10 +60,10 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.scripts]
 dataops_catalog_init = "cfa.dataops.create_catalog.command:main"
-dataops_datasets = "cfa.dataops.datasets.command:get_available_data"
-dataops_stages = "cfa.dataops.datasets.command:get_dataset_stages"
-dataops_versions = "cfa.dataops.datasets.command:get_dataset_versions"
-dataops_save = "cfa.dataops.datasets.command:save_data_locally"
+dataops_datasets = "cfa.dataops.command:get_available_data"
+dataops_stages = "cfa.dataops.command:get_dataset_stages"
+dataops_versions = "cfa.dataops.command:get_dataset_versions"
+dataops_save = "cfa.dataops.command:save_data_locally"
 
 
 [tool.pytest.ini_options]

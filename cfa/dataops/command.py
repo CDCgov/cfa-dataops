@@ -57,13 +57,13 @@ def get_available_data():
     """
     Retrieve a list of available datasets for CFA.
     """
-    args = ArgumentParser(description="Get list of available datasets")
-    args.add_argument(
-        "--prefix", "-p", help="optional prefix filter", default=None
+    parser = ArgumentParser(description="Get list of available datasets")
+    parser.add_argument(
+        "-p", "--prefix", help="optional prefix filter", default=None
     )
-    args.parse_args()
+    args = parser.parse_args()
     datasets = datacat.__namespace_list__
-    if args.prefix is not None:
+    if args.prefix:
         datasets = [ds for ds in datasets if ds.startswith(args.prefix)]
     formatted_list = "\n".join(f"- {dataset}" for dataset in sorted(datasets))
     Console().print(f"[bold]Available Datasets:[/bold]\n{formatted_list}")
@@ -73,9 +73,9 @@ def get_dataset_stages():
     """
     Retrieve stages of available datasets for CFA.
     """
-    args = ArgumentParser(description="Get dataset stages")
-    args.add_argument("dataset", help="full dataset namespace")
-    args = args.parse_args()
+    parser = ArgumentParser(description="Get dataset stages")
+    parser.add_argument("dataset", help="full dataset namespace")
+    args = parser.parse_args()
     dataset = args.dataset
     stages = _get_stages_list(dataset)
     formatted_stages = "\n".join(
@@ -84,7 +84,7 @@ def get_dataset_stages():
     )
     disclaimer = "[italic yellow]Note: Stages in [red]red[/red] indicate the default stage for loading the dataset.[/italic yellow]"
     Console().print(
-        f"[bold]Stages for {dataset}:[/bold]\n{formatted_stages}\n\n{disclaimer}"
+        f"[bold]Stages for {dataset}:[/bold]\n{formatted_stages}\n{disclaimer}"
     )
 
 
@@ -92,12 +92,12 @@ def get_dataset_versions():
     """
     Retrieve versions of available datasets for CFA.
     """
-    args = ArgumentParser(description="Get dataset versions")
-    args.add_argument("dataset", help="full dataset namespace")
-    args.add_argument(
+    parser = ArgumentParser(description="Get dataset versions")
+    parser.add_argument("dataset", help="full dataset namespace")
+    parser.add_argument(
         "--stage", "-s", help="specific stage to get version for", default=None
     )
-    args = args.parse_args()
+    args = parser.parse_args()
     dataset = args.dataset
     available_stages = _get_stages_list(dataset)
     if args.stage is None:
@@ -116,22 +116,22 @@ def save_data_locally():
     """
     Save a datasets to the local cache.
     """
-    args = ArgumentParser(description="Download a dataset locally")
-    args.add_argument("dataset", help="full dataset namespace")
-    args.add_argument(
+    parser = ArgumentParser(description="Download a dataset locally")
+    parser.add_argument("dataset", help="full dataset namespace")
+    parser.add_argument(
         "location",
         help="local location (directory) to save dataset to. If it does not exist, it will be created.",
     )
-    args.add_argument(
+    parser.add_argument(
         "--stage", "-s", help="specific stage to get version for", default=None
     )
-    args.add_argument(
+    parser.add_argument(
         "--version", "-v", help="specific version to get", default=None
     )
-    args.add_argument(
+    parser.add_argument(
         "--force", "-f", help="force re-download of data", action="store_true"
     )
-    args.parse_args()
+    args = parser.parse_args()
     dataset = args.dataset
     stage = args.stage
     version = args.version
@@ -143,7 +143,7 @@ def save_data_locally():
         version = versions[0]
     local_path = os.path.abspath(args.location)
     written = eval(
-        f"datacat.{dataset}.{stage}.download_version_to_local({local_path}, version={version}, force={args.force})"
+        f"datacat.{dataset}.{stage}.download_version_to_local('{local_path}', version='{version}', force={args.force})"
     )
     if not written:
         Console().print(
