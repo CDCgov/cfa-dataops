@@ -3,6 +3,7 @@
 import getpass
 import glob
 import os
+import re
 from datetime import datetime
 from itertools import islice
 from pathlib import Path
@@ -189,3 +190,77 @@ def tree(
         + f"\n{directories} directories"
         + (f", {files} files" if files else "")
     )
+
+
+def version_matcher(
+    version: str,
+    available_versions: list[str],
+    newest: bool = True,
+    and_sep=",",
+) -> str:
+    """Match a version string to the closest available version.
+
+    Args:
+        version (str): The version string to match (e.g., '1.2').
+        available_versions (list[str]): A list of available version strings (e.g., ['1.0', '1.1', '1.2', '2.0']).
+        newest (bool): Whether to return the newest matching version, returns oldest if False (default is True).
+        and_sep (str): The separator for multiple version conditions (default is ',').
+
+    Returns:
+        list[str]: The matched version string if found, otherwise or empty list if non found.
+
+    Example:
+        >>> available_versions = ['1.0', '1.1', '1.2', '2.0']
+        >>> version_matcher('>=1.1,<2.0', available_versions)
+        '1.2'
+        >>> version_matcher('>=1.1,<2.0', available_versions, newest=False)
+        '1.1'
+        >>> version_matcher('latest', available_versions)
+        '2.0'
+        >>> version_matcher('~=1', available_versions)
+        '1.2'
+    """
+    if version == "latest":
+        return sorted(available_versions, reverse=True)[0]
+    version = re.sub(r"\s", "", version)
+    v_ands_parsed = []
+    v_ands = version.split(and_sep)
+    for v in v_ands:
+        cond = re.match(r"[\>\<\=\~\!]+", v)
+        if cond and cond.span(0)[0] == 0:
+            v_cond = cond.group(0)
+        else:
+            v_cond = "=="
+        v_parts = re.findall(r"\d+", v)
+        v_ands_parsed.append((v_cond, ".".join(v_parts)))
+    av_parsed = {}
+    for avail_version in sorted(available_versions, reverse=True):
+        avail_parts = re.findall(r"\d+", avail_version)
+        av_parsed[avail_version] = ".".join(avail_parts)
+    v_match = []
+    logic_vals = []
+    for idx, (v_cond, v_p) in enumerate(v_ands_parsed):
+        logic_vals.append([])
+        for av, av_p in av_parsed.items():
+            if v_cond == "==" and v_p == av_p:
+                logic_vals[idx].append(True)
+            elif v_cond in [">=", "=>"] and v_p <= av_p:
+                logic_vals[idx].append(True)
+            elif v_cond in ["<=", "=<"] and v_p >= av_p:
+                logic_vals[idx].append(True)
+            elif v_cond == ">" and v_p < av_p:
+                logic_vals[idx].append(True)
+            elif v_cond == "<" and v_p > av_p:
+                logic_vals[idx].append(True)
+            elif v_cond == "!=" and v_p != av_p:
+                logic_vals[idx].append(True)
+            elif v_cond == "~=" and v_p == av_p[: len(v_p)]:
+                logic_vals[idx].append(True)
+            else:
+                logic_vals[idx].append(False)
+            v_match.append(av)
+    keep = [all(i) for i in zip(*logic_vals)]
+    if newest:
+        return max([i for i, j in zip(v_match, keep) if j])
+    else:
+        return min([i for i, j in zip(v_match, keep) if j])
