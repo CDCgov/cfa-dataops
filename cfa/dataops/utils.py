@@ -195,15 +195,15 @@ def tree(
 def version_matcher(
     version: str,
     available_versions: list[str],
-    newest: bool = True,
+    newest: Optional[bool] = True,
     and_sep=",",
-) -> str:
+) -> str | list[str]:
     """Match a version string to the closest available version.
 
     Args:
         version (str): The version string to match (e.g., '1.2').
         available_versions (list[str]): A list of available version strings (e.g., ['1.0', '1.1', '1.2', '2.0']).
-        newest (bool): Whether to return the newest matching version, returns oldest if False (default is True).
+        newest (Optional[bool]): Whether to return the newest matching version, returns oldest if False (default is True).
         and_sep (str): The separator for multiple version conditions (default is ',').
 
     Returns:
@@ -219,6 +219,8 @@ def version_matcher(
         '2.0'
         >>> version_matcher('~=1', available_versions)
         '1.2'
+        >>> version_matcher('>=1.1,<2.0', available_versions, newest=None)
+        ['1.2', '1.1']
     """
     if version == "latest":
         return sorted(available_versions, reverse=True)[0]
@@ -260,7 +262,10 @@ def version_matcher(
                 logic_vals[idx].append(False)
             v_match.append(av)
     keep = [all(i) for i in zip(*logic_vals)]
-    if newest:
-        return max([i for i, j in zip(v_match, keep) if j])
+    if isinstance(newest, bool):
+        if newest:
+            return max([i for i, j in zip(v_match, keep) if j])
+        else:
+            return min([i for i, j in zip(v_match, keep) if j])
     else:
-        return min([i for i, j in zip(v_match, keep) if j])
+        return [i for i, j in zip(v_match, keep) if j]

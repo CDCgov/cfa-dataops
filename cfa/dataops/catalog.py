@@ -307,20 +307,38 @@ class BlobEndpoint:
                     f"Version {version} not found in available versions: {available_versions}"
                 )
             if print_version:
-                print(f"Using version: {version}")
-            walk_path = f"{self.prefix}/{version}/"
+                print(f"Using version(s): {version}")
+            if isinstance(version, list):
+                walk_path = [f"{self.prefix}/{v}/" for v in version]
+            else:
+                walk_path = f"{self.prefix}/{version}/"
         else:
             walk_path = f"{self.prefix.removesuffix('/')}/"
-        return sorted(
-            list(
-                walk_blobs_in_container(
-                    name_starts_with=walk_path,
-                    account_name=self.account,
-                    container_name=self.container,
+        if isinstance(walk_path, list):
+            all_blobs = []
+            for wp in walk_path:
+                all_blobs.extend(
+                    walk_blobs_in_container(
+                        name_starts_with=wp,
+                        account_name=self.account,
+                        container_name=self.container,
+                    )
                 )
-            ),
-            key=lambda x: x["creation_time"],
-        )
+            return sorted(
+                all_blobs,
+                key=lambda x: x["creation_time"],
+            )
+        else:
+            return sorted(
+                list(
+                    walk_blobs_in_container(
+                        name_starts_with=walk_path,
+                        account_name=self.account,
+                        container_name=self.container,
+                    )
+                ),
+                key=lambda x: x["creation_time"],
+            )
 
     def download_version_to_local(
         self,
