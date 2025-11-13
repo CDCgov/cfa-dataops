@@ -34,9 +34,9 @@ This project provides data tools and low friction access to versioned datasets w
    df.glimpse()
    ```
 
-Read the [Dataset User Guide](docs/dataset_user.md) for more information about accessing datasets.
+Read the [Dataset User Guide](docs/data_user_guide.md) for more information about accessing datasets.
 
-Read the [Dataset Developer Guide](docs/dataset_developer.md) for information about how to run ETL to add new versions of an existing datasets and about how to create new datasets.
+Read the [Dataset Developer Guide](docs/data_developer_guide.md) for information about how to run ETL to add new versions of an existing datasets and about how to create new datasets.
 
 ## Project admins
 
