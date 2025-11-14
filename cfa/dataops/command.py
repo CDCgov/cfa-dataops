@@ -131,6 +131,18 @@ def save_data_locally():
     parser.add_argument(
         "--force", "-f", help="force re-download of data", action="store_true"
     )
+    parser.add_argument(
+        "--oldest",
+        "-o",
+        help="download the oldest version of data instead of the newest",
+        action="store_true",
+    )
+    parser.add_argument(
+        "--full_range",
+        "-r",
+        help="download the full range of data versions that meet the version criteria",
+        action="store_true",
+    )
     args = parser.parse_args()
     dataset = args.dataset
     stage = args.stage
@@ -142,8 +154,14 @@ def save_data_locally():
         versions = _get_versions_list(dataset, stage)
         version = versions[0]
     local_path = os.path.abspath(args.location)
+    if args.oldest:
+        newest = False
+    elif args.full_range:
+        newest = None
+    else:
+        newest = True
     written = eval(
-        f"datacat.{dataset}.{stage}.download_version_to_local('{local_path}', version='{version}', force={args.force})"
+        f"datacat.{dataset}.{stage}.download_version_to_local('{local_path}', version='{version}', force={args.force}, newest={newest})"
     )
     if not written:
         Console().print(
