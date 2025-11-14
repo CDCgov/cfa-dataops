@@ -8,6 +8,36 @@ The versioning pattern is `YYYY.MM.DD.micro(a/b/{none if release})
 
 ---
 
+## [2025.11.13.0a]
+
+### Added
+
+- `cfa.dataops.utils.py:version_matcher` utility function and testing via doctests
+
+### Updated
+
+- Data versions (when retrieved/`get_`) can now use conditional logic:
+  - Examples:
+    ```python
+    >>> from cfa.dataops import datacat
+    >>> datacat.public.my_dataset.load.get_versions()
+    ['2025-10-31',
+     '2025-09-19',
+     '2025-06-01',
+     '2024-12-08',
+     '2024-11-21']
+    >>> df = datacat.public.my_dataset.load.get_dataframe(version=">2024.12.01,<2025.08")
+    Using version: 2025-06-01
+    >>> df = datacat.public.my_dataset.load.get_dataframe(version=">2024-12.01,<2025.08", newest=False)
+    Using version: 2024-12-08
+    >>> df = datacat.public.my_dataset.load.get_dataframe(version="~=2024/11")
+    Using version: 2024-11-21
+    >>> df = datacat.public.my_dataset.load.get_dataframe(version="latest")
+    Using version: 2025-10-31
+    ```
+- Links in `README.md`
+- pytest adopts in `pyproject.toml` to include `cfa/dataops/utils.py` for doctests
+
 ## [2025.10.31.0a]
 
 ### Added

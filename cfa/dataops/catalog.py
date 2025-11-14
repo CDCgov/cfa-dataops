@@ -27,7 +27,13 @@ from .config_validator import (
     ValidationError,
 )
 from .reporting.catalog import report_dict_to_sn
-from .utils import get_dataset_dot_path, get_date, get_timestamp, get_user
+from .utils import (
+    get_dataset_dot_path,
+    get_date,
+    get_timestamp,
+    get_user,
+    version_matcher,
+)
 
 _here = os.path.abspath(os.path.dirname(__file__))
 _config = ConfigParser()
@@ -222,14 +228,19 @@ class BlobEndpoint:
         self.ledger_entry(action="write")
         # print(f"file written to: {full_path}")
 
-    def read_blobs(self, version: str = "latest") -> List[bytes]:
+    def read_blobs(
+        self, version: str = "latest", newest: bool = True
+    ) -> List[bytes]:
         """Read a blob in as bytes so it can be loaded into a dataframe
 
         Args:
             path_after_prefix (str): The path to the data (e.g.,
             {timestamp}/dataset.csv)
+            version (str, optional): the version of the data to read.
+                Defaults to "latest".
+            newest (bool, optional): whether to get the newest matching version. Defaults to True.
         """
-        blobs = self._get_version_blobs(version)
+        blobs = self._get_version_blobs(version, newest=newest)
         blob_bytes = [
             read_blob_stream(
                 blob_url=i["name"],
@@ -279,29 +290,62 @@ class BlobEndpoint:
         Returns:
             str: the file extension
         """
-        return self._get_version_blobs()[0]["name"].split(".")[-1]
+        return self._get_version_blobs(print_version=False)[0]["name"].split(
+            "."
+        )[-1]
 
-    def _get_version_blobs(self, version: str = "latest") -> list:
-        if version == "latest" and not self.is_ledger:
-            version = self.get_versions()[0]
+    def _get_version_blobs(
+        self, version: str = "latest", newest=True, print_version=True
+    ) -> list:
         if not self.is_ledger:
-            version = version.removesuffix("/")
-            walk_path = f"{self.prefix}/{version}/"
+            available_versions = self.get_versions()
+            version = version_matcher(
+                version, available_versions, newest=newest
+            )
+            if not version:
+                raise ValueError(
+                    f"Version {version} not found in available versions: {available_versions}"
+                )
+            if print_version:
+                print(f"Using version(s): {version}")
+            if isinstance(version, list):
+                walk_path = [f"{self.prefix}/{v}/" for v in version]
+            else:
+                walk_path = f"{self.prefix}/{version}/"
         else:
             walk_path = f"{self.prefix.removesuffix('/')}/"
-        return sorted(
-            list(
-                walk_blobs_in_container(
-                    name_starts_with=walk_path,
-                    account_name=self.account,
-                    container_name=self.container,
+        if isinstance(walk_path, list):
+            all_blobs = []
+            for wp in walk_path:
+                all_blobs.extend(
+                    walk_blobs_in_container(
+                        name_starts_with=wp,
+                        account_name=self.account,
+                        container_name=self.container,
+                    )
                 )
-            ),
-            key=lambda x: x["creation_time"],
-        )
+            return sorted(
+                all_blobs,
+                key=lambda x: x["creation_time"],
+            )
+        else:
+            return sorted(
+                list(
+                    walk_blobs_in_container(
+                        name_starts_with=walk_path,
+                        account_name=self.account,
+                        container_name=self.container,
+                    )
+                ),
+                key=lambda x: x["creation_time"],
+            )
 
     def download_version_to_local(
-        self, local_path: str, version: str = "latest", force: bool = False
+        self,
+        local_path: str,
+        version: str = "latest",
+        force: bool = False,
+        newest: bool = True,
     ) -> bool:
         """Download a specific version of the data to a local path
 
@@ -309,11 +353,12 @@ class BlobEndpoint:
             local_path (str): the local path to download to
             version (str, optional): the version to download. Defaults to "latest".
             force (bool, optional): whether to force re-download if local.
+            newest (bool, optional): whether to get the newest matching version. Defaults to True.
         Returns:
             bool: whether any files were written
         """
         written = False
-        blobs = self._get_version_blobs(version)
+        blobs = self._get_version_blobs(version, newest=newest)
         for blob in blobs:
             blob_data = read_blob_stream(
                 blob_url=blob["name"],
@@ -339,7 +384,11 @@ class BlobEndpoint:
         return written
 
     def get_dataframe(
-        self, output="pandas", version="latest", pl_lazy: bool = False
+        self,
+        output="pandas",
+        version="latest",
+        pl_lazy: bool = False,
+        newest: bool = True,
     ) -> pd.DataFrame | pl.DataFrame:
         """Get the data as a pandas or polars dataframe
 
@@ -350,6 +399,8 @@ class BlobEndpoint:
                 Defaults to "latest".
             pl_lazy (bool, optional): whether to return a lazy polars dataframe.
                 Defaults to False.
+            newest (bool, optional): whether to get the newest matching version. Defaults to True.
+                False returns the oldest matching version.
 
         Raises:
             ValueError: if output is not 'pandas' or 'polars'
@@ -361,7 +412,7 @@ class BlobEndpoint:
             raise ValueError(
                 f"Output {output} needs to be 'pandas', 'polars', 'pd, or 'pl'."
             )
-        blobs = self.read_blobs(version)
+        blobs = self.read_blobs(version, newest=newest)
         file_ext = self.get_file_ext()
         blob_bytes = [blob.content_as_bytes() for blob in blobs]
         blob_files = [BytesIO(pq) for pq in blob_bytes]
