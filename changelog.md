@@ -8,6 +8,12 @@ The versioning pattern is `YYYY.MM.DD.micro(a/b/{none if release})
 
 ---
 
+## [2025.11.18.0a]
+
+### Updated
+
+- `docs/data_user_guide.md` and added cli documentation to mkdocs nav.
+
 ## [2025.11.13.0a]
 
 ### Added

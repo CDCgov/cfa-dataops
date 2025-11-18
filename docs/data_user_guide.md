@@ -57,12 +57,12 @@ df = datacat.private.scenarios.covid19vax_trends.load.get_dataframe(
 )
 ```
 
-In order to see what versions are available, use the data catalog's convenient namespace methods:
+To see what versions are available, use the data catalog's convenient namespace methods:
 
 ```python
 >>> from cfa.dataops import datacat
->>> # these follow hierarchical naming created using the dataset
->>> # config TOML, so extract or load are the makes assigned to
+>>> # These follow hierarchical naming created using the dataset
+>>> # config TOML, so extract or load are the names assigned to
 >>> # raw or transformed datasets per the get_data function
 >>> datacat.private.scenarios.covid19vax_trends.load.get_versions()
 ['2025-06-03T17-59-16',
@@ -94,13 +94,68 @@ vax_df = datacat.private.scenarios.covid19vax_trends.load.get_dataframe()
 raw_vax = datacat.private.scenarios.covid19vax_trends.extract.get_dataframe()
 ```
 
-### Seroprevalence Data
+### Fetching Versions within a Range
+
+When `get_dataframe(...)` completes successfully, it prints a short confirmation line like:
+
+Used version(s): [...]
+
+Examples:
 
 ```python
 from cfa.dataops import datacat
 
-# Get as polars DataFrame
-sero_df = datacat.private.scenarios.seroprevalence.load.get_dataframe(output="polars")
+# newest match in the range (single version)
+df = datacat.private.scenarios.covid19vax_trends.load.get_dataframe(
+   version=">=2025-05-01,<2025-06-01"
+)
+```
+
+*Console output (example):*
+```
+Used version(s): '2025-05-30T19-55-51'
+```
+
+```python
+# oldest match in the same range (newest=False)
+df_old = datacat.private.scenarios.covid19vax_trends.load.get_dataframe(
+   version=">=2025-05-01,<2025-06-01", newest=False
+)
+```
+
+*Console output (example):*
+```
+Used version(s): '2025-05-30T14-50-36'
+```
+
+```python
+# Fetch all matches and concatenate all tables
+df_v = datacat.private.scenarios.covid19vax_trends.load.get_dataframe(
+   version=">=2025-05-01,<2025-06-01",
+   newest=None
+)
+```
+
+*Console output (example):*
+```
+Used version(s): ['2025-05-30T19-55-51', '2025-05-30T14-50-36']
+```
+
+Use the helper `version_matcher` (from `cfa.dataops.utils`) to experiment with version boundary logic to see what matches occur prior to loading large datasets into memory.
+
+```python
+>>> from cfa.dataops.utils import version_matcher
+>>> available_versions = ['1.0', '1.1', '1.2', '2.0']
+>>> version_matcher('>=1.1,<2.0', available_versions)
+'1.2'
+>>> version_matcher('>=1.1,<2.0', available_versions, newest=False)
+'1.1'
+>>> version_matcher('latest', available_versions)
+'2.0'
+>>> version_matcher('~=1', available_versions)
+'1.2'
+>>> version_matcher('>=1.1,<2.0', available_versions, newest=None)
+['1.2', '1.1']
 ```
 
 ## Common Issues
