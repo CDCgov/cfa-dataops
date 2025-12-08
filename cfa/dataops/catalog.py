@@ -422,7 +422,10 @@ class BlobEndpoint:
                 df.reset_index(inplace=True, drop=True)
             else:
                 df = pl.concat(
-                    [pl.read_csv(blob) for blob in blob_files],
+                    [
+                        pl.read_csv(blob, infer_schema_length=None)
+                        for blob in blob_files
+                    ],
                     how="diagonal",
                 )
                 if pl_lazy:
@@ -434,7 +437,11 @@ class BlobEndpoint:
                 df.reset_index(inplace=True, drop=True)
             else:
                 df = pl.concat(
-                    [pl.read_json(blob) for blob in blob_files],
+                    [
+                        pl.read_json(blob, infer_schema_length=None)
+                        for blob in blob_files
+                    ],
+                    how="diagonal",
                 )
                 if pl_lazy:
                     df = df.lazy()
@@ -448,6 +455,7 @@ class BlobEndpoint:
             else:
                 df = pl.concat(
                     [pl.read_ndjson(blob) for blob in blob_files],
+                    how="diagonal",
                 )
                 if pl_lazy:
                     df = df.lazy()
