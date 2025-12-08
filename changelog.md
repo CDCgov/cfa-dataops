@@ -8,6 +8,13 @@ The versioning pattern is `YYYY.MM.DD.micro(a/b/{none if release})
 
 ---
 
+## [2025.12.08.0a]
+
+### Fixed
+
+- Polars dataframe loading+concat from csv/json files that contain varying number of columns
+- Namespace package configuration for created catalogs
+
 ## [2025.11.18.0a]
 
 ### Updated
