@@ -23,7 +23,8 @@ dependencies = [
 ]
 
 [tool.setuptools.packages.find]
-include = ["${catalog_namespace}*"]
+namespaces = true
+include = ["cfa*"]
 
 [project.optional-dependencies]
 dev = [

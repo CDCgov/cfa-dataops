@@ -64,3 +64,9 @@ repos:
       stages: [pre-commit]
       language: system
       entry: jupyter nbconvert --ClearOutputPreprocessor.enabled=True --inplace
+    - id: remove-init-file-breaking-ns-packaging
+      name: Remove __init__.py files from ./cfa/
+      files: ^cfa/.*__init__\.py$
+      stages: [pre-commit]
+      language: system
+      entry: bash -c 'find ./cfa -maxdepth 1 -name "__init__.py" -delete'
