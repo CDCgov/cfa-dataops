@@ -423,7 +423,7 @@ class BlobEndpoint:
             else:
                 df = pl.concat(
                     [pl.read_csv(blob) for blob in blob_files],
-                    how="vertical_relaxed",
+                    how="diagonal",
                 )
                 if pl_lazy:
                     df = df.lazy()
@@ -461,7 +461,7 @@ class BlobEndpoint:
             else:
                 df = pl.concat(
                     [pl.read_parquet(pq_file) for pq_file in blob_files],
-                    how="vertical_relaxed",
+                    how="diagonal",
                 )
                 if pl_lazy:
                     df = df.lazy()
