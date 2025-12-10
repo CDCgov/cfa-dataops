@@ -8,6 +8,12 @@ The versioning pattern is `YYYY.MM.DD.micro(a/b/{none if release})
 
 ---
 
+## [2025.12.10.0a]
+
+### Updated
+
+- Added version matching to `BlobEndpoint.get_file_ext()` method for greater flexibility to changing file types over time.
+
 ## [2025.12.08.1a]
 
 ### Fixed
