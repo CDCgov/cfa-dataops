@@ -283,16 +283,18 @@ class BlobEndpoint:
             reverse=True,
         )
 
-    def get_file_ext(self) -> str:
+    def get_file_ext(self, version: str = "latest") -> str:
         """returns the file extension for handy routing of read byte types for
         DataFrame reading
 
+        Args:
+            version (str, optional): the version of the data to get.
         Returns:
             str: the file extension
         """
-        return self._get_version_blobs(print_version=False)[0]["name"].split(
-            "."
-        )[-1]
+        return self._get_version_blobs(version=version, print_version=False)[
+            0
+        ]["name"].split(".")[-1]
 
     def _get_version_blobs(
         self, version: str = "latest", newest=True, print_version=True
@@ -413,7 +415,7 @@ class BlobEndpoint:
                 f"Output {output} needs to be 'pandas', 'polars', 'pd, or 'pl'."
             )
         blobs = self.read_blobs(version, newest=newest)
-        file_ext = self.get_file_ext()
+        file_ext = self.get_file_ext(version=version)
         blob_bytes = [blob.content_as_bytes() for blob in blobs]
         blob_files = [BytesIO(pq) for pq in blob_bytes]
         if file_ext == "csv":

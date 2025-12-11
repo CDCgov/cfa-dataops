@@ -63,18 +63,6 @@ jobs:
         run: |
           poetry install --no-root --with dev
 
-      - name: Build Wheel
-        if: steps.is-release.outputs.should_continue == 'true'
-        run: |
-          poetry build
-
-      - name: Create Release
-        if: steps.is-release.outputs.should_continue == 'true'
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          gh release create ${{ github.ref }} dist/* --generate-notes --latest
-
       - name: Update pyproject.toml Version
         if: steps.is-release.outputs.should_continue == 'true'
         env:
@@ -82,7 +70,7 @@ jobs:
         run: |
           VERSION=${{ steps.get-version.outputs.version }}
 
-          sed -i.bak -E "s/^version\s*=\s*\"[^\"]+\"/version = \"${VERSION}\"/" pyproject.toml
+          sed -i.bak -E "s/^\s*version\s*=\s*\"[^\"]+\"/version = \"${VERSION}\"/" pyproject.toml
 
       - name: Update Change Log
         if: steps.is-release.outputs.should_continue == 'true'
@@ -104,6 +92,18 @@ jobs:
               }
               { print $0 }
             ' changelog.md > temp.md && mv temp.md changelog.md
+
+      - name: Build Wheel
+        if: steps.is-release.outputs.should_continue == 'true'
+        run: |
+          poetry build
+
+      - name: Create Release
+        if: steps.is-release.outputs.should_continue == 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create ${{ github.ref }} dist/* --generate-notes --latest
 
       - name: Commit Change Log and pyproject.toml Updates
         if: steps.is-release.outputs.should_continue == 'true'

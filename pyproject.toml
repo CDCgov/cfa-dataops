@@ -1,6 +1,6 @@
 [project]
 name = "cfa.dataops"
-version = "2025.12.08.1a"
+version = "2025.12.10.0a"
 description = "Data cataloging, ETL, modeling, verification, and validation for CFA"
 authors = [
     { name = "Phil Rogers", email = "ap66@cdc.gov" },
