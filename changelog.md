@@ -10,6 +10,20 @@ The versioning pattern is `YYYY.MM.DD.micro(a/b/{none if release})
 
 ## [2025.12.10.0a]
 
+### Summary
+
+**First Official Release!** 🎉
+
+This release marks a significant milestone for the CFA DataOps project, providing a robust foundation for data cataloging, ETL pipelines, and reporting. It consolidates months of development into a unified, versioned package ready for broader adoption.
+
+**Key Highlights:**
+- **Unified Data Access**: `datacat` interface for seamless dataset access.
+- **Automated Reporting**: `reportcat` for generating interactive HTML reports from Jupyter notebooks.
+- **Robust CLI Tools**: Manage catalogs and datasets effortlessly.
+- **Flexible Data Loading**: Advanced version filtering for Pandas and Polars DataFrames.
+
+See the [Release Notes](docs/release_notes/v2025.12.10.md) for more details.
+
 ### Updated
 
 - Added version matching to `BlobEndpoint.get_file_ext()` method for greater flexibility to changing file types over time.
