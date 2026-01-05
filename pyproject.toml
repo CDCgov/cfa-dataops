@@ -7,7 +7,7 @@ authors = [
     { name = "Ryan Raasch", email = "xng3@cdc.gov" },
 ]
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.10,<4.0"
 dependencies = [
     "cfa-cloudops @ git+https://github.com/CDCgov/cfa-cloudops.git",
     "tomli (>=2.2.1)",
