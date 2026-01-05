@@ -20,7 +20,6 @@ dependencies = [
     "matplotlib (~=3.9)",
     "pandas (>=2.2.3)",
     "polars (>=1.26.0)",
-    "tqdm (>=4.67.0)",
     "altair (>=5.5.0)",
     "vl-convert-python (>=1.7.0)",
     "pandera[pandas] (>=0.24.0)",
