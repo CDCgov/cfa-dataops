@@ -105,7 +105,7 @@ class DatasetEndpoint:
         with open(config_path, "rb") as f:
             self.config = tomli.load(f)
         for k, v in self.config.items():
-            if k in ["load", "extract"] or k.startswith("stage"):
+            if k in ["load", "extract", "data"] or k.startswith("stage"):
                 account = v.get("account", "")
                 container = v.get("container", "")
                 if account == "":
