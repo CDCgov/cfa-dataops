@@ -123,7 +123,7 @@ class DatasetEndpoint:
             "prefix": self.defaults["access_ledger"]["path"],
         }
         for k, v in self.config.items():
-            if k in ["load", "extract"] or k.startswith("stage"):
+            if k in ["load", "extract", "data"] or k.startswith("stage"):
                 self.__setattr__(
                     k,
                     BlobEndpoint(
