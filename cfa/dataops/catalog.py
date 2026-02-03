@@ -88,7 +88,7 @@ report_namespaces = get_dataset_dot_path(all_reports_ns_map)
 class DatasetEndpoint:
     """The DatasetEndpoint class for including in the datacat namespace.
     This ends the namespace branching at a config file and creates all the
-    blob endpoints for each 'stag' of the config (e.g., extract, load, stage_01)."""
+    blob endpoints for each 'stage' of the config (e.g., extract, load, stage_01)."""
 
     def __init__(self, config_path: str, defaults: dict, ns: str):
         """Basic functionality to interact with datasets to be included
