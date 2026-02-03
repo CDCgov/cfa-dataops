@@ -142,7 +142,8 @@ class DatasetEndpoint:
             config_models = {}
             for c_key, c_value in self.config.items():
                 if (
-                    c_key.startswith("stage_") or c_key in ["load", "extract"]
+                    c_key.startswith("stage_")
+                    or c_key in ["load", "extract", "data"]
                 ) and c_value is not None:
                     config_models[c_key] = StorageEndpointValidation(**c_value)
                 elif c_key == "properties":
