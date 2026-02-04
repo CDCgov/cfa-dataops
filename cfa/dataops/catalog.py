@@ -88,7 +88,7 @@ report_namespaces = get_dataset_dot_path(all_reports_ns_map)
 class DatasetEndpoint:
     """The DatasetEndpoint class for including in the datacat namespace.
     This ends the namespace branching at a config file and creates all the
-    blob endpoints for each 'stag' of the config (e.g., extract, load, stage_01)."""
+    blob endpoints for each 'stage' of the config (e.g., extract, load, stage_01)."""
 
     def __init__(self, config_path: str, defaults: dict, ns: str):
         """Basic functionality to interact with datasets to be included
@@ -105,7 +105,7 @@ class DatasetEndpoint:
         with open(config_path, "rb") as f:
             self.config = tomli.load(f)
         for k, v in self.config.items():
-            if k in ["load", "extract"] or k.startswith("stage"):
+            if k in ["load", "extract", "data"] or k.startswith("stage"):
                 account = v.get("account", "")
                 container = v.get("container", "")
                 if account == "":
@@ -123,7 +123,7 @@ class DatasetEndpoint:
             "prefix": self.defaults["access_ledger"]["path"],
         }
         for k, v in self.config.items():
-            if k in ["load", "extract"] or k.startswith("stage"):
+            if k in ["load", "extract", "data"] or k.startswith("stage"):
                 self.__setattr__(
                     k,
                     BlobEndpoint(
@@ -142,7 +142,8 @@ class DatasetEndpoint:
             config_models = {}
             for c_key, c_value in self.config.items():
                 if (
-                    c_key.startswith("stage_") or c_key in ["load", "extract"]
+                    c_key.startswith("stage_")
+                    or c_key in ["load", "extract", "data"]
                 ) and c_value is not None:
                     config_models[c_key] = StorageEndpointValidation(**c_value)
                 elif c_key == "properties":
