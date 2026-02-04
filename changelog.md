@@ -7,6 +7,13 @@ and this project adheres to [Calendar Versioning](https://calver.org/).
 The versioning pattern is `YYYY.MM.DD.micro(a/b/{none if release})
 
 ---
+## [2026.02.04.0]
+
+### Added
+
+- Added capability to get_dataframe for reference datasets
+
+
 ## [2026.01.05.0a]
 
 ### Fixed
