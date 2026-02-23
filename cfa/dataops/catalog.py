@@ -735,14 +735,20 @@ def _attach_schema_mock_functions(
                 # the last segment is used as the schema module name
                 dataset_name = val.__ns_str__.split(".")[-1]
                 for cns, cat_name, _ in catalogs:
-                    # __ns_str__ includes cat_name as a prefix (e.g. "public.stf.nhsn_hrd_prelim")
-                    # strip it so the path within datasets/ is e.g. "stf.nhsn_hrd_prelim"
+                    # __ns_str__ is e.g. "public.stf.nhsn_hrd_prelim"
+                    # strip cat_name prefix -> "stf.nhsn_hrd_prelim"
+                    # then split into team ("stf") and dataset ("nhsn_hrd_prelim")
+                    # so the schema lives at: datasets.stf.schemas.nhsn_hrd_prelim
                     ns_within_datasets = val.__ns_str__.removeprefix(
                         f"{cat_name}."
                     )
+                    ns_parts = ns_within_datasets.rsplit(".", 1)
+                    team_path = ns_parts[0] if len(ns_parts) > 1 else ""
                     schema_mod_path = (
                         f"{cns}.{cat_name}.datasets"
-                        f".{ns_within_datasets}.schemas.{dataset_name}"
+                        f".{team_path}.schemas.{dataset_name}"
+                        if team_path
+                        else f"{cns}.{cat_name}.datasets.schemas.{dataset_name}"
                     )
                     try:
                         mod = import_module(schema_mod_path)
