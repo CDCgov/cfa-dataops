@@ -715,8 +715,8 @@ def _attach_schema_mock_functions(
         {catalog_namespace}.{catalog_name}.datasets.{team}.{dataset}.schemas.{dataset}
 
     and define one or both of:
-        - extract_mock_dataframe() -> pd.DataFrame
-        - load_mock_dataframe() -> pd.DataFrame
+        - extract_mock_data() -> pd.DataFrame
+        - load_mock_data() -> pd.DataFrame
 
     These are then accessible as:
         datacat.<catalog>.<team>.<dataset>.extract.mock_data()
@@ -757,8 +757,8 @@ def _attach_schema_mock_functions(
                         continue
                     # Attach to the already-existing BlobEndpoint on .extract / .load
                     for stage, func_name in [
-                        ("extract", "extract_mock_dataframe"),
-                        ("load", "load_mock_dataframe"),
+                        ("extract", "extract_mock_data"),
+                        ("load", "load_mock_data"),
                     ]:
                         if hasattr(val, stage):
                             if hasattr(mod, func_name):
