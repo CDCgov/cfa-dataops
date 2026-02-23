@@ -702,3 +702,62 @@ datacat = SimpleNamespace(**combined_dict)
 datacat.__setattr__("__namespace_list__", dataset_namespaces)
 reportcat = SimpleNamespace(**combined_reports_dict)
 reportcat.__setattr__("__namespace_list__", report_namespaces)
+
+
+def _attach_schema_mock_functions(
+    datacat: SimpleNamespace, catalogs: list
+) -> None:
+    """Recursively walk the datacat namespace and attach mock_data functions to
+    the extract and load BlobEndpoints of each DatasetEndpoint, sourced from
+    a schema module co-located with the dataset.
+
+    The schema module is expected to live at:
+        {catalog_namespace}.{catalog_name}.datasets.{team}.{dataset}.schemas.{dataset}
+
+    and define one or both of:
+        - extract_mock_dataframe() -> pd.DataFrame
+        - load_mock_dataframe() -> pd.DataFrame
+
+    These are then accessible as:
+        datacat.<team>.<dataset>.extract.mock_data()
+        datacat.<team>.<dataset>.load.mock_data()
+
+    Args:
+        datacat (SimpleNamespace): the top-level datacat namespace
+        catalogs (list): list of (catalog_namespace, catalog_name, catalog_path)
+            tuples from get_all_catalogs()
+    """
+
+    def _walk(ns: SimpleNamespace) -> None:
+        for val in vars(ns).values():
+            if isinstance(val, DatasetEndpoint):
+                # __ns_str__ is e.g. "stf.nhsn_hrd_prelim";
+                # the last segment is used as the schema module name
+                dataset_name = val.__ns_str__.split(".")[-1]
+                for cns, cat_name, _ in catalogs:
+                    schema_mod_path = (
+                        f"{cns}.{cat_name}.datasets"
+                        f".{val.__ns_str__}.schemas.{dataset_name}"
+                    )
+                    try:
+                        mod = import_module(schema_mod_path)
+                    except ModuleNotFoundError:
+                        continue
+                    # Attach to the already-existing BlobEndpoint on .extract / .load
+                    for stage, func_name in [
+                        ("extract", "extract_mock_dataframe"),
+                        ("load", "load_mock_dataframe"),
+                    ]:
+                        if hasattr(mod, func_name) and hasattr(val, stage):
+                            setattr(
+                                getattr(val, stage),
+                                "mock_data",
+                                getattr(mod, func_name),
+                            )
+            elif isinstance(val, SimpleNamespace):
+                _walk(val)
+
+    _walk(datacat)
+
+
+_attach_schema_mock_functions(datacat, all_catalogs)
