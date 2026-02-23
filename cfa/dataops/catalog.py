@@ -747,18 +747,26 @@ def _attach_schema_mock_functions(
                     try:
                         mod = import_module(schema_mod_path)
                     except ModuleNotFoundError:
+                        # No schema module for this dataset — skip silently
                         continue
                     # Attach to the already-existing BlobEndpoint on .extract / .load
                     for stage, func_name in [
                         ("extract", "extract_mock_dataframe"),
                         ("load", "load_mock_dataframe"),
                     ]:
-                        if hasattr(mod, func_name) and hasattr(val, stage):
-                            setattr(
-                                getattr(val, stage),
-                                "mock_data",
-                                getattr(mod, func_name),
-                            )
+                        if hasattr(val, stage):
+                            if hasattr(mod, func_name):
+                                setattr(
+                                    getattr(val, stage),
+                                    "mock_data",
+                                    getattr(mod, func_name),
+                                )
+                            else:
+                                print(
+                                    f"[dataops] WARNING: schema module '{schema_mod_path}' "
+                                    f"found but missing '{func_name}'. "
+                                    f"'{val.__ns_str__}.{stage}.mock_data()' will not be available."
+                                )
             elif isinstance(val, SimpleNamespace):
                 _walk(val)
 
