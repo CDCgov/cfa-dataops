@@ -719,8 +719,8 @@ def _attach_schema_mock_functions(
         - load_mock_dataframe() -> pd.DataFrame
 
     These are then accessible as:
-        datacat.<team>.<dataset>.extract.mock_data()
-        datacat.<team>.<dataset>.load.mock_data()
+        datacat.<catalog>.<team>.<dataset>.extract.mock_data()
+        datacat.<catalog>.<team>.<dataset>.load.mock_data()
 
     Args:
         datacat (SimpleNamespace): the top-level datacat namespace
@@ -731,13 +731,18 @@ def _attach_schema_mock_functions(
     def _walk(ns: SimpleNamespace) -> None:
         for val in vars(ns).values():
             if isinstance(val, DatasetEndpoint):
-                # __ns_str__ is e.g. "stf.nhsn_hrd_prelim";
+                # __ns_str__ is e.g. "public.stf.nhsn_hrd_prelim";
                 # the last segment is used as the schema module name
                 dataset_name = val.__ns_str__.split(".")[-1]
                 for cns, cat_name, _ in catalogs:
+                    # __ns_str__ includes cat_name as a prefix (e.g. "public.stf.nhsn_hrd_prelim")
+                    # strip it so the path within datasets/ is e.g. "stf.nhsn_hrd_prelim"
+                    ns_within_datasets = val.__ns_str__.removeprefix(
+                        f"{cat_name}."
+                    )
                     schema_mod_path = (
                         f"{cns}.{cat_name}.datasets"
-                        f".{val.__ns_str__}.schemas.{dataset_name}"
+                        f".{ns_within_datasets}.schemas.{dataset_name}"
                     )
                     try:
                         mod = import_module(schema_mod_path)
