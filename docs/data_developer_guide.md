@@ -174,11 +174,11 @@ def extract_mock_data(output = "pandas", size = 10) -> pd.DataFrame|pl.DataFrame
     data = {
             "date": pd.date_range(
                 start="2023-01-01",
-                periods=n_rows,
+                periods=size,
                 tz='UTC'
             ),
-            "value": np.random.uniform(1, 100, n_rows),
-            "category": np.random.choice(['A', 'B', 'C'], n_rows)
+            "value": np.random.uniform(1, 100, size),
+            "category": np.random.choice(['A', 'B', 'C'], size)
     }
     df = pd.DataFrame(data)
     return df if output == "pandas" or output == "pd" else pl.from_pandas(df)
