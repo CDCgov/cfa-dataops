@@ -712,15 +712,20 @@ def _attach_schema_mock_functions(
     a schema module co-located with the dataset.
 
     The schema module is expected to live at:
-        {catalog_namespace}.{catalog_name}.datasets.{team}.{dataset}.schemas.{dataset}
+        {catalog_namespace}.{catalog_name}.datasets.{team_path}.schemas.{dataset_name}
 
-    and define one or both of:
+    where ``team_path`` is the namespace path segment(s) between the catalog
+    name and the dataset name (for example, ``stf`` in
+    ``public.stf.nhsn_hrd_prelim``), and ``dataset_name`` is the dataset's
+    namespace name (for example, ``nhsn_hrd_prelim``).
+
+    The schema module should define one or both of:
         - extract_mock_data() -> pd.DataFrame
         - load_mock_data() -> pd.DataFrame
 
     These are then accessible as:
-        datacat.<catalog>.<team>.<dataset>.extract.mock_data()
-        datacat.<catalog>.<team>.<dataset>.load.mock_data()
+        datacat.<catalog>.<team_path_segments>.<dataset>.extract.mock_data()
+        datacat.<catalog>.<team_path_segments>.<dataset>.load.mock_data()
 
     Args:
         datacat (SimpleNamespace): the top-level datacat namespace
