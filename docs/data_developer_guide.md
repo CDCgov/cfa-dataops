@@ -168,21 +168,24 @@ load_schema = pa.DataFrameSchema({
     "category": pa.Column(str)
 })
 
-# Add synthetic data generation for testing
-def raw_synthetic_data(n_rows: int = 100) -> pd.DataFrame:
-    return pd.DataFrame({
+# Add mock data generation for testing
+# prefix with 'extract' or 'load'
+def extract_mock_data(output="pandas", size=10) -> pd.DataFrame|pl.DataFrame:
+    data = {
             "date": pd.date_range(
                 start="2023-01-01",
-                periods=n_rows,
+                periods=size,
                 tz='UTC'
             ),
-            "value": np.random.uniform(1, 100, n_rows),
-            "category": np.random.choice(['A', 'B', 'C'], n_rows)
-    })
+            "value": np.random.uniform(1, 100, size),
+            "category": np.random.choice(['A', 'B', 'C'], size)
+    }
+    df = pd.DataFrame(data)
+    return df if output == "pandas" or output == "pd" else pl.from_pandas(df)
 
 # Validate synthetic data matches schema
 if __name__ == "__main__":
-    test_df = generate_synthetic_data()
+    test_df = extract_mock_data()
     extract_schema.validate(test_df)
 ```
 
