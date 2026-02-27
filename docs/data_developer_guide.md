@@ -170,7 +170,7 @@ load_schema = pa.DataFrameSchema({
 
 # Add mock data generation for testing
 # prefix with 'extract' or 'load'
-def extract_mock_data(output = "pandas", size = 10) -> pd.DataFrame|pl.DataFrame:
+def extract_mock_data(output="pandas", size=10) -> pd.DataFrame|pl.DataFrame:
     data = {
             "date": pd.date_range(
                 start="2023-01-01",
