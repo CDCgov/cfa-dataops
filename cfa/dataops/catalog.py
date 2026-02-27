@@ -767,12 +767,6 @@ def _attach_schema_mock_functions(
                                     "mock_data",
                                     getattr(mod, func_name),
                                 )
-                            else:
-                                print(
-                                    f"[dataops] WARNING: schema module '{schema_mod_path}' "
-                                    f"found but missing '{func_name}'. "
-                                    f"'{val.__ns_str__}.{stage}.mock_data()' will not be available."
-                                )
             elif isinstance(val, SimpleNamespace):
                 _walk(val)
 
