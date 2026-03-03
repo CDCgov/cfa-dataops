@@ -702,3 +702,80 @@ datacat = SimpleNamespace(**combined_dict)
 datacat.__setattr__("__namespace_list__", dataset_namespaces)
 reportcat = SimpleNamespace(**combined_reports_dict)
 reportcat.__setattr__("__namespace_list__", report_namespaces)
+
+
+def _attach_schema_mock_functions(
+    datacat: SimpleNamespace, catalogs: list
+) -> None:
+    """Recursively walk the datacat namespace and attach mock_data functions to
+    the extract and load BlobEndpoints of each DatasetEndpoint, sourced from
+    a schema module co-located with the dataset.
+
+    The schema module is expected to live at:
+        {catalog_namespace}.{catalog_name}.datasets.{team_path}.schemas.{dataset_name}
+
+    where ``team_path`` is the namespace path segment(s) between the catalog
+    name and the dataset name (for example, ``stf`` in
+    ``public.stf.nhsn_hrd_prelim``), and ``dataset_name`` is the dataset's
+    namespace name (for example, ``nhsn_hrd_prelim``).
+
+    The schema module should define one or both of:
+        - extract_mock_data() -> pd.DataFrame
+        - load_mock_data() -> pd.DataFrame
+
+    These are then accessible as:
+        datacat.<catalog>.<team_path_segments>.<dataset>.extract.mock_data()
+        datacat.<catalog>.<team_path_segments>.<dataset>.load.mock_data()
+
+    Args:
+        datacat (SimpleNamespace): the top-level datacat namespace
+        catalogs (list): list of (catalog_namespace, catalog_name, catalog_path)
+            tuples from get_all_catalogs()
+    """
+
+    def _walk(ns: SimpleNamespace) -> None:
+        for val in vars(ns).values():
+            if isinstance(val, DatasetEndpoint):
+                # __ns_str__ is e.g. "public.stf.nhsn_hrd_prelim";
+                # the last segment is used as the schema module name
+                dataset_name = val.__ns_str__.split(".")[-1]
+                for cns, cat_name, _ in catalogs:
+                    # __ns_str__ is e.g. "public.stf.nhsn_hrd_prelim"
+                    # strip cat_name prefix -> "stf.nhsn_hrd_prelim"
+                    # then split into team ("stf") and dataset ("nhsn_hrd_prelim")
+                    # so the schema lives at: datasets.stf.schemas.nhsn_hrd_prelim
+                    ns_within_datasets = val.__ns_str__.removeprefix(
+                        f"{cat_name}."
+                    )
+                    ns_parts = ns_within_datasets.rsplit(".", 1)
+                    team_path = ns_parts[0] if len(ns_parts) > 1 else ""
+                    schema_mod_path = (
+                        f"{cns}.{cat_name}.datasets"
+                        f".{team_path}.schemas.{dataset_name}"
+                        if team_path
+                        else f"{cns}.{cat_name}.datasets.schemas.{dataset_name}"
+                    )
+                    try:
+                        mod = import_module(schema_mod_path)
+                    except ModuleNotFoundError:
+                        # No schema module for this dataset — skip silently
+                        continue
+                    # Attach to the already-existing BlobEndpoint on .extract / .load
+                    for stage, func_name in [
+                        ("extract", "extract_mock_data"),
+                        ("load", "load_mock_data"),
+                    ]:
+                        if hasattr(val, stage):
+                            if hasattr(mod, func_name):
+                                setattr(
+                                    getattr(val, stage),
+                                    "mock_data",
+                                    getattr(mod, func_name),
+                                )
+            elif isinstance(val, SimpleNamespace):
+                _walk(val)
+
+    _walk(datacat)
+
+
+_attach_schema_mock_functions(datacat, all_catalogs)
