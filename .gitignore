@@ -378,3 +378,6 @@ logs/
 
 # mkdocs local build
 site/
+
+# Output from Jupyter Notebooks
+out/
