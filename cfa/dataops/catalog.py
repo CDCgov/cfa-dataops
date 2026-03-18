@@ -12,6 +12,7 @@ from typing import Any, List, Sequence
 import pandas as pd
 import polars as pl
 import tomli
+from azure.identity import ManagedIdentityCredential
 
 from cfa.cloudops.blob_helpers import (
     read_blob_stream,
@@ -415,8 +416,35 @@ class BlobEndpoint:
             raise ValueError(
                 f"Output {output} needs to be 'pandas', 'polars', 'pd, or 'pl'."
             )
-        blobs = self.read_blobs(version, newest=newest)
         file_ext = self.get_file_ext(version=version)
+        if pl_lazy:
+            name = self._get_version_blobs(version=version)[0]["name"]
+            if file_ext in ["parquet", "parq"]:
+                path = "/".join(name.split("/")[:-1]) + "/*.parquet"
+                fullpath = f"az://{self.container}/{path}"
+                df = pl.scan_parquet(
+                    fullpath,
+                    storage_options={"account_name": self.account},
+                    credential_provider=pl.CredentialProviderAzure(
+                        credential=ManagedIdentityCredential()
+                    ),
+                )
+            elif file_ext == "csv":
+                path = "/".join(name.split("/")[:-1]) + "/*.csv"
+                fullpath = f"az://{self.container}/{path}"
+                df = pl.scan_csv(
+                    fullpath,
+                    infer_schema_length=None,
+                    storage_options={"account_name": self.account},
+                    credential_provider=pl.CredentialProviderAzure(
+                        credential=ManagedIdentityCredential()
+                    ),
+                )
+            else:
+                print(
+                    f"Lazy loading not supported for {file_ext} files. Loading eagerly instead."
+                )
+        blobs = self.read_blobs(version, newest=newest)
         blob_bytes = [blob.content_as_bytes() for blob in blobs]
         blob_files = [BytesIO(pq) for pq in blob_bytes]
         if file_ext == "csv":
@@ -431,8 +459,6 @@ class BlobEndpoint:
                     ],
                     how="diagonal",
                 )
-                if pl_lazy:
-                    df = df.lazy()
             return df
         elif file_ext == "json":
             if output in ["pandas", "pd"]:
