@@ -423,7 +423,9 @@ class BlobEndpoint:
             )
         file_ext = self.get_file_ext(version=version)
         if pl_lazy:
-            version_blobs = self._get_version_blobs(version=version, newest=newest)
+            version_blobs = self._get_version_blobs(
+                version=version, newest=newest
+            )
             if not version_blobs:
                 raise ValueError(
                     f"No blobs found for version '{version}' in container '{self.container}'."
@@ -445,6 +447,19 @@ class BlobEndpoint:
                 path = "/".join(name.split("/")[:-1]) + "/*.csv"
                 fullpath = f"az://{self.container}/{path}"
                 df = pl.scan_csv(
+                    fullpath,
+                    infer_schema_length=None,
+                    storage_options={"account_name": self.account},
+                    credential_provider=pl.CredentialProviderAzure(
+                        credential=ManagedIdentityCredential()
+                    ),
+                )
+                self.ledger_entry(action="read")
+                return df
+            elif file_ext == "json":
+                path = "/".join(name.split("/")[:-1]) + "/*.json"
+                fullpath = f"az://{self.container}/{path}"
+                df = pl.scan_ndjson(
                     fullpath,
                     infer_schema_length=None,
                     storage_options={"account_name": self.account},
@@ -486,8 +501,6 @@ class BlobEndpoint:
                     ],
                     how="diagonal",
                 )
-                if pl_lazy:
-                    df = df.lazy()
             return df
         elif file_ext == "jsonl":
             if output in ["pandas", "pd"]:
@@ -500,8 +513,6 @@ class BlobEndpoint:
                     [pl.read_ndjson(blob) for blob in blob_files],
                     how="diagonal",
                 )
-                if pl_lazy:
-                    df = df.lazy()
             return df
         elif file_ext == "parquet" or file_ext == "parq":
             if output in ["pandas", "pd"]:
@@ -514,8 +525,6 @@ class BlobEndpoint:
                     [pl.read_parquet(pq_file) for pq_file in blob_files],
                     how="diagonal",
                 )
-                if pl_lazy:
-                    df = df.lazy()
             return df
 
     def ledger_entry(self, action: str) -> None:
