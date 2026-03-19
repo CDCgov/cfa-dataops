@@ -407,7 +407,8 @@ class BlobEndpoint:
                 False returns the oldest matching version.
 
         Raises:
-            ValueError: if output is not 'pandas' or 'polars'
+            ValueError: if output is not 'pandas' or 'polars', or if pl_lazy is True
+                and output is not 'polars' or 'pl'
 
         Returns:
             pd.DataFrame | pl.DataFrame | pl.LazyFrame: the dataframe
@@ -415,6 +416,10 @@ class BlobEndpoint:
         if output not in ["pandas", "polars", "pd", "pl"]:
             raise ValueError(
                 f"Output {output} needs to be 'pandas', 'polars', 'pd, or 'pl'."
+            )
+        if pl_lazy and output not in ["polars", "pl"]:
+            raise ValueError(
+                "pl_lazy=True is only supported when output is 'polars' or 'pl'."
             )
         file_ext = self.get_file_ext(version=version)
         if pl_lazy:
