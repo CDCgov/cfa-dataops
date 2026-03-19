@@ -429,6 +429,7 @@ class BlobEndpoint:
                         credential=ManagedIdentityCredential()
                     ),
                 )
+                return df
             elif file_ext == "csv":
                 path = "/".join(name.split("/")[:-1]) + "/*.csv"
                 fullpath = f"az://{self.container}/{path}"
@@ -440,6 +441,7 @@ class BlobEndpoint:
                         credential=ManagedIdentityCredential()
                     ),
                 )
+                return df
             else:
                 print(
                     f"Lazy loading not supported for {file_ext} files. Loading eagerly instead."
