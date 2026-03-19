@@ -418,7 +418,7 @@ class BlobEndpoint:
             )
         file_ext = self.get_file_ext(version=version)
         if pl_lazy:
-            name = self._get_version_blobs(version=version)[0]["name"]
+            name = self._get_version_blobs(version=version, newest=newest)[0]["name"]
             if file_ext in ["parquet", "parq"]:
                 path = "/".join(name.split("/")[:-1]) + "/*.parquet"
                 fullpath = f"az://{self.container}/{path}"
