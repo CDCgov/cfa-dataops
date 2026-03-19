@@ -434,6 +434,7 @@ class BlobEndpoint:
                         credential=ManagedIdentityCredential()
                     ),
                 )
+                self.ledger_entry(action="read")
                 return df
             elif file_ext == "csv":
                 path = "/".join(name.split("/")[:-1]) + "/*.csv"
@@ -446,6 +447,7 @@ class BlobEndpoint:
                         credential=ManagedIdentityCredential()
                     ),
                 )
+                self.ledger_entry(action="read")
                 return df
             else:
                 print(
