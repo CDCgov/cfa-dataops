@@ -393,7 +393,7 @@ class BlobEndpoint:
         version="latest",
         pl_lazy: bool = False,
         newest: bool = True,
-    ) -> pd.DataFrame | pl.DataFrame:
+    ) -> pd.DataFrame | pl.DataFrame | pl.LazyFrame:
         """Get the data as a pandas or polars dataframe
 
         Args:
@@ -410,7 +410,7 @@ class BlobEndpoint:
             ValueError: if output is not 'pandas' or 'polars'
 
         Returns:
-            pd.DataFrame | pl.DataFrame: the dataframe
+            pd.DataFrame | pl.DataFrame | pl.LazyFrame: the dataframe
         """
         if output not in ["pandas", "polars", "pd", "pl"]:
             raise ValueError(
