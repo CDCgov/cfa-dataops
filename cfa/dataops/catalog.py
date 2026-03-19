@@ -420,7 +420,7 @@ class BlobEndpoint:
         if pl_lazy:
             name = self._get_version_blobs(version=version, newest=newest)[0]["name"]
             if file_ext in ["parquet", "parq"]:
-                path = "/".join(name.split("/")[:-1]) + "/*.parquet"
+                path = "/".join(name.split("/")[:-1]) + f"/*.{file_ext}"
                 fullpath = f"az://{self.container}/{path}"
                 df = pl.scan_parquet(
                     fullpath,
