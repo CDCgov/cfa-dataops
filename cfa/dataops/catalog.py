@@ -6,8 +6,9 @@ import pkgutil
 from configparser import ConfigParser
 from importlib import import_module
 from io import BytesIO
+from pathlib import PurePosixPath
 from types import SimpleNamespace
-from typing import Any, List, Sequence
+from typing import Any, List, Literal, Sequence, overload
 
 import pandas as pd
 import polars as pl
@@ -387,42 +388,61 @@ class BlobEndpoint:
             self.ledger_entry(action="read")
         return written
 
+    @overload
     def get_dataframe(
         self,
-        output="pandas",
-        version="latest",
-        pl_lazy: bool = False,
+        output: Literal["pandas", "pd"] = "pandas",
+        version: str = "latest",
+        newest: bool = True,
+    ) -> pd.DataFrame: ...
+
+    @overload
+    def get_dataframe(
+        self,
+        output: Literal["polars", "pl"],
+        version: str = "latest",
+        newest: bool = True,
+    ) -> pl.DataFrame: ...
+
+    @overload
+    def get_dataframe(
+        self,
+        output: Literal["pl_lazy", "lazy"],
+        version: str = "latest",
+        newest: bool = True,
+    ) -> pl.LazyFrame: ...
+
+    def get_dataframe(
+        self,
+        output: Literal[
+            "pandas", "pd", "polars", "pl", "pl_lazy", "lazy"
+        ] = "pandas",
+        version: str = "latest",
         newest: bool = True,
     ) -> pd.DataFrame | pl.DataFrame | pl.LazyFrame:
         """Get the data as a pandas or polars dataframe
 
         Args:
             output (str, optional): the type of dataframe to return,
-                either 'pandas' or 'polars'. Defaults to "pandas".
+                either 'pandas' or 'polars' or 'pl_lazy'. Defaults to "pandas".
             version (str, optional): the version of the data to get.
                 Defaults to "latest".
-            pl_lazy (bool, optional): whether to return a lazy polars dataframe.
-                Defaults to False.
             newest (bool, optional): whether to get the newest matching version. Defaults to True.
                 False returns the oldest matching version.
 
         Raises:
-            ValueError: if output is not 'pandas' or 'polars', or if pl_lazy is True
-                and output is not 'polars' or 'pl'
+            ValueError: if output is not one of
+                'pandas', 'pd', 'polars', 'pl', 'pl_lazy', or 'lazy'
 
         Returns:
             pd.DataFrame | pl.DataFrame | pl.LazyFrame: the dataframe
         """
-        if output not in ["pandas", "polars", "pd", "pl"]:
+        if output not in ["pandas", "polars", "pd", "pl", "pl_lazy", "lazy"]:
             raise ValueError(
-                f"Output {output} needs to be 'pandas', 'polars', 'pd, or 'pl'."
-            )
-        if pl_lazy and output not in ["polars", "pl"]:
-            raise ValueError(
-                "pl_lazy=True is only supported when output is 'polars' or 'pl'."
+                f"Output {output} needs to be 'pandas', 'polars', 'pd, 'pl', 'pl_lazy', or 'lazy'."
             )
         file_ext = self.get_file_ext(version=version)
-        if pl_lazy:
+        if output in ["pl_lazy", "lazy"]:
             version_blobs = self._get_version_blobs(
                 version=version, newest=newest
             )
@@ -432,7 +452,7 @@ class BlobEndpoint:
                 )
             name = version_blobs[0]["name"]
             if file_ext in ["parquet", "parq"]:
-                path = "/".join(name.split("/")[:-1]) + f"/*.{file_ext}"
+                path = str(PurePosixPath(name).parent / f"*.{file_ext}")
                 fullpath = f"az://{self.container}/{path}"
                 df = pl.scan_parquet(
                     fullpath,
@@ -444,7 +464,7 @@ class BlobEndpoint:
                 self.ledger_entry(action="read")
                 return df
             elif file_ext == "csv":
-                path = "/".join(name.split("/")[:-1]) + "/*.csv"
+                path = str(PurePosixPath(name).parent / "*.csv")
                 fullpath = f"az://{self.container}/{path}"
                 df = pl.scan_csv(
                     fullpath,
@@ -457,7 +477,7 @@ class BlobEndpoint:
                 self.ledger_entry(action="read")
                 return df
             elif file_ext == "json":
-                path = "/".join(name.split("/")[:-1]) + "/*.json"
+                path = str(PurePosixPath(name).parent / "*.json")
                 fullpath = f"az://{self.container}/{path}"
                 df = pl.scan_ndjson(
                     fullpath,
