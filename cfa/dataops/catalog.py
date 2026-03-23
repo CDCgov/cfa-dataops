@@ -464,7 +464,7 @@ class BlobEndpoint:
                 self.ledger_entry(action="read")
                 return df
             elif file_ext == "csv":
-                path = str(PurePosixPath(name).parent / "*.csv")
+                path = str(PurePosixPath(name).parent / f"*.{file_ext}")
                 fullpath = f"az://{self.container}/{path}"
                 df = pl.scan_csv(
                     fullpath,
@@ -476,8 +476,8 @@ class BlobEndpoint:
                 )
                 self.ledger_entry(action="read")
                 return df
-            elif file_ext == "json":
-                path = str(PurePosixPath(name).parent / "*.json")
+            elif file_ext == "ndjson" or file_ext == "jsonl":
+                path = str(PurePosixPath(name).parent / f"*.{file_ext}")
                 fullpath = f"az://{self.container}/{path}"
                 df = pl.scan_ndjson(
                     fullpath,
@@ -522,7 +522,7 @@ class BlobEndpoint:
                     how="diagonal",
                 )
             return df
-        elif file_ext == "jsonl":
+        elif file_ext == "jsonl" or file_ext == "ndjson":
             if output in ["pandas", "pd"]:
                 df = pd.concat(
                     [pd.read_json(blob, lines=True) for blob in blob_files]
