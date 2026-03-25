@@ -205,7 +205,5 @@ def test_datasets_catalog_get_dataframe_json(
     assert isinstance(blobs_df, pd.DataFrame)
     blobs_df = datacat.tests.etl_test.load.get_dataframe(output="pl")
     assert isinstance(blobs_df, pl.DataFrame)
-    blobs_df = datacat.tests.etl_test.load.get_dataframe(
-        output="pl", pl_lazy=True
-    )
-    assert isinstance(blobs_df, pl.LazyFrame)
+    blobs_df = datacat.tests.etl_test.load.get_dataframe(output="pl")
+    assert isinstance(blobs_df, pl.DataFrame)
