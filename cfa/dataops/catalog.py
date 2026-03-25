@@ -489,8 +489,8 @@ class BlobEndpoint:
                 self.ledger_entry(action="read")
                 return df
             else:
-                print(
-                    f"Lazy loading not supported for {file_ext} files. Loading eagerly instead."
+                raise ValueError(
+                    f"Lazy loading not supported for {file_ext} files."
                 )
         blobs = self.read_blobs(version, newest=newest)
         blob_bytes = [blob.content_as_bytes() for blob in blobs]
