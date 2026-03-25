@@ -441,16 +441,15 @@ class BlobEndpoint:
             raise ValueError(
                 f"Output {output} needs to be 'pandas', 'polars', 'pd, 'pl', 'pl_lazy', or 'lazy'."
             )
-        file_ext = self.get_file_ext(version=version)
-        if output in ["pl_lazy", "lazy"]:
-            version_blobs = self._get_version_blobs(
-                version=version, newest=newest
+        # Fetch version blobs once and validate before deriving file extension.
+        version_blobs = self._get_version_blobs(version=version, newest=newest)
+        if not version_blobs:
+            raise ValueError(
+                f"No blobs found for version '{version}' in container '{self.container}'."
             )
-            if not version_blobs:
-                raise ValueError(
-                    f"No blobs found for version '{version}' in container '{self.container}'."
-                )
-            name = version_blobs[0]["name"]
+        name = version_blobs[0]["name"]
+        file_ext = PurePosixPath(name).suffix.lstrip(".").lower()
+        if output in ["pl_lazy", "lazy"]:
             if file_ext in ["parquet", "parq"]:
                 path = str(PurePosixPath(name).parent / f"*.{file_ext}")
                 fullpath = f"az://{self.container}/{path}"
