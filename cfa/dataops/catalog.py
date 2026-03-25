@@ -439,7 +439,7 @@ class BlobEndpoint:
         """
         if output not in ["pandas", "polars", "pd", "pl", "pl_lazy", "lazy"]:
             raise ValueError(
-                f"Output {output} needs to be 'pandas', 'polars', 'pd, 'pl', 'pl_lazy', or 'lazy'."
+                f"Output {output} needs to be 'pandas', 'polars', 'pd', 'pl', 'pl_lazy', or 'lazy'."
             )
         # Fetch version blobs once and validate before deriving file extension.
         version_blobs = self._get_version_blobs(version=version, newest=newest)
