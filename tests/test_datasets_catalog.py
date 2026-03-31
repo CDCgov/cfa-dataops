@@ -205,7 +205,73 @@ def test_datasets_catalog_get_dataframe_json(
     assert isinstance(blobs_df, pd.DataFrame)
     blobs_df = datacat.tests.etl_test.load.get_dataframe(output="pl")
     assert isinstance(blobs_df, pl.DataFrame)
-    blobs_df = datacat.tests.etl_test.load.get_dataframe(
-        output="pl", pl_lazy=True
+    blobs_df = datacat.tests.etl_test.load.get_dataframe(output="pl")
+    assert isinstance(blobs_df, pl.DataFrame)
+
+
+def test_datasets_catalog_get_dataframe_pl_lazy(
+    mocker, mock_write_blob_stream, dataset_ns_map, dataset_defaults
+):
+    datacat = dict_to_sn(dataset_ns_map, dataset_defaults)
+    dataset_namespaces = get_dataset_dot_path(dataset_ns_map)
+    datacat.__setattr__("__namespace_list__", dataset_namespaces)
+
+    mocker.patch(
+        "cfa.dataops.catalog.write_blob_stream",
+        mock_write_blob_stream,
     )
-    assert isinstance(blobs_df, pl.LazyFrame)
+    mocker.patch.object(
+        datacat.tests.etl_test.load,
+        "get_versions",
+        return_value=["2025-06-03T17-56-50"],
+    )
+    mocker.patch.object(
+        datacat.tests.etl_test.load,
+        "_get_version_blobs",
+        return_value=[
+            {
+                "name": "prefix_test/transformed/test_dataset/2025-06-03T17-56-50/data.parquet",
+                "container": "container_test",
+            }
+        ],
+    )
+    mocker.patch.object(
+        datacat.tests.etl_test.load,
+        "ledger_entry",
+        return_value=None,
+    )
+
+    # Avoid real auth wiring during test
+    mocker.patch(
+        "cfa.dataops.catalog.ManagedIdentityCredential", return_value=object()
+    )
+    mocker.patch(
+        "cfa.dataops.catalog.pl.CredentialProviderAzure",
+        side_effect=lambda credential: object(),
+    )
+
+    scan_calls = []
+
+    def mock_scan_parquet(path, **kwargs):
+        scan_calls.append((path, kwargs))
+        return pl.DataFrame([{"test": 1, "data": 2}]).lazy()
+
+    mocker.patch(
+        "cfa.dataops.catalog.pl.scan_parquet",
+        side_effect=mock_scan_parquet,
+    )
+
+    out_pl_lazy = datacat.tests.etl_test.load.get_dataframe(output="pl_lazy")
+    out_lazy = datacat.tests.etl_test.load.get_dataframe(output="lazy")
+
+    assert isinstance(out_pl_lazy, pl.LazyFrame)
+    assert isinstance(out_lazy, pl.LazyFrame)
+    assert len(scan_calls) == 2
+    assert (
+        scan_calls[0][0]
+        == "az://container_test/prefix_test/transformed/test_dataset/2025-06-03T17-56-50/*.parquet"
+    )
+    assert (
+        scan_calls[1][0]
+        == "az://container_test/prefix_test/transformed/test_dataset/2025-06-03T17-56-50/*.parquet"
+    )

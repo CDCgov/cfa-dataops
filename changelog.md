@@ -7,6 +7,10 @@ and this project adheres to [Calendar Versioning](https://calver.org/).
 The versioning pattern is `YYYY.MM.DD.micro(a/b/{none if release})
 
 ---
+## [2026.03.31.0]
+
+- updated polars lazyframe loading to correctly reference the Blob file without downloading
+
 ## [2026.03.02.0]
 
 ### Added
