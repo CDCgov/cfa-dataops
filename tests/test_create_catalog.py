@@ -192,9 +192,9 @@ def test_create_expanded_catalog(catalog_parent):
     ]
 
     for file_name in cfa_files:
-        assert catalog_location.join(file_name).check(file=True), (
-            f"Missing CFA file: {file_name}"
-        )
+        assert catalog_location.join(file_name).check(
+            file=True
+        ), f"Missing CFA file: {file_name}"
 
 
 def test_unique_name_sanitization(catalog_parent):
@@ -285,9 +285,9 @@ def test_datasets_directory_structure(catalog_parent):
     ]
 
     for example_file in example_files:
-        assert datasets_path.join(example_file).check(file=True), (
-            f"Missing example file: {example_file}"
-        )
+        assert datasets_path.join(example_file).check(
+            file=True
+        ), f"Missing example file: {example_file}"
 
 
 def test_reports_directory_structure(catalog_parent):
