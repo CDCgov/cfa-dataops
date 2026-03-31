@@ -3,18 +3,18 @@
 import json
 import os
 import pkgutil
+from collections.abc import Sequence
 from configparser import ConfigParser
 from importlib import import_module
 from io import BytesIO
 from pathlib import PurePosixPath
 from types import SimpleNamespace
-from typing import Any, List, Literal, Sequence, overload
+from typing import Any, Literal, overload
 
 import pandas as pd
 import polars as pl
 import tomli
 from azure.identity import ManagedIdentityCredential
-
 from cfa.cloudops.blob_helpers import (
     read_blob_stream,
     walk_blobs_in_container,
@@ -53,9 +53,7 @@ def get_all_catalogs() -> list:
     catalog_nspace = _config.get("DEFAULT", "catalog_namespaces")
     try:
         catalog_pkg = import_module(catalog_nspace)
-        for module_finder, modname, ispkg in pkgutil.iter_modules(
-            catalog_pkg.__path__
-        ):
+        for module_finder, modname, ispkg in pkgutil.iter_modules(catalog_pkg.__path__):
             if ispkg:
                 catalogs.append((catalog_nspace, modname, module_finder.path))
     except ModuleNotFoundError:
@@ -76,9 +74,7 @@ for cns, cat_name, cat_path in all_catalogs:
     report_mod = import_module(f"{cns}.{cat_name}.reports")
     all_dataset_ns_map.update(dataset_mod.dataset_ns_map)
     all_reports_ns_map.update(report_mod.report_ns_map)
-    with open(
-        os.path.join(cat_path, cat_name, "catalog_defaults.toml"), "rb"
-    ) as f:
+    with open(os.path.join(cat_path, cat_name, "catalog_defaults.toml"), "rb") as f:
         defaults = tomli.load(f)
     for k in dataset_mod.dataset_ns_map.keys():
         all_defaults.update({k: defaults})
@@ -111,13 +107,9 @@ class DatasetEndpoint:
                 account = v.get("account", "")
                 container = v.get("container", "")
                 if account == "":
-                    self.config[k]["account"] = self.defaults["storage"][
-                        "account"
-                    ]
+                    self.config[k]["account"] = self.defaults["storage"]["account"]
                 if container == "":
-                    self.config[k]["container"] = self.defaults["storage"][
-                        "container"
-                    ]
+                    self.config[k]["container"] = self.defaults["storage"]["container"]
         self.validate_dataset_config(config_path)
         self._ledger_location = {
             "account": self.defaults["storage"]["account"],
@@ -144,8 +136,7 @@ class DatasetEndpoint:
             config_models = {}
             for c_key, c_value in self.config.items():
                 if (
-                    c_key.startswith("stage_")
-                    or c_key in ["load", "extract", "data"]
+                    c_key.startswith("stage_") or c_key in ["load", "extract", "data"]
                 ) and c_value is not None:
                     config_models[c_key] = StorageEndpointValidation(**c_value)
                 elif c_key == "properties":
@@ -207,9 +198,7 @@ class BlobEndpoint:
             append (bool, optional): whether to append to existing file (only for single file writes).
         """
         if auto_version and not append:
-            path_after_prefix = (
-                f"{get_timestamp()}/{path_after_prefix.lstrip('/')}"
-            )
+            path_after_prefix = f"{get_timestamp()}/{path_after_prefix.lstrip('/')}"
         path_after_prefix = path_after_prefix.lstrip("/")
         full_path = f"{self.prefix}/{path_after_prefix}"
         if isinstance(file_buffer, bytes):
@@ -231,9 +220,7 @@ class BlobEndpoint:
         self.ledger_entry(action="write")
         # print(f"file written to: {full_path}")
 
-    def read_blobs(
-        self, version: str = "latest", newest: bool = True
-    ) -> List[bytes]:
+    def read_blobs(self, version: str = "latest", newest: bool = True) -> list[bytes]:
         """Read a blob in as bytes so it can be loaded into a dataframe
 
         Args:
@@ -295,18 +282,16 @@ class BlobEndpoint:
         Returns:
             str: the file extension
         """
-        return self._get_version_blobs(version=version, print_version=False)[
-            0
-        ]["name"].split(".")[-1]
+        return self._get_version_blobs(version=version, print_version=False)[0][
+            "name"
+        ].split(".")[-1]
 
     def _get_version_blobs(
         self, version: str = "latest", newest=True, print_version=True
     ) -> list:
         if not self.is_ledger:
             available_versions = self.get_versions()
-            version = version_matcher(
-                version, available_versions, newest=newest
-            )
+            version = version_matcher(version, available_versions, newest=newest)
             if not version:
                 raise ValueError(
                     f"Version {version} not found in available versions: {available_versions}"
@@ -414,9 +399,7 @@ class BlobEndpoint:
 
     def get_dataframe(
         self,
-        output: Literal[
-            "pandas", "pd", "polars", "pl", "pl_lazy", "lazy"
-        ] = "pandas",
+        output: Literal["pandas", "pd", "polars", "pl", "pl_lazy", "lazy"] = "pandas",
         version: str = "latest",
         newest: bool = True,
     ) -> pd.DataFrame | pl.DataFrame | pl.LazyFrame:
@@ -489,9 +472,7 @@ class BlobEndpoint:
                 self.ledger_entry(action="read")
                 return df
             else:
-                raise ValueError(
-                    f"Lazy loading not supported for {file_ext} files."
-                )
+                raise ValueError(f"Lazy loading not supported for {file_ext} files.")
         blobs = self.read_blobs(version, newest=newest)
         blob_bytes = [blob.content_as_bytes() for blob in blobs]
         blob_files = [BytesIO(pq) for pq in blob_bytes]
@@ -523,9 +504,7 @@ class BlobEndpoint:
             return df
         elif file_ext == "jsonl" or file_ext == "ndjson":
             if output in ["pandas", "pd"]:
-                df = pd.concat(
-                    [pd.read_json(blob, lines=True) for blob in blob_files]
-                )
+                df = pd.concat([pd.read_json(blob, lines=True) for blob in blob_files])
                 df.reset_index(inplace=True, drop=True)
             else:
                 df = pl.concat(
@@ -535,9 +514,7 @@ class BlobEndpoint:
             return df
         elif file_ext == "parquet" or file_ext == "parq":
             if output in ["pandas", "pd"]:
-                df = pd.concat(
-                    [pd.read_parquet(pq_file) for pq_file in blob_files]
-                )
+                df = pd.concat([pd.read_parquet(pq_file) for pq_file in blob_files])
                 df.reset_index(inplace=True, drop=True)
             else:
                 df = pl.concat(
@@ -593,9 +570,7 @@ class BlobEndpoint:
             raise ValueError(
                 f"File format {file_format} not supported. Use 'parquet', 'csv', 'json', or 'jsonl'."
             )
-        if file_format in ["json", "jsonl"] and path_after_prefix.endswith(
-            ".json"
-        ):
+        if file_format in ["json", "jsonl"] and path_after_prefix.endswith(".json"):
             path_after_prefix = path_after_prefix[:-5] + ".jsonl"
             print("Changing file extension to .jsonl for line-delimited JSON.")
         if isinstance(df, pd.DataFrame):
@@ -618,9 +593,7 @@ class BlobEndpoint:
                     auto_version=auto_version,
                 )
             elif file_format in ["json", "jsonl"]:
-                json_bytes = df.to_json(orient="records", lines=True).encode(
-                    "utf-8"
-                )
+                json_bytes = df.to_json(orient="records", lines=True).encode("utf-8")
                 self.write_blob(
                     file_buffer=json_bytes,
                     path_after_prefix=path_after_prefix
@@ -762,9 +735,7 @@ combined_dict = {key: value for ns in dc for key, value in vars(ns).items()}
 rc = []
 for k in all_reports_ns_map.keys():
     rc.append(report_dict_to_sn({k: all_reports_ns_map[k]}))
-combined_reports_dict = {
-    key: value for ns in rc for key, value in vars(ns).items()
-}
+combined_reports_dict = {key: value for ns in rc for key, value in vars(ns).items()}
 
 datacat = SimpleNamespace(**combined_dict)
 datacat.__setattr__("__namespace_list__", dataset_namespaces)
@@ -772,9 +743,7 @@ reportcat = SimpleNamespace(**combined_reports_dict)
 reportcat.__setattr__("__namespace_list__", report_namespaces)
 
 
-def _attach_schema_mock_functions(
-    datacat: SimpleNamespace, catalogs: list
-) -> None:
+def _attach_schema_mock_functions(datacat: SimpleNamespace, catalogs: list) -> None:
     """Recursively walk the datacat namespace and attach mock_data functions to
     the extract and load BlobEndpoints of each DatasetEndpoint, sourced from
     a schema module co-located with the dataset.
@@ -812,14 +781,11 @@ def _attach_schema_mock_functions(
                     # strip cat_name prefix -> "stf.nhsn_hrd_prelim"
                     # then split into team ("stf") and dataset ("nhsn_hrd_prelim")
                     # so the schema lives at: datasets.stf.schemas.nhsn_hrd_prelim
-                    ns_within_datasets = val.__ns_str__.removeprefix(
-                        f"{cat_name}."
-                    )
+                    ns_within_datasets = val.__ns_str__.removeprefix(f"{cat_name}.")
                     ns_parts = ns_within_datasets.rsplit(".", 1)
                     team_path = ns_parts[0] if len(ns_parts) > 1 else ""
                     schema_mod_path = (
-                        f"{cns}.{cat_name}.datasets"
-                        f".{team_path}.schemas.{dataset_name}"
+                        f"{cns}.{cat_name}.datasets.{team_path}.schemas.{dataset_name}"
                         if team_path
                         else f"{cns}.{cat_name}.datasets.schemas.{dataset_name}"
                     )

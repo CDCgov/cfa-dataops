@@ -32,9 +32,7 @@ def blob_endpoint(mocker, mock_write_blob_stream):
 class TestDownloadVersionToLocal:
     """Tests for the download_version_to_local method"""
 
-    def test_download_version_to_local_single_file(
-        self, mocker, blob_endpoint
-    ):
+    def test_download_version_to_local_single_file(self, mocker, blob_endpoint):
         """Test downloading a single file version to local path"""
         # Mock the blob reading
         test_content = b"test file content"
@@ -69,18 +67,14 @@ class TestDownloadVersionToLocal:
             assert result is True
 
             # Verify file was written
-            expected_file = os.path.join(
-                tmpdir, "2025-01-01T12-00-00", "data.csv"
-            )
+            expected_file = os.path.join(tmpdir, "2025-01-01T12-00-00", "data.csv")
             assert os.path.exists(expected_file)
 
             # Verify content
             with open(expected_file, "rb") as f:
                 assert f.read() == test_content
 
-    def test_download_version_to_local_multiple_files(
-        self, mocker, blob_endpoint
-    ):
+    def test_download_version_to_local_multiple_files(self, mocker, blob_endpoint):
         """Test downloading multiple files in a version to local path"""
         test_content_1 = b"test file 1"
         test_content_2 = b"test file 2"
@@ -121,12 +115,8 @@ class TestDownloadVersionToLocal:
             assert result is True
 
             # Verify both files were written
-            file1 = os.path.join(
-                tmpdir, "2025-01-01T12-00-00", "data_0.parquet"
-            )
-            file2 = os.path.join(
-                tmpdir, "2025-01-01T12-00-00", "data_1.parquet"
-            )
+            file1 = os.path.join(tmpdir, "2025-01-01T12-00-00", "data_0.parquet")
+            file2 = os.path.join(tmpdir, "2025-01-01T12-00-00", "data_1.parquet")
             assert os.path.exists(file1)
             assert os.path.exists(file2)
 
@@ -135,9 +125,7 @@ class TestDownloadVersionToLocal:
             with open(file2, "rb") as f:
                 assert f.read() == test_content_2
 
-    def test_download_version_to_local_nested_structure(
-        self, mocker, blob_endpoint
-    ):
+    def test_download_version_to_local_nested_structure(self, mocker, blob_endpoint):
         """Test downloading files with nested directory structure"""
         test_content = b"nested file content"
 
@@ -217,9 +205,7 @@ class TestDownloadVersionToLocal:
             assert result is True
 
             # Verify the latest version was downloaded
-            expected_file = os.path.join(
-                tmpdir, "2025-01-02T12-00-00", "data.csv"
-            )
+            expected_file = os.path.join(tmpdir, "2025-01-02T12-00-00", "data.csv")
             assert os.path.exists(expected_file)
 
     def test_download_version_to_local_no_redownload_without_force(
@@ -249,9 +235,7 @@ class TestDownloadVersionToLocal:
 
         with tempfile.TemporaryDirectory() as tmpdir:
             # Create the file beforehand
-            expected_file = os.path.join(
-                tmpdir, "2025-01-01T12-00-00", "data.csv"
-            )
+            expected_file = os.path.join(tmpdir, "2025-01-01T12-00-00", "data.csv")
             os.makedirs(os.path.dirname(expected_file), exist_ok=True)
             existing_content = b"existing content"
             with open(expected_file, "wb") as f:
@@ -270,9 +254,7 @@ class TestDownloadVersionToLocal:
             with open(expected_file, "rb") as f:
                 assert f.read() == existing_content
 
-    def test_download_version_to_local_force_redownload(
-        self, mocker, blob_endpoint
-    ):
+    def test_download_version_to_local_force_redownload(self, mocker, blob_endpoint):
         """Test that existing files are re-downloaded with force flag"""
         test_content = b"new test content"
 
@@ -297,9 +279,7 @@ class TestDownloadVersionToLocal:
 
         with tempfile.TemporaryDirectory() as tmpdir:
             # Create the file beforehand with different content
-            expected_file = os.path.join(
-                tmpdir, "2025-01-01T12-00-00", "data.csv"
-            )
+            expected_file = os.path.join(tmpdir, "2025-01-01T12-00-00", "data.csv")
             os.makedirs(os.path.dirname(expected_file), exist_ok=True)
             with open(expected_file, "wb") as f:
                 f.write(b"old content")
@@ -316,9 +296,7 @@ class TestDownloadVersionToLocal:
             with open(expected_file, "rb") as f:
                 assert f.read() == test_content
 
-    def test_download_version_to_local_creates_directories(
-        self, mocker, blob_endpoint
-    ):
+    def test_download_version_to_local_creates_directories(self, mocker, blob_endpoint):
         """Test that download creates necessary directories"""
         test_content = b"test content"
 
@@ -362,9 +340,7 @@ class TestDownloadVersionToLocal:
             assert os.path.exists(expected_file)
             assert os.path.isfile(expected_file)
 
-    def test_download_version_to_local_ledger_entry(
-        self, mocker, blob_endpoint
-    ):
+    def test_download_version_to_local_ledger_entry(self, mocker, blob_endpoint):
         """Test that ledger entry is created when files are written"""
         test_content = b"test content"
 
@@ -430,9 +406,7 @@ class TestDownloadVersionToLocal:
 
         with tempfile.TemporaryDirectory() as tmpdir:
             # Create the file beforehand
-            expected_file = os.path.join(
-                tmpdir, "2025-01-01T12-00-00", "data.csv"
-            )
+            expected_file = os.path.join(tmpdir, "2025-01-01T12-00-00", "data.csv")
             os.makedirs(os.path.dirname(expected_file), exist_ok=True)
             with open(expected_file, "wb") as f:
                 f.write(b"existing content")

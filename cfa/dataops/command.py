@@ -58,9 +58,7 @@ def get_available_data():
     Retrieve a list of available datasets for CFA.
     """
     parser = ArgumentParser(description="Get list of available datasets")
-    parser.add_argument(
-        "-p", "--prefix", help="optional prefix filter", default=None
-    )
+    parser.add_argument("-p", "--prefix", help="optional prefix filter", default=None)
     args = parser.parse_args()
     datasets = datacat.__namespace_list__
     if args.prefix:
@@ -125,9 +123,7 @@ def save_data_locally():
     parser.add_argument(
         "--stage", "-s", help="specific stage to get version for", default=None
     )
-    parser.add_argument(
-        "--version", "-v", help="specific version to get", default=None
-    )
+    parser.add_argument("--version", "-v", help="specific version to get", default=None)
     parser.add_argument(
         "--force", "-f", help="force re-download of data", action="store_true"
     )

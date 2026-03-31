@@ -14,9 +14,7 @@ def must_get(name: str) -> str:
 def main() -> None:
     """Generate and publish a minimal HTML report to Azure Blob Storage."""
     repo_root = Path(__file__).resolve().parents[2]
-    notebook_path = (
-        repo_root / "examples" / "reportcat" / "minimal_report.ipynb"
-    )
+    notebook_path = repo_root / "examples" / "reportcat" / "minimal_report.ipynb"
 
     blob_account = must_get("REPORTCAT_BLOB_ACCOUNT")
     blob_container = must_get("REPORTCAT_BLOB_CONTAINER")

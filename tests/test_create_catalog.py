@@ -57,9 +57,7 @@ def create_catalog_programmatically(
         with open(
             os.path.join(library_modules_root, "catalog_defaults.toml"), "w"
         ) as f:
-            template = repo_template_lookup.get_template(
-                "catalog_defaults.toml.mako"
-            )
+            template = repo_template_lookup.get_template("catalog_defaults.toml.mako")
             f.write(
                 template.render(
                     unique_name=unique_name,
@@ -192,9 +190,9 @@ def test_create_expanded_catalog(catalog_parent):
     ]
 
     for file_name in cfa_files:
-        assert catalog_location.join(file_name).check(
-            file=True
-        ), f"Missing CFA file: {file_name}"
+        assert catalog_location.join(file_name).check(file=True), (
+            f"Missing CFA file: {file_name}"
+        )
 
 
 def test_unique_name_sanitization(catalog_parent):
@@ -208,9 +206,7 @@ def test_unique_name_sanitization(catalog_parent):
 
     for i, (input_name, expected_name) in enumerate(test_cases):
         # Use unique directory for each test case
-        catalog_location = catalog_parent.join(
-            f"sanitize_test_{i}_{expected_name}"
-        )
+        catalog_location = catalog_parent.join(f"sanitize_test_{i}_{expected_name}")
 
         success = create_catalog_programmatically(
             unique_name=input_name,
@@ -221,9 +217,7 @@ def test_unique_name_sanitization(catalog_parent):
         assert success is True
 
         # Check that the directory uses the sanitized name
-        catalog_module_path = catalog_location.join(
-            "cfa", "catalog", expected_name
-        )
+        catalog_module_path = catalog_location.join("cfa", "catalog", expected_name)
         assert catalog_module_path.check(dir=True)
 
 
@@ -270,9 +264,7 @@ def test_datasets_directory_structure(catalog_parent):
 
     assert success is True
 
-    datasets_path = catalog_location.join(
-        "cfa", "catalog", unique_name, "datasets"
-    )
+    datasets_path = catalog_location.join("cfa", "catalog", unique_name, "datasets")
     assert datasets_path.check(dir=True)
     assert datasets_path.join("__init__.py").check(file=True)
 
@@ -285,9 +277,9 @@ def test_datasets_directory_structure(catalog_parent):
     ]
 
     for example_file in example_files:
-        assert datasets_path.join(example_file).check(
-            file=True
-        ), f"Missing example file: {example_file}"
+        assert datasets_path.join(example_file).check(file=True), (
+            f"Missing example file: {example_file}"
+        )
 
 
 def test_reports_directory_structure(catalog_parent):
@@ -303,9 +295,7 @@ def test_reports_directory_structure(catalog_parent):
 
     assert success is True
 
-    reports_path = catalog_location.join(
-        "cfa", "catalog", unique_name, "reports"
-    )
+    reports_path = catalog_location.join("cfa", "catalog", unique_name, "reports")
     assert reports_path.check(dir=True)
     assert reports_path.join("__init__.py").check(file=True)
 
@@ -328,9 +318,7 @@ def test_workflows_directory_structure(catalog_parent):
 
     assert success is True
 
-    workflows_path = catalog_location.join(
-        "cfa", "catalog", unique_name, "workflows"
-    )
+    workflows_path = catalog_location.join("cfa", "catalog", unique_name, "workflows")
     assert workflows_path.check(dir=True)
     assert workflows_path.join("__init__.py").check(file=True)
 
@@ -371,9 +359,7 @@ def test_main_function_with_confirmation(mocker, catalog_parent):
     mock_exit = mocker.patch("sys.exit")
 
     # Mock sys.argv to simulate command line arguments
-    mocker.patch(
-        "sys.argv", ["create-catalog", unique_name, str(catalog_location)]
-    )
+    mocker.patch("sys.argv", ["create-catalog", unique_name, str(catalog_location)])
 
     # Call main function - it should create the catalog successfully
     main()
@@ -398,9 +384,7 @@ def test_main_function_with_abort(mocker, catalog_parent):
     mock_exit = mocker.patch("sys.exit")
 
     # Mock sys.argv to simulate command line arguments
-    mocker.patch(
-        "sys.argv", ["create-catalog", unique_name, str(catalog_location)]
-    )
+    mocker.patch("sys.argv", ["create-catalog", unique_name, str(catalog_location)])
 
     # Call main function
     main()

@@ -28,9 +28,7 @@ def test_dict_to_sn(simple_dataset_ns_map):
     assert not result.space.example.config["properties"]["automate"]
     assert result.space.example.extract.account == "account_test"
     assert result.space.example.extract.container == "container_test"
-    assert (
-        result.space.example.extract.prefix == "prefix_test/raw/test_dataset"
-    )
+    assert result.space.example.extract.prefix == "prefix_test/raw/test_dataset"
     assert isinstance(result.space.example.load, BlobEndpoint)
     assert isinstance(result.space.example.extract, BlobEndpoint)
     assert isinstance(result.space.example, DatasetEndpoint)
@@ -45,9 +43,7 @@ def test_datasets_catalog(
     datacat.__setattr__("__namespace_list__", dataset_namespaces)
     assert isinstance(datacat, SimpleNamespace)
     assert isinstance(datacat.tests, SimpleNamespace)
-    assert isinstance(
-        datacat.tests.multistage.multistage_test, DatasetEndpoint
-    )
+    assert isinstance(datacat.tests.multistage.multistage_test, DatasetEndpoint)
     assert isinstance(datacat.tests.reference_test.load, BlobEndpoint)
     # did defaults load
     assert datacat.tests.experiment_test.load.account == "account_test"
@@ -242,9 +238,7 @@ def test_datasets_catalog_get_dataframe_pl_lazy(
     )
 
     # Avoid real auth wiring during test
-    mocker.patch(
-        "cfa.dataops.catalog.ManagedIdentityCredential", return_value=object()
-    )
+    mocker.patch("cfa.dataops.catalog.ManagedIdentityCredential", return_value=object())
     mocker.patch(
         "cfa.dataops.catalog.pl.CredentialProviderAzure",
         side_effect=lambda credential: object(),

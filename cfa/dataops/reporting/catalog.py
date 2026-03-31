@@ -2,14 +2,13 @@ import os
 from pprint import pprint
 from tempfile import TemporaryDirectory
 from types import SimpleNamespace
-from typing import Any, Optional
+from typing import Any
 
 import nbformat
 import papermill as pm
+from cfa.cloudops.blob_helpers import write_blob_stream
 from nbconvert import HTMLExporter
 from traitlets.config import Config
-
-from cfa.cloudops.blob_helpers import write_blob_stream
 
 _here_dir = os.path.split(os.path.abspath(__file__))[0]
 
@@ -42,7 +41,7 @@ def retitle_notebook(nb_loc: str, new_title: str) -> None:
     assert os.path.exists(nb_loc), f"Notebook {nb_loc} does not exist."
     assert nb_loc.endswith(".ipynb"), "Notebook must be a .ipynb file."
 
-    with open(nb_loc, "r", encoding="utf-8") as f:
+    with open(nb_loc, encoding="utf-8") as f:
         notebook = nbformat.read(f, as_version=4)
 
     notebook.metadata["title"] = new_title
@@ -62,15 +61,11 @@ def nb_to_html(nb_path: str) -> str:
     c.TagRemovePreprocessor.remove_input_tags = ("remove_input",)
     c.TagRemovePreprocessor.remove_all_outputs_tags = ("remove_outputs",)
     c.TagRemovePreprocessor.enabled = True
-    c.HTMLExporter.preprocessors = [
-        "nbconvert.preprocessors.TagRemovePreprocessor"
-    ]
+    c.HTMLExporter.preprocessors = ["nbconvert.preprocessors.TagRemovePreprocessor"]
     c.TemplateExporter.extra_template_basedirs = os.path.join(
         _here_dir, "jupyter_templates"
     )
-    body, _ = HTMLExporter(template_name="lab", config=c).from_filename(
-        nb_path
-    )
+    body, _ = HTMLExporter(template_name="lab", config=c).from_filename(nb_path)
     return body
 
 
@@ -88,7 +83,7 @@ class NotebookEndpoint:
         """Pretty print the parameters of the notebook."""
         pprint(self.get_params())
 
-    def nb_to_html_str(self, nb_title: Optional[str] = None, **kwargs) -> str:
+    def nb_to_html_str(self, nb_title: str | None = None, **kwargs) -> str:
         """Convert the notebook to HTML format and optionally save it to a file.
 
         Args:
@@ -113,7 +108,7 @@ class NotebookEndpoint:
         return html_content
 
     def nb_to_html_file(
-        self, html_out_path: str, nb_title: Optional[str] = None, **kwargs
+        self, html_out_path: str, nb_title: str | None = None, **kwargs
     ) -> None:
         """Convert the notebook to HTML format.
 
@@ -123,9 +118,7 @@ class NotebookEndpoint:
         Returns:
             None, saves the html content to a file.
         """
-        assert html_out_path.endswith(
-            ".html"
-        ), "Output path must end with .html"
+        assert html_out_path.endswith(".html"), "Output path must end with .html"
         html_content = self.nb_to_html_str(nb_title=nb_title, **kwargs)
         os.makedirs(os.path.dirname(html_out_path), exist_ok=True)
         with open(html_out_path, "w", encoding="utf-8") as f:
@@ -137,7 +130,7 @@ class NotebookEndpoint:
         blob_account: str,
         blob_container: str,
         blob_path: str,
-        nb_title: Optional[str] = None,
+        nb_title: str | None = None,
         **kwargs,
     ) -> None:
         """Convert the notebook to HTML format save to blob storage.
