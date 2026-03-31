@@ -14,17 +14,12 @@ repos:
 #####
 # Python
 - repo: https://github.com/astral-sh/ruff-pre-commit
-  rev: v0.6.8
+  rev: v0.15.8
   hooks:
     # Sort imports
-    - id: ruff
-      args: ['check', '--select', 'I', '--fix']
-    # Run the linter
-    - id: ruff
-      args: ['--line-length', '79']
+    - id: ruff-check
     # Run the formatter
     - id: ruff-format
-      args: ['--line-length', '79']
 #####
 # R
 # -   repo: https://github.com/lorenzwalthert/precommit
