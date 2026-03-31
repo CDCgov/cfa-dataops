@@ -121,9 +121,9 @@ class Query:
 
     def _get_records(self, start: int, end: int) -> list[dict]:
         assert end >= start
-        assert (
-            self.limit is None or end < self.limit
-        ), f"End index {end} is larger than limit {self.limit}."
+        assert self.limit is None or end < self.limit, (
+            f"End index {end} is larger than limit {self.limit}."
+        )
         n_rows = end - start + 1
 
         return self._get_request(

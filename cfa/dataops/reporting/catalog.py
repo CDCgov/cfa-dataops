@@ -123,9 +123,9 @@ class NotebookEndpoint:
         Returns:
             None, saves the html content to a file.
         """
-        assert html_out_path.endswith(
-            ".html"
-        ), "Output path must end with .html"
+        assert html_out_path.endswith(".html"), (
+            "Output path must end with .html"
+        )
         html_content = self.nb_to_html_str(nb_title=nb_title, **kwargs)
         os.makedirs(os.path.dirname(html_out_path), exist_ok=True)
         with open(html_out_path, "w", encoding="utf-8") as f:
