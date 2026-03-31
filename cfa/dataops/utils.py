@@ -4,6 +4,7 @@ import getpass
 import glob
 import os
 import re
+from collections.abc import Callable
 from datetime import datetime
 from itertools import islice
 from pathlib import Path
@@ -27,7 +28,7 @@ def remove_ws_and_nonalpha(s: str) -> str:
 
 
 def get_fs_ns_map(
-    base_dir: str, file_ext: str, endpoint_func: callable | None = None
+    base_dir: str, file_ext: str, endpoint_func: Callable[[str], str] | None = None
 ) -> dict:
     """Get a nested dictionary representing the filesystem structure starting from base_dir.
 

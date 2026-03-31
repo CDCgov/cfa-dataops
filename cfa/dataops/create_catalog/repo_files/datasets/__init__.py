@@ -2,6 +2,7 @@
 
 import glob
 import os
+from collections.abc import Callable
 from os import path
 
 import tomli
@@ -43,7 +44,7 @@ def get_dataset_name(p: str) -> str:
 
 
 def get_fs_ns_map(
-    base_dir: str, file_ext: str, endpoint_func: callable | None = None
+    base_dir: str, file_ext: str, endpoint_func: Callable[[str], str] | None = None
 ) -> dict:
     """Get a nested dictionary representing the filesystem structure starting from base_dir.
 
