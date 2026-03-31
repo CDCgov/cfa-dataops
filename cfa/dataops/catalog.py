@@ -7,7 +7,7 @@ from configparser import ConfigParser
 from importlib import import_module
 from io import BytesIO
 from types import SimpleNamespace
-from typing import TYPE_CHECKING, Any, List, Literal, Sequence, overload
+from typing import TYPE_CHECKING, Any, List, Sequence
 
 import pandas as pd
 import polars as pl
