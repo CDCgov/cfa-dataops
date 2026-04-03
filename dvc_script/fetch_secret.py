@@ -4,41 +4,44 @@ import sys
 
 from cfa.cloudops import CloudClient
 
-KEYVAULT_NAME = "cfa-predict"
-STORAGE_ACCOUNT = "cfadatalakedev"
-SECRET_NAME = "CFA-Function-Container-Deployer-SP-Secret"
+
+def get_required_env(name: str) -> str:
+    value = os.getenv(name)
+    if not value:
+        raise RuntimeError(f"Missing required environment variable: {name}")
+    return value
 
 
 def main() -> int:
     try:
-        client_id = os.getenv("AZURE_CLIENT_ID")
-        tenant_id = os.getenv("AZURE_TENANT_ID")
-        subscription_id = os.getenv("AZURE_SUBSCRIPTION_ID")
+        keyvault_name = get_required_env("AZURE_KEYVAULT_NAME")
+        storage_account = get_required_env("AZURE_STORAGE_ACCOUNT_NAME")
+        secret_name = get_required_env("AZURE_KEYVAULT_SP_SECRET_ID")
 
-        if not client_id:
-            raise RuntimeError("Missing AZURE_CLIENT_ID in environment")
-        if not tenant_id:
-            raise RuntimeError("Missing AZURE_TENANT_ID in environment")
-        if not subscription_id:
-            raise RuntimeError("Missing AZURE_SUBSCRIPTION_ID in environment")
+        client_id = get_required_env("AZURE_CLIENT_ID")
+        tenant_id = get_required_env("AZURE_TENANT_ID")
+        subscription_id = get_required_env("AZURE_SUBSCRIPTION_ID")
 
         cc = CloudClient(
-            keyvault=KEYVAULT_NAME,
+            keyvault=keyvault_name,
             use_federated=True,
         )
 
-        client_secret = cc.get_kv_secret(SECRET_NAME, KEYVAULT_NAME)
+        client_secret = cc.get_kv_secret(secret_name, keyvault_name)
         if not client_secret:
-            raise RuntimeError(f"Failed to retrieve secret '{SECRET_NAME}' from Key Vault")
+            raise RuntimeError(
+                f"Failed to retrieve secret '{secret_name}' from Key Vault '{keyvault_name}'"
+            )
 
-        os.environ["AZURE_STORAGE_ACCOUNT_NAME"] = STORAGE_ACCOUNT
         os.environ["AZURE_CLIENT_SECRET"] = client_secret
 
-        print(f"Using storage account: {STORAGE_ACCOUNT}")
+        print(f"Using Key Vault: {keyvault_name}")
+        print(f"Using storage account: {storage_account}")
+        print(f"Using secret name: {secret_name}")
         print(f"Using client id: {client_id}")
         print(f"Using tenant id: {tenant_id}")
         print(f"Using subscription id: {subscription_id}")
-        print(f"Fetched secret '{SECRET_NAME}' from Key Vault")
+        print("Fetched client secret from Key Vault")
 
         result = subprocess.run(["dvc", "push", "-v"], check=False)
         return result.returncode
