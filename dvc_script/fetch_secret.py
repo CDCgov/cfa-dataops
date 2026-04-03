@@ -46,4 +46,4 @@ def main() -> int:
 if __name__ == "__main__":
     raise SystemExit(main())
 
-# python -c "from azure.identity import DefaultAzureCredential; from azure.keyvault.secrets import SecretClient; sc=SecretClient(vault_url='https://cfa-predict.vault.azure.net/', credential=DefaultAzureCredential()); print(sc.get_secret('CFA-Function-Container-Deployer-SP-ClientID').value)"
+# python -c "from azure.identity import ClientSecretCredential; c=ClientSecretCredential(tenant_id='$env:AZURE_TENANT_ID', client_id='$env:AZURE_CLIENT_ID', client_secret='$env:AZURE_CLIENT_SECRET'); print('credential created')"
