@@ -1,25 +1,47 @@
 import os
-import traceback
-from cfa.cloudops import CloudClient
+import subprocess
+import sys
 
-print("Starting Key Vault test...")
+from azure.identity import DefaultAzureCredential
+from azure.keyvault.secrets import SecretClient
 
-try:
-    cc = CloudClient(keyvault="cfa-predict")
-    print("CloudClient initialized")
 
-    print("Fetching client id...")
-    client_id = cc.get_kv_secret("CFA-Function-Container-Deployer-SP-ClientID", "cfa-predict")
-    print("client_id fetched:", client_id)
+KEYVAULT_NAME = "cfa-predict"
+VAULT_URL = f"https://{KEYVAULT_NAME}.vault.azure.net/"
+STORAGE_ACCOUNT = "cfadatalakedev"
 
-    print("Fetching client secret...")
-    client_secret = cc.get_kv_secret("CFA-Function-Container-Deployer-SP-Secret", "cfa-predict")
-    print("client_secret fetched:", "***hidden***" if client_secret else "<empty>")
 
-    print("Fetching tenant id...")
-    tenant_id = cc.get_kv_secret("CFA-Function-Container-Deployer-SP-TenantID", "cfa-predict")
-    print("tenant_id fetched:", tenant_id)
+def get_secret(secret_client: SecretClient, name: str) -> str:
+    value = secret_client.get_secret(name).value
+    if not value:
+        raise RuntimeError(f"Secret '{name}' is empty or missing")
+    return value
 
-except Exception as e:
-    print("ERROR:", e)
-    traceback.print_exc()
+
+def main() -> int:
+    try:
+        credential = DefaultAzureCredential()
+        secret_client = SecretClient(vault_url=VAULT_URL, credential=credential)
+
+        client_id = get_secret(secret_client, "CFA-Function-Container-Deployer-SP-ClientID")
+        client_secret = get_secret(secret_client, "CFA-Function-Container-Deployer-SP-Secret")
+        tenant_id = get_secret(secret_client, "CFA-Function-Container-Deployer-SP-TenantID")
+
+        os.environ["AZURE_STORAGE_ACCOUNT_NAME"] = STORAGE_ACCOUNT
+        os.environ["AZURE_CLIENT_ID"] = client_id
+        os.environ["AZURE_CLIENT_SECRET"] = client_secret
+        os.environ["AZURE_TENANT_ID"] = tenant_id
+
+        print(f"Using storage account: {STORAGE_ACCOUNT}")
+        print(f"Using client id: {client_id}")
+
+        result = subprocess.run(["dvc", "push", "-v"], check=False)
+        return result.returncode
+
+    except Exception as exc:
+        print(f"ERROR: {exc}", file=sys.stderr)
+        return 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
