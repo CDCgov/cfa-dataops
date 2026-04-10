@@ -19,9 +19,7 @@ catalog_namespace = _config.get("DEFAULT", "catalog_namespaces")
 _here_dir = os.path.split(os.path.abspath(__file__))[0]
 template_dirs = [os.path.join(_here_dir, "repo_templates")]
 repo_files_dirs = os.path.join(_here_dir, "repo_files")
-repo_template_lookup = TemplateLookup(
-    directories=template_dirs, cache_enabled=False
-)
+repo_template_lookup = TemplateLookup(directories=template_dirs, cache_enabled=False)
 
 
 def main():
@@ -84,9 +82,7 @@ def main():
         with open(
             os.path.join(library_modules_root, "catalog_defaults.toml"), "w"
         ) as f:
-            template = repo_template_lookup.get_template(
-                "catalog_defaults.toml.mako"
-            )
+            template = repo_template_lookup.get_template("catalog_defaults.toml.mako")
             f.write(
                 template.render(
                     unique_name=unique_name,
@@ -129,9 +125,7 @@ def main():
         sys.exit(0)
 
     if args.expanded_repo_for_cfa:
-        print(
-            "Including CFA expanded repository pre-commit and workflow files."
-        )
+        print("Including CFA expanded repository pre-commit and workflow files.")
         for copy_i in [
             ".pre-commit-config.yaml",
             ".secrets.baseline",

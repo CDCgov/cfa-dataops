@@ -94,9 +94,7 @@ class TestGetStagesList:
         # Check error message was printed
         captured = capsys.readouterr()
         assert "Error" in captured.out
-        assert (
-            "Dataset namespace 'nonexistent.dataset' not found" in captured.out
-        )
+        assert "Dataset namespace 'nonexistent.dataset' not found" in captured.out
 
     def test_get_stages_list_filters_correct_prefixes(self, mock_datacat):
         """Test that only stages with correct prefixes are returned"""

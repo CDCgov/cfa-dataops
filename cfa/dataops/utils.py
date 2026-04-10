@@ -4,10 +4,10 @@ import getpass
 import glob
 import os
 import re
+from collections.abc import Callable
 from datetime import datetime
 from itertools import islice
 from pathlib import Path
-from typing import Optional
 
 
 def remove_ws_and_nonalpha(s: str) -> str:
@@ -28,7 +28,7 @@ def remove_ws_and_nonalpha(s: str) -> str:
 
 
 def get_fs_ns_map(
-    base_dir: str, file_ext: str, endpoint_func: Optional[callable] = None
+    base_dir: str, file_ext: str, endpoint_func: Callable[[str], str] | None = None
 ) -> dict:
     """Get a nested dictionary representing the filesystem structure starting from base_dir.
 
@@ -44,9 +44,7 @@ def get_fs_ns_map(
     """
     base_dir = os.path.abspath(base_dir)
     file_ext = file_ext.lstrip(".")
-    fs_paths = glob.glob(
-        os.path.join(base_dir, "**", f"*.{file_ext}"), recursive=True
-    )
+    fs_paths = glob.glob(os.path.join(base_dir, "**", f"*.{file_ext}"), recursive=True)
     fs_map = {}
     for p_i in fs_paths:
         if p_i.startswith(base_dir):
@@ -83,9 +81,7 @@ def get_dataset_dot_path(endpoint_map: dict) -> list[str]:
     """
     paths = []
     for k, v in endpoint_map.items():
-        if isinstance(v, str) and (
-            v.endswith(".toml") or v.endswith(".ipynb")
-        ):
+        if isinstance(v, str) and (v.endswith(".toml") or v.endswith(".ipynb")):
             paths.append(k)
         elif isinstance(v, dict):
             for i in get_dataset_dot_path(v):
@@ -171,9 +167,7 @@ def tree(
                 yield prefix + pointer + path.name
                 directories += 1
                 extension = branch if pointer == tee else space
-                yield from inner(
-                    path, prefix=prefix + extension, level=level - 1
-                )
+                yield from inner(path, prefix=prefix + extension, level=level - 1)
             elif not limit_to_directories:
                 yield prefix + pointer + path.name
                 files += 1
@@ -195,7 +189,7 @@ def tree(
 def version_matcher(
     version: str,
     available_versions: list[str],
-    newest: Optional[bool] = True,
+    newest: bool | None = True,
     and_sep=",",
 ) -> str | list[str]:
     """Match a version string to the closest available version.

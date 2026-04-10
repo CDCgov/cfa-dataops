@@ -37,12 +37,8 @@ def dataset_ns_map():
                 )
             },
             "etl_test": os.path.join(test_datasets_dir, "etl_test.toml"),
-            "experiment_test": os.path.join(
-                test_datasets_dir, "experiment_test.toml"
-            ),
-            "reference_test": os.path.join(
-                test_datasets_dir, "reference_test.toml"
-            ),
+            "experiment_test": os.path.join(test_datasets_dir, "experiment_test.toml"),
+            "reference_test": os.path.join(test_datasets_dir, "reference_test.toml"),
         }
     }
     return dataset_ns_map

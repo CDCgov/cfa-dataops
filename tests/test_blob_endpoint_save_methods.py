@@ -95,9 +95,7 @@ class TestSaveDataframe:
         call_args = mock_write.call_args
         assert call_args[1]["path_after_prefix"] == "data/output.parquet"
 
-    def test_save_pandas_dataframe_csv(
-        self, mocker, blob_endpoint, sample_pandas_df
-    ):
+    def test_save_pandas_dataframe_csv(self, mocker, blob_endpoint, sample_pandas_df):
         """Test saving a pandas DataFrame as CSV"""
         mock_write = mocker.patch.object(blob_endpoint, "write_blob")
 
@@ -113,9 +111,7 @@ class TestSaveDataframe:
         assert call_args[1]["path_after_prefix"] == "data/output.csv"
         assert isinstance(call_args[1]["file_buffer"], bytes)
 
-    def test_save_pandas_dataframe_json(
-        self, mocker, blob_endpoint, sample_pandas_df
-    ):
+    def test_save_pandas_dataframe_json(self, mocker, blob_endpoint, sample_pandas_df):
         """Test saving a pandas DataFrame as JSON"""
         mock_write = mocker.patch.object(blob_endpoint, "write_blob")
 
@@ -170,9 +166,7 @@ class TestSaveDataframe:
         assert call_args[1]["path_after_prefix"] == "data/output.parquet"
         assert isinstance(call_args[1]["file_buffer"], bytes)
 
-    def test_save_polars_dataframe_csv(
-        self, mocker, blob_endpoint, sample_polars_df
-    ):
+    def test_save_polars_dataframe_csv(self, mocker, blob_endpoint, sample_polars_df):
         """Test saving a polars DataFrame as CSV"""
         mock_write = mocker.patch.object(blob_endpoint, "write_blob")
 
@@ -188,9 +182,7 @@ class TestSaveDataframe:
         assert call_args[1]["path_after_prefix"] == "data/output.csv"
         assert isinstance(call_args[1]["file_buffer"], bytes)
 
-    def test_save_polars_dataframe_jsonl(
-        self, mocker, blob_endpoint, sample_polars_df
-    ):
+    def test_save_polars_dataframe_jsonl(self, mocker, blob_endpoint, sample_polars_df):
         """Test saving a polars DataFrame as JSONL"""
         mock_write = mocker.patch.object(blob_endpoint, "write_blob")
 
@@ -223,9 +215,7 @@ class TestSaveDataframe:
         call_args = mock_write.call_args
         assert call_args[1]["auto_version"] is True
 
-    def test_save_dataframe_invalid_format(
-        self, blob_endpoint, sample_pandas_df
-    ):
+    def test_save_dataframe_invalid_format(self, blob_endpoint, sample_pandas_df):
         """Test that invalid file format raises ValueError"""
         with pytest.raises(ValueError, match="File format .* not supported"):
             blob_endpoint.save_dataframe(
@@ -245,9 +235,7 @@ class TestSaveDataframe:
             nonlocal captured_buffer
             captured_buffer = file_buffer
 
-        mocker.patch.object(
-            blob_endpoint, "write_blob", side_effect=capture_write_blob
-        )
+        mocker.patch.object(blob_endpoint, "write_blob", side_effect=capture_write_blob)
 
         blob_endpoint.save_dataframe(
             df=sample_pandas_df,
@@ -267,9 +255,7 @@ class TestSaveFilesToBlob:
     def test_save_file_to_blob(self, mocker, blob_endpoint):
         """Test saving a local file to blob storage"""
         # Create a temporary file
-        with tempfile.NamedTemporaryFile(
-            mode="w", delete=False, suffix=".txt"
-        ) as f:
+        with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".txt") as f:
             f.write("test content\nline 2\nline 3")
             temp_file_path = f.name
 
@@ -284,9 +270,7 @@ class TestSaveFilesToBlob:
 
             mock_write.assert_called_once()
             call_args = mock_write.call_args
-            assert (
-                call_args[1]["path_after_prefix"] == "data/uploaded_file.txt"
-            )
+            assert call_args[1]["path_after_prefix"] == "data/uploaded_file.txt"
             assert call_args[1]["auto_version"] is False
             assert isinstance(call_args[1]["file_buffer"], bytes)
         finally:
@@ -294,9 +278,7 @@ class TestSaveFilesToBlob:
 
     def test_save_file_to_blob_with_auto_version(self, mocker, blob_endpoint):
         """Test saving a file with auto-versioning enabled"""
-        with tempfile.NamedTemporaryFile(
-            mode="w", delete=False, suffix=".txt"
-        ) as f:
+        with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".txt") as f:
             f.write("test content")
             temp_file_path = f.name
 
@@ -335,9 +317,7 @@ class TestSaveFilesToBlob:
         try:
             captured_buffer = None
 
-            def capture_write_blob(
-                file_buffer, path_after_prefix, auto_version
-            ):
+            def capture_write_blob(file_buffer, path_after_prefix, auto_version):
                 nonlocal captured_buffer
                 captured_buffer = file_buffer
 
@@ -491,9 +471,7 @@ class TestSaveMethodsIntegration:
             mock_write_blob_stream,
         )
 
-        with tempfile.NamedTemporaryFile(
-            mode="w", delete=False, suffix=".txt"
-        ) as f:
+        with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".txt") as f:
             f.write("test content")
             temp_file_path = f.name
 

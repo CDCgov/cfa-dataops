@@ -1,6 +1,6 @@
 import warnings
 from collections.abc import Iterator, Sequence
-from typing import Any, Optional
+from typing import Any
 from urllib.parse import urlunparse
 
 import httpx
@@ -15,12 +15,12 @@ class Query:
         self,
         domain: str,
         id: str,
-        clauses: Optional[dict[str, Any]] = None,
-        select: Optional[str | Sequence[str]] = None,
-        where: Optional[str] = None,
-        limit: Optional[int] = None,
+        clauses: dict[str, Any] | None = None,
+        select: str | Sequence[str] | None = None,
+        where: str | None = None,
+        limit: int | None = None,
         offset: int = 0,
-        app_token: Optional[str] = None,
+        app_token: str | None = None,
         verbose=True,
     ):
         self.domain = domain
@@ -35,9 +35,7 @@ class Query:
 
     def get_all(self) -> list[dict]:
         if self.verbose:
-            print(
-                f"Downloading dataset {self.domain} {self.id}: {self.n_rows} rows"
-            )
+            print(f"Downloading dataset {self.domain} {self.id}: {self.n_rows} rows")
 
         if self.clauses is None:
             self.clauses = self._build_payload(
@@ -86,9 +84,7 @@ class Query:
     def n_rows(self) -> int:
         result = self._get_request(
             self.url,
-            params=self._build_payload(
-                select="count(:id)", where=self.where, limit=1
-            ),
+            params=self._build_payload(select="count(:id)", where=self.where, limit=1),
             app_token=self.app_token,
         )
 
@@ -121,9 +117,9 @@ class Query:
 
     def _get_records(self, start: int, end: int) -> list[dict]:
         assert end >= start
-        assert (
-            self.limit is None or end < self.limit
-        ), f"End index {end} is larger than limit {self.limit}."
+        assert self.limit is None or end < self.limit, (
+            f"End index {end} is larger than limit {self.limit}."
+        )
         n_rows = end - start + 1
 
         return self._get_request(
@@ -140,9 +136,9 @@ class Query:
     @classmethod
     def _build_payload(
         cls,
-        select: Optional[str | Sequence[str]] = None,
-        where: Optional[str] = None,
-        limit: Optional[int] = None,
+        select: str | Sequence[str] | None = None,
+        where: str | None = None,
+        limit: int | None = None,
         offset: int = 0,
     ) -> dict:
         clauses = {}
@@ -178,8 +174,8 @@ class Query:
     def _get_request(
         cls,
         url: str,
-        params: Optional[dict] = None,
-        app_token: Optional[str] = None,
+        params: dict | None = None,
+        app_token: str | None = None,
     ) -> list[dict]:
         headers = {}
         if app_token is not None:

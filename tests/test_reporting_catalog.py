@@ -52,9 +52,7 @@ class TestRetitleNotebook:
 
         # Mock file operations
         mock_exists = mocker.patch("os.path.exists", return_value=True)
-        mock_nbformat_read = mocker.patch(
-            "nbformat.read", return_value=mock_notebook
-        )
+        mock_nbformat_read = mocker.patch("nbformat.read", return_value=mock_notebook)
         mock_nbformat_write = mocker.patch("nbformat.write")
         _ = mocker.patch(
             "builtins.open", mocker.mock_open(read_data="notebook_content")
@@ -143,9 +141,7 @@ class TestNotebookEndpoint:
         mock_html_content = "<html><body>Test HTML</body></html>"
 
         # Mock TemporaryDirectory
-        mock_temp_dir = mocker.patch(
-            "cfa.dataops.reporting.catalog.TemporaryDirectory"
-        )
+        mock_temp_dir = mocker.patch("cfa.dataops.reporting.catalog.TemporaryDirectory")
         mock_temp_dir.return_value.__enter__.return_value = "/tmp/test"
 
         # Mock papermill execution
@@ -176,18 +172,14 @@ class TestNotebookEndpoint:
         mock_html_content = "<html><body>Test HTML</body></html>"
 
         # Mock TemporaryDirectory
-        mock_temp_dir = mocker.patch(
-            "cfa.dataops.reporting.catalog.TemporaryDirectory"
-        )
+        mock_temp_dir = mocker.patch("cfa.dataops.reporting.catalog.TemporaryDirectory")
         mock_temp_dir.return_value.__enter__.return_value = "/tmp/test"
 
         # Mock papermill execution
         _ = mocker.patch("papermill.execute_notebook")
 
         # Mock retitle_notebook
-        mock_retitle = mocker.patch(
-            "cfa.dataops.reporting.catalog.retitle_notebook"
-        )
+        mock_retitle = mocker.patch("cfa.dataops.reporting.catalog.retitle_notebook")
 
         # Mock nb_to_html function
         _ = mocker.patch(
@@ -201,9 +193,7 @@ class TestNotebookEndpoint:
         result = notebook_endpoint.nb_to_html_str(nb_title="New Title")
 
         assert result == mock_html_content
-        mock_retitle.assert_called_once_with(
-            "/tmp/test/output.ipynb", "New Title"
-        )
+        mock_retitle.assert_called_once_with("/tmp/test/output.ipynb", "New Title")
 
     def test_nb_to_html_file(self, mocker, notebook_endpoint):
         """Test converting notebook to HTML file."""
@@ -330,10 +320,7 @@ class TestReportDictToSn:
         assert isinstance(result, SimpleNamespace)
         assert isinstance(result.reports, SimpleNamespace)
         assert isinstance(result.reports.example_ipynb, NotebookEndpoint)
-        assert (
-            result.reports.example_ipynb.notebook_path
-            == "/path/to/notebook.ipynb"
-        )
+        assert result.reports.example_ipynb.notebook_path == "/path/to/notebook.ipynb"
         assert result.reports.regular_key == "regular_value"
 
     def test_list_conversion(self):
@@ -370,16 +357,11 @@ class TestReportDictToSn:
 
         # Check notebook endpoint creation
         assert isinstance(result.notebook_example_ipynb, NotebookEndpoint)
-        assert (
-            result.notebook_example_ipynb.notebook_path
-            == "/path/to/example.ipynb"
-        )
+        assert result.notebook_example_ipynb.notebook_path == "/path/to/example.ipynb"
 
         # Check nested structure
         assert isinstance(result.nested_dict, SimpleNamespace)
-        assert isinstance(
-            result.nested_dict.inner_notebook_ipynb, NotebookEndpoint
-        )
+        assert isinstance(result.nested_dict.inner_notebook_ipynb, NotebookEndpoint)
         assert (
             result.nested_dict.inner_notebook_ipynb.notebook_path
             == "/path/to/inner.ipynb"
@@ -444,17 +426,9 @@ class TestReportingCatalogIntegration:
         assert isinstance(result.analysis.advanced_ipynb, NotebookEndpoint)
 
         # Verify paths
-        assert (
-            result.examples.basic_ipynb.notebook_path == "/path/to/basic.ipynb"
-        )
-        assert (
-            result.examples.tutorial_ipynb.notebook_path
-            == "/path/to/tutorial.ipynb"
-        )
-        assert (
-            result.analysis.advanced_ipynb.notebook_path
-            == "/path/to/advanced.ipynb"
-        )
+        assert result.examples.basic_ipynb.notebook_path == "/path/to/basic.ipynb"
+        assert result.examples.tutorial_ipynb.notebook_path == "/path/to/tutorial.ipynb"
+        assert result.analysis.advanced_ipynb.notebook_path == "/path/to/advanced.ipynb"
 
     def test_end_to_end_notebook_execution(self, mocker):
         """Test end-to-end notebook execution workflow."""
@@ -462,15 +436,11 @@ class TestReportingCatalogIntegration:
         notebook_endpoint = NotebookEndpoint("/path/to/test.ipynb")
 
         # Mock all the dependencies
-        mock_temp_dir = mocker.patch(
-            "cfa.dataops.reporting.catalog.TemporaryDirectory"
-        )
+        mock_temp_dir = mocker.patch("cfa.dataops.reporting.catalog.TemporaryDirectory")
         mock_temp_dir.return_value.__enter__.return_value = "/tmp/test"
 
         mock_execute = mocker.patch("papermill.execute_notebook")
-        mock_retitle = mocker.patch(
-            "cfa.dataops.reporting.catalog.retitle_notebook"
-        )
+        mock_retitle = mocker.patch("cfa.dataops.reporting.catalog.retitle_notebook")
         mock_nb_to_html = mocker.patch(
             "cfa.dataops.reporting.catalog.nb_to_html",
             return_value="<html>Test Report</html>",
@@ -497,13 +467,11 @@ class TestReportingCatalogIntegration:
             parameters={"param1": "test_value", "param2": 42},
             progress_bar=True,
         )
-        mock_retitle.assert_called_once_with(
-            "/tmp/test/output.ipynb", "Test Report"
-        )
+        mock_retitle.assert_called_once_with("/tmp/test/output.ipynb", "Test Report")
         mock_nb_to_html.assert_called_once_with("/tmp/test/output.ipynb")
         mock_write_blob.assert_called_once_with(
             account_name="test_account",
             container_name="reports",
             blob_url="test_report.html",
-            data="<html>Test Report</html>".encode("utf-8"),
+            data=b"<html>Test Report</html>",
         )
