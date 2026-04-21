@@ -9,7 +9,7 @@ from io import BytesIO
 from pathlib import PurePosixPath
 from types import SimpleNamespace
 
-from typing import TYPE_CHECKING, Any, List, Sequence, overload
+from typing import TYPE_CHECKING, Any, List, Sequence, overload, Literal
 
 import pandas as pd
 import polars as pl
