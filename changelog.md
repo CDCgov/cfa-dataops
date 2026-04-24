@@ -7,6 +7,12 @@ and this project adheres to [Calendar Versioning](https://calver.org/).
 The versioning pattern is `YYYY.MM.DD.micro(a/b/{none if release})
 
 ---
+## [2026.04.24.0]
+
+### Updated
+
+- increased the maximum version allowed for pandas and ipykernel to make use of the next available major version
+
 ## [2026.04.10.0]
 
 ### Updated
