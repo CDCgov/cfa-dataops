@@ -226,8 +226,6 @@ class BlobEndpoint:
         """Read a blob in as bytes so it can be loaded into a dataframe
 
         Args:
-            path_after_prefix (str): The path to the data (e.g.,
-            {timestamp}/dataset.csv)
             version (str, optional): the version of the data to read.
                 Defaults to "latest".
             newest (bool, optional): whether to get the newest matching version. Defaults to True.
