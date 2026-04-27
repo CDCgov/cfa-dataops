@@ -7,6 +7,12 @@ and this project adheres to [Calendar Versioning](https://calver.org/).
 The versioning pattern is `YYYY.MM.DD.micro(a/b/{none if release})
 
 ---
+## [2026.04.27.0]
+
+### Fixed
+
+- in some get_dataframe() calls, the version would be printed twice. This has been fixed.
+
 ## [2026.04.10.0]
 
 ### Updated
