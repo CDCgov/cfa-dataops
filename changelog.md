@@ -11,7 +11,7 @@ The versioning pattern is `YYYY.MM.DD.micro(a/b/{none if release})
 
 ### Fixed
 
-- in some get_dataframe() calls, the version would be printed twice. This has been fixed.
+- In some get_dataframe() calls, the version would be printed twice. This has been fixed.
 
 ## [2026.04.24.0]
 
