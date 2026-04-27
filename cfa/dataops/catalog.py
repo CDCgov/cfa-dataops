@@ -479,7 +479,10 @@ class BlobEndpoint:
             else:
                 raise ValueError(f"Lazy loading not supported for {file_ext} files.")
         blobs = self.read_blobs(version, newest=newest, print_version=False)
-        blob_bytes = [blob.content_as_bytes() for blob in blobs]
+        blob_bytes = [
+            blob if isinstance(blob, bytes) else blob.content_as_bytes()
+            for blob in blobs
+        ]
         blob_files = [BytesIO(pq) for pq in blob_bytes]
         if file_ext == "csv":
             if output in ["pandas", "pd"]:
