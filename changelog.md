@@ -11,7 +11,13 @@ The versioning pattern is `YYYY.MM.DD.micro(a/b/{none if release})
 
 ### Fixed
 
-- in some get_dataframe() calls, the version would be printed twice. This has been fixed.
+- In some get_dataframe() calls, the version would be printed twice. This has been fixed.
+
+## [2026.04.24.0]
+
+### Updated
+
+- increased the maximum version allowed for pandas and ipykernel to make use of the next available major version
 
 ## [2026.04.10.0]
 
