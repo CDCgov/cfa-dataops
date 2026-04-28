@@ -9,8 +9,7 @@ from importlib import import_module
 from io import BytesIO
 from pathlib import PurePosixPath
 from types import SimpleNamespace
-
-from typing import TYPE_CHECKING, Any, List, Sequence, overload, Literal
+from typing import TYPE_CHECKING, Any, Literal, overload
 
 import pandas as pd
 import polars as pl
@@ -715,9 +714,7 @@ class BlobEndpoint:
                 )
 
 
-def dict_to_sn(
-    d: Any, defaults: dict | None = None, ns: str = ""
-) -> CatalogNamespace:
+def dict_to_sn(d: Any, defaults: dict | None = None, ns: str = "") -> CatalogNamespace:
     """Simple recursive namespace construction
 
     Args:
