@@ -45,9 +45,7 @@ class TestConfigValidator(unittest.TestCase):
     def test_invalid_storage_endpoint(self):
         """Test that invalid storage endpoints are caught."""
         bad_config = self.good_config.copy()
-        bad_config["stage_00"] = {
-            "account": "test_account"
-        }  # Missing required fields
+        bad_config["stage_00"] = {"account": "test_account"}  # Missing required fields
 
         with self.assertRaises(ValidationError):
             ConfigValidator(**bad_config)

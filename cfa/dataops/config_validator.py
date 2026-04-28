@@ -1,7 +1,6 @@
 """The dataset config validator."""
 
 from enum import Enum
-from typing import List, Optional
 
 from pydantic import (
     BaseModel,
@@ -34,15 +33,15 @@ class PropertiesValidation(BaseModel):
         ...,
         description="The type of the dataset.",
     )
-    schemas: Optional[str] = Field(
+    schemas: str | None = Field(
         None,
         description="the relative path to where the data schema(s) are defined.",
     )
-    transform_templates: Optional[List[str]] = Field(
+    transform_templates: list[str] | None = Field(
         None,
         description="A list of transform templates to applied to raw data.",
     )
-    automate: Optional[bool] = Field(
+    automate: bool | None = Field(
         False,
         description="Whether to automate workflows that cache raw data and transform it.",
     )
@@ -80,9 +79,9 @@ class ConfigValidator(BaseModel):
 
     model_config = ConfigDict(extra="allow")
     properties: PropertiesValidation
-    load: Optional[StorageEndpointValidation] = None
-    source: Optional[SourceValidation] = None
-    extract: Optional[StorageEndpointValidation] = None
+    load: StorageEndpointValidation | None = None
+    source: SourceValidation | None = None
+    extract: StorageEndpointValidation | None = None
 
     # Any stage_xx field will be validated dynamically; no need for explicit field or nesting.
     @classmethod
