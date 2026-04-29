@@ -220,17 +220,20 @@ class BlobEndpoint:
         self.ledger_entry(action="write")
         # print(f"file written to: {full_path}")
 
-    def read_blobs(self, version: str = "latest", newest: bool = True) -> list[bytes]:
+    def read_blobs(
+        self, version: str = "latest", newest: bool = True, print_version: bool = True
+    ) -> list[bytes]:
         """Read a blob in as bytes so it can be loaded into a dataframe
 
         Args:
-            path_after_prefix (str): The path to the data (e.g.,
-            {timestamp}/dataset.csv)
             version (str, optional): the version of the data to read.
                 Defaults to "latest".
             newest (bool, optional): whether to get the newest matching version. Defaults to True.
+            print_version (bool, optional): whether to print the version being used. Defaults to True.
         """
-        blobs = self._get_version_blobs(version, newest=newest)
+        blobs = self._get_version_blobs(
+            version, newest=newest, print_version=print_version
+        )
         blob_bytes = [
             read_blob_stream(
                 blob_url=i["name"],
@@ -473,8 +476,11 @@ class BlobEndpoint:
                 return df
             else:
                 raise ValueError(f"Lazy loading not supported for {file_ext} files.")
-        blobs = self.read_blobs(version, newest=newest)
-        blob_bytes = [blob.content_as_bytes() for blob in blobs]
+        blobs = self.read_blobs(version, newest=newest, print_version=False)
+        blob_bytes = [
+            blob if isinstance(blob, bytes) else blob.content_as_bytes()
+            for blob in blobs
+        ]
         blob_files = [BytesIO(pq) for pq in blob_bytes]
         if file_ext == "csv":
             if output in ["pandas", "pd"]:
