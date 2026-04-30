@@ -15,8 +15,24 @@ This project provides data tools and low friction access to versioned datasets w
 - Tooling for easy access to Socrata Open Data API (e.i., data.cdc.gov) (copied and modified from [here](https://github.com/CDCgov/cfasodapy))
 - Ability to initialize new dataset catalog libraries and maintain datasets in more than one repo
 
+## Technology Stack
+- DuckDB (in-process analytics engine)
+- Polars (high-performance data frame library)
+- Azure Blob Storage (centralized data storage)
+- Dagster (workflow orchestration, emerging)
+- GitHub Actions (CI/CD and scheduling)
+- Socrata API (public health data access)
+- DVC (under evaluation for data set versioning)
+
 ## Getting started
 
+### Prequisites
+Before getting started, ensure you have:
+- GitHub access to this repository
+- Azure credentials (Blob storage, VPC access)
+- Python and Git installed
+
+### Steps
 1. Clone the repository and install dependencies with `poetry install` (**requires `poetry >= 2.0`**)
 2. Ensure your have access to the relevant resources (e.g., `az login --identity`)
 3. See which datasets are available:
