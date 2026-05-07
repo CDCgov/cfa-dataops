@@ -280,7 +280,7 @@ def get_subscriptions():
         subscriptions = subscription_client.subscriptions.list()
         return [sub.display_name for sub in subscriptions]
     except Exception as e:
-        print(f"Error fetching subscriptions: {e}")
+        print(f"Could not find a subscription.")
         return []
 
 
