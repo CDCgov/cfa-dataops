@@ -279,8 +279,8 @@ def get_subscriptions():
         subscription_client = SubscriptionClient(credential)
         subscriptions = subscription_client.subscriptions.list()
         return [sub.display_name for sub in subscriptions]
-    except Exception as e:
-        print(f"Could not find a subscription.")
+    except Exception:
+        print("Could not find a subscription.")
         return []
 
 
