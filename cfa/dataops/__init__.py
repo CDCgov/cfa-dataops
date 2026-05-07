@@ -5,7 +5,7 @@ format. Use the existing configuration files as a starting point. Validations
 will run on all configurations.
 """
 
-import azure.identity.ManagedIdentityCredential as mic
+from azure.identity import ManagedIdentityCredential as mic
 
 try:
     from importlib.metadata import version
