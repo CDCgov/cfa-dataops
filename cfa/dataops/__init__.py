@@ -5,6 +5,8 @@ format. Use the existing configuration files as a starting point. Validations
 will run on all configurations.
 """
 
+import azure.identity.ManagedIdentityCredential as mic
+
 try:
     from importlib.metadata import version
 
@@ -15,3 +17,9 @@ except ImportError:
 from .catalog import datacat, reportcat
 
 __all__ = [__version__, datacat, reportcat]
+
+try:
+    credential = mic()
+    print("Azure Managed Identity Credential initialized successfully.")
+except Exception as e:
+    print(f"Failed to initialize Azure Managed Identity Credential: {e}")
