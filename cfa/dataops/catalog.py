@@ -217,7 +217,7 @@ class BlobEndpoint:
                 container_name=self.container,
                 append_blob=append,
             )
-        self.ledger_entry(action="write")
+        # self.ledger_entry(action="write")
         # print(f"file written to: {full_path}")
 
     def read_blobs(
@@ -242,7 +242,7 @@ class BlobEndpoint:
             )
             for i in blobs
         ]
-        self.ledger_entry(action="read")
+        # self.ledger_entry(action="read")
         return blob_bytes
 
     def read_csv(self, suffix: str) -> pd.DataFrame:
@@ -252,7 +252,7 @@ class BlobEndpoint:
             container_name=self.container,
         )
         df = pd.read_csv(blob)
-        self.ledger_entry(action="read")
+        # self.ledger_entry(action="read")
         return df
 
     def get_versions(self) -> list:
@@ -372,8 +372,8 @@ class BlobEndpoint:
             with open(local_file_path, "wb") as f:
                 f.write(file_bytes)
                 written = True
-        if written:
-            self.ledger_entry(action="read")
+        # if written:
+        # self.ledger_entry(action="read")
         return written
 
     @overload
@@ -446,7 +446,7 @@ class BlobEndpoint:
                         credential=ManagedIdentityCredential()
                     ),
                 )
-                self.ledger_entry(action="read")
+                # self.ledger_entry(action="read")
                 return df
             elif file_ext == "csv":
                 path = str(PurePosixPath(name).parent / f"*.{file_ext}")
@@ -459,7 +459,7 @@ class BlobEndpoint:
                         credential=ManagedIdentityCredential()
                     ),
                 )
-                self.ledger_entry(action="read")
+                ##self.ledger_entry(action="read")
                 return df
             elif file_ext == "ndjson" or file_ext == "jsonl":
                 path = str(PurePosixPath(name).parent / f"*.{file_ext}")
@@ -472,7 +472,7 @@ class BlobEndpoint:
                         credential=ManagedIdentityCredential()
                     ),
                 )
-                self.ledger_entry(action="read")
+                ##self.ledger_entry(action="read")
                 return df
             else:
                 raise ValueError(f"Lazy loading not supported for {file_ext} files.")
@@ -544,9 +544,11 @@ class BlobEndpoint:
             "action": action,
         }
         log_data = (json.dumps(log_entry) + "\n").encode("utf-8")
-        write_blob_stream(  # TODO: make this a streaming write to a single file (one per day parsed from get_timestamp())
+        ledger_path = f"{self.ledger_location['prefix']}/{get_date()}.jsonl"
+
+        write_blob_stream(
             data=log_data,
-            blob_url=f"{self.ledger_location['prefix']}/{get_date()}.jsonl",
+            blob_url=ledger_path,
             account_name=self.ledger_location["account"],
             container_name=self.ledger_location["container"],
             append_blob=True,
