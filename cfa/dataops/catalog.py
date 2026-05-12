@@ -14,7 +14,6 @@ from typing import Any, Literal, overload
 import pandas as pd
 import polars as pl
 import tomli
-from azure.core.exceptions import ResourceExistsError
 from azure.identity import ManagedIdentityCredential
 from cfa.cloudops.blob_helpers import (
     read_blob_stream,
@@ -546,30 +545,15 @@ class BlobEndpoint:
         }
         log_data = (json.dumps(log_entry) + "\n").encode("utf-8")
         ledger_path = f"{self.ledger_location['prefix']}/{get_date()}.jsonl"
-        try:
-            write_blob_stream(
-                data=log_data,
-                blob_url=ledger_path,
-                account_name=self.ledger_location["account"],
-                container_name=self.ledger_location["container"],
-                append_blob=True,
-                overwrite=False,
-            )
-        except ResourceExistsError as e:
-            # Azure Append Blobs have a 50,000 block limit; rotate to a new
-            # timestamped file when the daily file is full.
-            if "BlockCountExceedsLimit" in str(e):
-                rotated_path = f"{self.ledger_location['prefix']}/{get_date()}_{get_timestamp()}.jsonl"
-                write_blob_stream(
-                    data=log_data,
-                    blob_url=rotated_path,
-                    account_name=self.ledger_location["account"],
-                    container_name=self.ledger_location["container"],
-                    append_blob=True,
-                    overwrite=False,
-                )
-            else:
-                raise
+
+        write_blob_stream(
+            data=log_data,
+            blob_url=ledger_path,
+            account_name=self.ledger_location["account"],
+            container_name=self.ledger_location["container"],
+            append_blob=True,
+            overwrite=False,
+        )
 
     def save_dataframe(
         self,
