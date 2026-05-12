@@ -7,6 +7,12 @@ and this project adheres to [Calendar Versioning](https://calver.org/).
 The versioning pattern is `YYYY.MM.DD.micro(a/b/{none if release})
 
 ---
+## [2026.05.12.0]
+
+### Fixed
+
+- removed the ledger reads and write temporarily
+
 ## [2026.04.27.0]
 
 ### Fixed
