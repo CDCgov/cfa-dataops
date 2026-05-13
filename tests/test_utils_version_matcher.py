@@ -68,3 +68,21 @@ class TestVersionMatcher:
         )
 
         assert matches == ["2025-12-17T00-00-00", "2025-12-16T00-00-00"]
+
+    def test_date_range_respects_upper_bound(self):
+        available_versions = [
+            "2026-03-14T23-59-59",
+            "2026-03-15T00-10-00",
+            "2026-04-10T12-00-00",
+            "2026-04-15T00-19-59",
+            "2026-04-15T00-20-00",
+            "2026-04-16T00-00-00",
+        ]
+
+        assert (
+            version_matcher(
+                ">=2026-03-15T00-10-00,<2026-04-15T00-20-00",
+                available_versions,
+            )
+            == "2026-04-15T00-19-59"
+        )

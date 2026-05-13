@@ -248,10 +248,8 @@ def _match_date_versions(
             )
         v_ands_parsed.append((v_cond, parsed_value, raw_value))
 
-    matched_versions: list[str] = []
-    for av, av_dt in sorted(
-        parsed_available_versions.items(), key=lambda item: item[1], reverse=True
-    ):
+    matched_versions = []
+    for av, av_dt in parsed_available_versions.items():
         keep = True
         for v_cond, v_dt, _ in v_ands_parsed:
             if v_cond in {"==", "="} and av_dt != v_dt:
@@ -277,8 +275,12 @@ def _match_date_versions(
         )
 
     if isinstance(newest, bool):
-        return matched_versions[0] if newest else matched_versions[-1]
-    return matched_versions
+        return (
+            max(matched_versions, key=parsed_available_versions.get)
+            if newest
+            else min(matched_versions, key=parsed_available_versions.get)
+        )
+    return sorted(matched_versions, key=parsed_available_versions.get, reverse=True)
 
 
 def version_matcher(
@@ -314,16 +316,30 @@ def version_matcher(
     if version == "latest":
         return sorted(available_versions, reverse=True)[0]
 
+    version_no_ws = re.sub(r"\s", "", version)
+    requested_parts = [part for part in version_no_ws.split(and_sep) if part]
+    date_request = True
+    for part in requested_parts:
+        cond = re.match(r"[\>\<\=\~\!]+", part)
+        raw_value = part[cond.end() :] if cond and cond.span(0)[0] == 0 else part
+        if _parse_version_datetime(raw_value) is None:
+            date_request = False
+            break
+
     parsed_available_versions = {
         av: _parse_version_datetime(av) for av in available_versions
     }
-    if available_versions and all(
-        parsed_version is not None
-        for parsed_version in parsed_available_versions.values()
-    ):
+    if date_request:
+        if available_versions and not all(
+            parsed_version is not None
+            for parsed_version in parsed_available_versions.values()
+        ):
+            raise ValueError(
+                "Date-style version matching requires all available versions to be parseable as dates."
+            )
         return _match_date_versions(version, available_versions, newest, and_sep)
 
-    version = re.sub(r"\s", "", version)
+    version = version_no_ws
     v_ands_parsed = []
     v_ands = version.split(and_sep)
     for v in v_ands:
