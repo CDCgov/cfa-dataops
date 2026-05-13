@@ -44,4 +44,3 @@ A typical file looks like:
 {"timestamp": "2026-05-12T14:01:03", "username": "jsmith", "dataset": "public.stf.nhsn_hrd_prelim.extract", "action": "read"}
 {"timestamp": "2026-05-12T14:05:17", "username": "alopez", "dataset": "public.stf.nhsn_hrd_prelim.load", "action": "write"}
 ```
-
