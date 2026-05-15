@@ -186,119 +186,33 @@ def tree(
     )
 
 
-def _parse_version_datetime(version: str) -> datetime | None:
-    """Parse a version string as a datetime when possible.
-
-    Supported formats include date-only values and the timestamp format used
-    by the catalog, for example ``YYYY-MM-DDT00-00-00``.
-    """
-    version = version.strip()
-    formats = [
-        "%Y-%m-%d",
-        "%Y-%m-%dT%H:%M:%S",
-        "%Y-%m-%dT%H:%M:%S.%f",
-        "%Y-%m-%dT%H-%M-%S",
-        "%Y-%m-%dT%H-%M-%S.%f",
-    ]
-    for fmt in formats:
-        try:
-            return datetime.strptime(version, fmt)
-        except ValueError:
-            continue
-    return None
-
-
-def _match_date_versions(
-    version: str,
-    available_versions: list[str],
-    newest: bool | None,
-    and_sep: str,
-) -> str | list[str]:
-    """Match versions when both the request and available versions are dates."""
-    version = re.sub(r"\s", "", version)
-    v_ands = version.split(and_sep)
-    parsed_available_versions = {
-        av: _parse_version_datetime(av) for av in available_versions
-    }
-    newest_available_version = max(parsed_available_versions.values())
-
-    v_ands_parsed: list[tuple[str, datetime | None, str]] = []
-    for v in v_ands:
-        cond = re.match(r"[\>\<\=\~\!]+", v)
-        if cond and cond.span(0)[0] == 0:
-            v_cond = cond.group(0)
-            raw_value = v[len(v_cond) :]
-        else:
-            v_cond = "=="
-            raw_value = v
-        parsed_value = _parse_version_datetime(raw_value)
-        if parsed_value is None:
-            raise ValueError(
-                f"Version '{raw_value}' could not be parsed as a date. "
-                "Expected 'YYYY-MM-DD' or 'YYYY-MM-DDTHH-MM-SS'."
-            )
-        if v_cond in {"==", "="} and parsed_value > newest_available_version:
-            newest_version = max(
-                parsed_available_versions,
-                key=parsed_available_versions.get,
-            )
-            raise ValueError(
-                f"Version '{raw_value}' is newer than the newest available version "
-                f"'{newest_version}'."
-            )
-        v_ands_parsed.append((v_cond, parsed_value, raw_value))
-
-    matched_versions = []
-    for av, av_dt in parsed_available_versions.items():
-        keep = True
-        for v_cond, v_dt, _ in v_ands_parsed:
-            if v_cond in {"==", "="} and av_dt != v_dt:
-                keep = False
-            elif v_cond in {">=", "=>"} and av_dt < v_dt:
-                keep = False
-            elif v_cond in {"<=", "=<"} and av_dt > v_dt:
-                keep = False
-            elif v_cond == ">" and av_dt <= v_dt:
-                keep = False
-            elif v_cond == "<" and av_dt >= v_dt:
-                keep = False
-            elif v_cond == "!=" and av_dt == v_dt:
-                keep = False
-            elif v_cond == "~=" and not av.startswith(v_dt.strftime("%Y-%m-%d")):
-                keep = False
-        if keep:
-            matched_versions.append(av)
-
-    if not matched_versions:
-        raise ValueError(
-            f"Version '{version}' was not found in available versions: {available_versions}"
-        )
-
-    if isinstance(newest, bool):
-        return (
-            max(matched_versions, key=parsed_available_versions.get)
-            if newest
-            else min(matched_versions, key=parsed_available_versions.get)
-        )
-    return sorted(matched_versions, key=parsed_available_versions.get, reverse=True)
-
-
 def version_matcher(
     version: str,
     available_versions: list[str],
     newest: bool | None = True,
     and_sep=",",
 ) -> str | list[str]:
-    """Match a version string to the closest available version.
+    """
+    Match a version string to the closest available version.
+
+    Handles:
+    - 'latest': Returns the newest available version.
+    - Exact version: Returns the matching version if it exists.
+    - Range queries: e.g. '>=2026-03-01,<2026-05-15' returns all versions in that window.
+    - Multiple conditions: Comma-separated filters (e.g. '>=1.1,<2.0').
+    - Non-numeric input: If the input is not parseable as a version or date (e.g. 'sadsfs'), raises ValueError.
+    - Date-style versions: If both the request and available versions look like dates, compares as datetimes.
+    - Oldest/newest: newest=True (default) returns newest match, newest=False returns oldest, newest=None returns all matches.
+    - Error cases: Raises ValueError if input can't be parsed, is newer than the newest available, or no match is found.
 
     Args:
-        version (str): The version string to match (e.g., '1.2').
-        available_versions (list[str]): A list of available version strings (e.g., ['1.0', '1.1', '1.2', '2.0']).
-        newest (Optional[bool]): Whether to return the newest matching version, returns oldest if False (default is True).
-        and_sep (str): The separator for multiple version conditions (default is ',').
+        version (str): The version string to match (e.g., '1.2', '>=2026-03-01,<2026-05-15').
+        available_versions (list[str]): List of available version strings (e.g., ['1.0', '1.1', '1.2', '2.0']).
+        newest (Optional[bool]): Whether to return the newest matching version, oldest if False, all if None.
+        and_sep (str): Separator for multiple version conditions (default is ',').
 
     Returns:
-        list[str]: The matched version string if found, otherwise or empty list if non found.
+        str or list[str]: The matched version string(s).
 
     Example:
         >>> available_versions = ['1.0', '1.1', '1.2', '2.0']
@@ -312,34 +226,15 @@ def version_matcher(
         '1.2'
         >>> version_matcher('>=1.1,<2.0', available_versions, newest=None)
         ['1.2', '1.1']
+        >>> version_matcher('sadsfs', available_versions)
+        ValueError: Version 'sadsfs' could not be parsed as a date or version.
+        >>> available_versions = ['2026-03-01', '2026-04-01', '2026-05-01']
+        >>> version_matcher('>=2026-03-01,<2026-05-01', available_versions, newest=None)
+        ['2026-04-01', '2026-03-01']
     """
     if version == "latest":
         return sorted(available_versions, reverse=True)[0]
-
-    version_no_ws = re.sub(r"\s", "", version)
-    requested_parts = [part for part in version_no_ws.split(and_sep) if part]
-    date_request = True
-    for part in requested_parts:
-        cond = re.match(r"[\>\<\=\~\!]+", part)
-        raw_value = part[cond.end() :] if cond and cond.span(0)[0] == 0 else part
-        if _parse_version_datetime(raw_value) is None:
-            date_request = False
-            break
-
-    parsed_available_versions = {
-        av: _parse_version_datetime(av) for av in available_versions
-    }
-    if date_request:
-        if available_versions and not all(
-            parsed_version is not None
-            for parsed_version in parsed_available_versions.values()
-        ):
-            raise ValueError(
-                "Date-style version matching requires all available versions to be parseable as dates."
-            )
-        return _match_date_versions(version, available_versions, newest, and_sep)
-
-    version = version_no_ws
+    version = re.sub(r"\s", "", version)
     v_ands_parsed = []
     v_ands = version.split(and_sep)
     for v in v_ands:
@@ -377,15 +272,10 @@ def version_matcher(
                 logic_vals[idx].append(False)
             v_match.append(av)
     keep = [all(i) for i in zip(*logic_vals)]
-    matched_versions = [i for i, j in zip(v_match, keep) if j]
-    if not matched_versions:
-        raise ValueError(
-            f"Version '{version}' was not found in available versions: {available_versions}"
-        )
     if isinstance(newest, bool):
         if newest:
-            return max(matched_versions)
+            return max([i for i, j in zip(v_match, keep) if j])
         else:
-            return min(matched_versions)
+            return min([i for i, j in zip(v_match, keep) if j])
     else:
-        return matched_versions
+        return [i for i, j in zip(v_match, keep) if j]
