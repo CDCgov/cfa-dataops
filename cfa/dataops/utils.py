@@ -194,7 +194,23 @@ def version_matcher(
     newest: bool | None = True,
 ):
     if spec == "latest":
-        return max(available_versions, key=Version)
+        if not available_versions:
+            return None
+
+        available_versions_normalized = [
+            v.replace("T", ".").replace("-", ".") for v in available_versions
+        ]
+        ordered_versions = sorted(
+            zip(available_versions_normalized, available_versions),
+            key=lambda version_pair: Version(version_pair[0]),
+        )
+
+        if newest is True:
+            return ordered_versions[-1][1]
+        elif newest is False:
+            return ordered_versions[0][1]
+        else:
+            return [original for _, original in reversed(ordered_versions)]
     spec_normalized = spec.replace("T", ".").replace("-", ".")
     available_versions_normalized = [
         v.replace("T", ".").replace("-", ".") for v in available_versions

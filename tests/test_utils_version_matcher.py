@@ -17,6 +17,18 @@ class TestVersionMatcher:
 
         assert version_matcher("latest", available_versions) == "2025-12-17T00-00-00"
 
+    def test_latest_oldest_when_newest_false(self):
+        available_versions = [
+            "2025-12-15T00-00-00",
+            "2025-12-16T00-00-00",
+            "2025-12-17T00-00-00",
+        ]
+
+        assert (
+            version_matcher("latest", available_versions, newest=False)
+            == "2025-12-15T00-00-00"
+        )
+
     def test_newer_than_latest(self):
         available_versions = [
             "2025-12-15T00-00-00",
