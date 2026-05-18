@@ -192,7 +192,31 @@ def version_matcher(
     spec: str,
     available_versions: list[str],
     newest: bool | None = True,
-):
+) -> str | list[str] | None:
+    """Match available versions against an exact version or specifier set.
+
+    Args:
+        spec (str): Version selector. Accepts either ``"latest"`` to choose from all
+            available versions, or a packaging-compatible version specifier such as
+            ``"==1.2.3"`` or ``">=1.0,<2.0"``. Both ``spec`` and
+            ``available_versions`` are normalized by replacing ``"T"`` and ``"-"``
+            with ``"."`` before comparison so timestamp-like versions can be matched.
+        available_versions (list[str]): Available version strings to evaluate.
+        newest (bool | None): Controls the return shape. ``True`` returns the newest
+            matching version, ``False`` returns the oldest matching version, and
+            ``None`` returns all matching versions in descending order.
+
+    Returns:
+        str | list[str] | None: The newest or oldest matching original version string,
+        a list of matching original version strings when ``newest is None``, or
+        ``None`` when no match is found.
+
+    Raises:
+        packaging.specifiers.InvalidSpecifier: If ``spec`` is not ``"latest"`` and is
+            not a valid packaging specifier set after normalization.
+        packaging.version.InvalidVersion: If any normalized version string cannot be
+            parsed by ``packaging.version.Version``.
+    """
     if spec == "latest":
         if not available_versions:
             return None
