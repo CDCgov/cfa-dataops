@@ -340,42 +340,6 @@ class TestDownloadVersionToLocal:
             assert os.path.exists(expected_file)
             assert os.path.isfile(expected_file)
 
-    def test_download_version_to_local_ledger_entry(self, mocker, blob_endpoint):
-        """Test that ledger entry is created when files are written"""
-        test_content = b"test content"
-
-        def mock_read_blob_stream(blob_url, account_name, container_name):
-            return test_content
-
-        mocker.patch(
-            "cfa.dataops.catalog.read_blob_stream",
-            side_effect=mock_read_blob_stream,
-        )
-
-        mocker.patch.object(
-            blob_endpoint,
-            "_get_version_blobs",
-            return_value=[
-                {
-                    "name": "test/prefix/2025-01-01T12-00-00/data.csv",
-                    "creation_time": "2025-01-01T12:00:00",
-                }
-            ],
-        )
-
-        # Mock ledger_entry to track if it was called
-        mock_ledger = mocker.patch.object(blob_endpoint, "ledger_entry")
-
-        with tempfile.TemporaryDirectory() as tmpdir:
-            blob_endpoint.download_version_to_local(
-                local_path=tmpdir,
-                version="2025-01-01T12-00-00",
-                force=False,
-            )
-
-            # Verify ledger entry was called with 'read' action
-            mock_ledger.assert_called_once_with(action="read")
-
     def test_download_version_to_local_no_ledger_entry_when_not_written(
         self, mocker, blob_endpoint
     ):

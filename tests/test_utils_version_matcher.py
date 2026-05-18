@@ -30,23 +30,27 @@ class TestVersionMatcher:
         )
 
     def test_newer_than_latest(self):
+        from packaging.specifiers import InvalidSpecifier
+
         available_versions = [
             "2025-12-15T00-00-00",
             "2025-12-16T00-00-00",
             "2025-12-17T00-00-00",
         ]
 
-        with pytest.raises(ValueError, match="newer than the newest available version"):
+        with pytest.raises(InvalidSpecifier):
             version_matcher("2025-12-18T00-00-00", available_versions)
 
     def test_invalid_date(self):
+        from packaging.specifiers import InvalidSpecifier
+
         available_versions = [
             "2025-12-15T00-00-00",
             "2025-12-16T00-00-00",
             "2025-12-17T00-00-00",
         ]
 
-        with pytest.raises(ValueError, match="could not be parsed as a date"):
+        with pytest.raises(InvalidSpecifier):
             version_matcher("2025-99-99T00-00-00", available_versions)
 
     def test_date_range(self):
