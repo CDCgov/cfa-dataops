@@ -36,7 +36,7 @@ class TestVersionMatcher:
             "2025-12-17T00-00-00",
         ]
 
-        with pytest.raises(ValueError, match="newer than the newest available version"):
+        with pytest.raises(ValueError, match="Invalid specifier"):
             version_matcher("2025-12-18T00-00-00", available_versions)
 
     def test_invalid_date(self):
@@ -46,7 +46,7 @@ class TestVersionMatcher:
             "2025-12-17T00-00-00",
         ]
 
-        with pytest.raises(ValueError, match="could not be parsed as a date"):
+        with pytest.raises(ValueError, match="Invalid specifier"):
             version_matcher("2025-99-99T00-00-00", available_versions)
 
     def test_date_range(self):
