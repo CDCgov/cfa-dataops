@@ -102,3 +102,118 @@ class TestVersionMatcher:
             )
             == "2026-04-15T00-19-59"
         )
+
+    @pytest.mark.parametrize(
+        "spec,available_versions,expected_newest,expected_oldest,expected_all",
+        [
+            (
+                "==2025-12-15",
+                [
+                    "2025-12-14T23-59-59",
+                    "2025-12-15T00-00-00",
+                    "2025-12-15T12-30-00",
+                    "2025-12-16T00-00-00",
+                ],
+                "2025-12-15T12-30-00",
+                "2025-12-15T00-00-00",
+                ["2025-12-15T12-30-00", "2025-12-15T00-00-00"],
+            ),
+            (
+                "<2025-12-15",
+                [
+                    "2025-12-14T23-59-59",
+                    "2025-12-15T00-00-00",
+                    "2025-12-16T00-00-00",
+                ],
+                "2025-12-14T23-59-59",
+                "2025-12-14T23-59-59",
+                ["2025-12-14T23-59-59"],
+            ),
+            (
+                ">2025",
+                [
+                    "2024-12-31T23-59-59",
+                    "2025-01-01T00-00-00",
+                    "2025-12-15T00-00-00",
+                    "2026-01-01T00-00-00",
+                ],
+                "2026-01-01T00-00-00",
+                "2025-01-01T00-00-00",
+                [
+                    "2026-01-01T00-00-00",
+                    "2025-12-15T00-00-00",
+                    "2025-01-01T00-00-00",
+                ],
+            ),
+        ],
+    )
+    def test_partial_date_specifiers(
+        self,
+        spec,
+        available_versions,
+        expected_newest,
+        expected_oldest,
+        expected_all,
+    ):
+        assert version_matcher(spec, available_versions) == expected_newest
+        assert (
+            version_matcher(spec, available_versions, newest=False) == expected_oldest
+        )
+        assert version_matcher(spec, available_versions, newest=None) == expected_all
+
+    def test_partial_date_specifier_equal_date(self):
+        available_versions = [
+            "2025-12-14T23-59-59",
+            "2025-12-15T00-00-00",
+            "2025-12-15T12-30-00",
+            "2025-12-16T00-00-00",
+        ]
+
+        assert (
+            version_matcher("==2025-12-15", available_versions) == "2025-12-15T12-30-00"
+        )
+        assert (
+            version_matcher("==2025-12-15", available_versions, newest=False)
+            == "2025-12-15T00-00-00"
+        )
+        assert version_matcher("==2025-12-15", available_versions, newest=None) == [
+            "2025-12-15T12-30-00",
+            "2025-12-15T00-00-00",
+        ]
+
+    def test_partial_date_specifier_less_than_date(self):
+        available_versions = [
+            "2025-12-14T23-59-59",
+            "2025-12-15T00-00-00",
+            "2025-12-16T00-00-00",
+        ]
+
+        assert (
+            version_matcher("<2025-12-15", available_versions) == "2025-12-14T23-59-59"
+        )
+        assert (
+            version_matcher("<2025-12-15", available_versions, newest=False)
+            == "2025-12-14T23-59-59"
+        )
+        assert version_matcher("<2025-12-15", available_versions, newest=None) == [
+            "2025-12-14T23-59-59"
+        ]
+
+    def test_partial_date_specifier_greater_than_year(self):
+        available_versions = [
+            "2024-12-31T23-59-59",
+            "2025-01-01T00-00-00",
+            "2025-12-15T00-00-00",
+            "2026-01-01T00-00-00",
+        ]
+
+        assert version_matcher(">2025", available_versions) == "2026-01-01T00-00-00"
+        assert (
+            version_matcher(">2025", available_versions, newest=False)
+            == "2025-01-01T00-00-00"
+        )
+        assert version_matcher(">2025", available_versions, newest=None) == [
+            "2026-01-01T00-00-00",
+            "2025-12-15T00-00-00",
+            "2025-01-01T00-00-00",
+        ]

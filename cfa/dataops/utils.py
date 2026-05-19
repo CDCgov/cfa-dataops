@@ -188,6 +188,14 @@ def tree(
     )
 
 
+def normalize(version: str) -> str:
+    return version.replace("T", ".").replace("-", ".")
+
+
+def sort_version_pairs(version_pairs: list[tuple[str, str]]) -> list[tuple[str, str]]:
+    return sorted(version_pairs, key=lambda version_pair: Version(version_pair[0]))
+
+
 def version_matcher(
     spec: str,
     available_versions: list[str],
@@ -198,9 +206,9 @@ def version_matcher(
     Args:
         spec (str): Version selector. Accepts either ``"latest"`` to choose from all
             available versions, or a packaging-compatible version specifier such as
-            ``"==1.2.3"`` or ``">=1.0,<2.0"``. Both ``spec`` and
+            ``"==2026-05-18"`` or ``">=2026-01-01,<2027-01-01"``. Both ``spec`` and
             ``available_versions`` are normalized by replacing ``"T"`` and ``"-"``
-            with ``"."`` before comparison so timestamp-like versions can be matched.
+            with ``"."`` before comparison so date-like versions can be matched.
         available_versions (list[str]): Available version strings to evaluate.
         newest (bool | None): Controls the return shape. ``True`` returns the newest
             matching version, ``False`` returns the oldest matching version, and
@@ -217,43 +225,29 @@ def version_matcher(
         packaging.version.InvalidVersion: If any normalized version string cannot be
             parsed by ``packaging.version.Version``.
     """
+    version_pairs = [(normalize(v), v) for v in available_versions]
+
     if spec == "latest":
         if not available_versions:
             return None
 
-        available_versions_normalized = [
-            v.replace("T", ".").replace("-", ".") for v in available_versions
-        ]
-        ordered_versions = sorted(
-            zip(available_versions_normalized, available_versions),
-            key=lambda version_pair: Version(version_pair[0]),
-        )
+        ordered_versions = sort_version_pairs(version_pairs)
 
         if newest is True:
             return ordered_versions[-1][1]
-        elif newest is False:
+        if newest is False:
             return ordered_versions[0][1]
-        else:
-            return [original for _, original in reversed(ordered_versions)]
-    spec_normalized = spec.replace("T", ".").replace("-", ".")
-    available_versions_normalized = [
-        v.replace("T", ".").replace("-", ".") for v in available_versions
-    ]
-    specset = SpecifierSet(spec_normalized)
+        return [original for _, original in reversed(ordered_versions)]
 
-    matches = sorted(
-        (v for v in available_versions_normalized if Version(v) in specset),
-        key=Version,
-    )
+    specset = SpecifierSet(normalize(spec))
 
-    # Map back to original versions
-    original_matches = [
-        available_versions[available_versions_normalized.index(m)] for m in matches
-    ]
+    matching_pairs = [pair for pair in version_pairs if Version(pair[0]) in specset]
+    matches = sort_version_pairs(matching_pairs)
+
+    original_matches = [original for _, original in matches]
 
     if newest is True:
         return original_matches[-1] if original_matches else None
-    elif newest is False:
+    if newest is False:
         return original_matches[0] if original_matches else None
-    else:
-        return list(reversed(original_matches))
+    return list(reversed(original_matches))
