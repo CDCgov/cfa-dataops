@@ -15,7 +15,10 @@ class TestVersionMatcher:
             "2025-12-17T00-00-00",
         ]
 
-        assert version_matcher("latest", available_versions) == "2025-12-17T00-00-00"
+        assert (
+            version_matcher(selection="newest", available_versions=available_versions)
+            == "2025-12-17T00-00-00"
+        )
 
     def test_latest_oldest_when_newest_false(self):
         available_versions = [
@@ -25,7 +28,7 @@ class TestVersionMatcher:
         ]
 
         assert (
-            version_matcher("latest", available_versions, newest=False)
+            version_matcher(selection="oldest", available_versions=available_versions)
             == "2025-12-15T00-00-00"
         )
 
@@ -80,7 +83,7 @@ class TestVersionMatcher:
         matches = version_matcher(
             ">=2025-12-16T00-00-00,<2025-12-18T00-00-00",
             available_versions,
-            newest=None,
+            selection="all",
         )
 
         assert matches == ["2025-12-17T00-00-00", "2025-12-16T00-00-00"]
@@ -157,9 +160,12 @@ class TestVersionMatcher:
     ):
         assert version_matcher(spec, available_versions) == expected_newest
         assert (
-            version_matcher(spec, available_versions, newest=False) == expected_oldest
+            version_matcher(spec, available_versions, selection="oldest")
+            == expected_oldest
         )
-        assert version_matcher(spec, available_versions, newest=None) == expected_all
+        assert (
+            version_matcher(spec, available_versions, selection="all") == expected_all
+        )
 
     def test_partial_date_specifier_equal_date(self):
         available_versions = [
@@ -173,10 +179,10 @@ class TestVersionMatcher:
             version_matcher("==2025-12-15", available_versions) == "2025-12-15T00-00-00"
         )
         assert (
-            version_matcher("==2025-12-15", available_versions, newest=False)
+            version_matcher("==2025-12-15", available_versions, selection="oldest")
             == "2025-12-15T00-00-00"
         )
-        assert version_matcher("==2025-12-15", available_versions, newest=None) == [
+        assert version_matcher("==2025-12-15", available_versions, selection="all") == [
             "2025-12-15T00-00-00",
         ]
 
@@ -191,10 +197,10 @@ class TestVersionMatcher:
             version_matcher("<2025-12-15", available_versions) == "2025-12-14T23-59-59"
         )
         assert (
-            version_matcher("<2025-12-15", available_versions, newest=False)
+            version_matcher("<2025-12-15", available_versions, selection="oldest")
             == "2025-12-14T23-59-59"
         )
-        assert version_matcher("<2025-12-15", available_versions, newest=None) == [
+        assert version_matcher("<2025-12-15", available_versions, selection="all") == [
             "2025-12-14T23-59-59"
         ]
 
@@ -208,10 +214,10 @@ class TestVersionMatcher:
 
         assert version_matcher(">2025", available_versions) == "2026-01-01T00-00-00"
         assert (
-            version_matcher(">2025", available_versions, newest=False)
+            version_matcher(">2025", available_versions, selection="oldest")
             == "2025-01-01T00-00-00"
         )
-        assert version_matcher(">2025", available_versions, newest=None) == [
+        assert version_matcher(">2025", available_versions, selection="all") == [
             "2026-01-01T00-00-00",
             "2025-12-15T00-00-00",
             "2025-01-01T00-00-00",
