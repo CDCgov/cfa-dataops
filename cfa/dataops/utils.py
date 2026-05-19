@@ -7,6 +7,7 @@ from collections.abc import Callable
 from datetime import datetime
 from itertools import islice
 from pathlib import Path
+from typing import Literal
 
 from packaging.specifiers import SpecifierSet
 from packaging.version import Version
@@ -197,45 +198,38 @@ def sort_version_pairs(version_pairs: list[tuple[str, str]]) -> list[tuple[str, 
 
 
 def version_matcher(
-    spec: str,
-    available_versions: list[str],
-    newest: bool | None = True,
+    spec: str = None,
+    available_versions: list[str] = None,
+    selection: Literal["newest", "oldest", "all"] = "newest",
 ) -> str | list[str] | None:
     """Match available versions against an exact version or specifier set.
 
     Args:
-        spec (str): Version selector. Accepts either ``"latest"`` to choose from all
-            available versions, or a packaging-compatible version specifier such as
+        spec (str): Version selector. Accepts either ``None`` or a packaging-compatible version specifier such as
             ``"==2026-05-18"`` or ``">=2026-01-01,<2027-01-01"``. Both ``spec`` and
             ``available_versions`` are normalized by replacing ``"T"`` and ``"-"``
             with ``"."`` before comparison so date-like versions can be matched.
         available_versions (list[str]): Available version strings to evaluate.
-        newest (bool | None): Controls the return shape. ``True`` returns the newest
-            matching version, ``False`` returns the oldest matching version, and
-            ``None`` returns all matching versions in descending order.
+        selection (Literal["newest", "oldest", "all"]): Controls the return shape. ``"newest"`` returns the newest
+            matching version, ``"oldest"`` returns the oldest matching version, and
+            ``"all"`` returns all matching versions in descending order.
 
     Returns:
         str | list[str] | None: The newest or oldest matching original version string,
-        a list of matching original version strings when ``newest is None``, or
+        a list of matching original version strings when ``selection`` is ``"all"``, or
         ``None`` when no match is found.
-
-    Raises:
-        packaging.specifiers.InvalidSpecifier: If ``spec`` is not ``"latest"`` and is
-            not a valid packaging specifier set after normalization.
-        packaging.version.InvalidVersion: If any normalized version string cannot be
-            parsed by ``packaging.version.Version``.
     """
     version_pairs = [(normalize(v), v) for v in available_versions]
 
-    if spec == "latest":
+    if spec is None:
         if not available_versions:
             return None
 
         ordered_versions = sort_version_pairs(version_pairs)
 
-        if newest is True:
+        if selection == "newest":
             return ordered_versions[-1][1]
-        if newest is False:
+        if selection == "oldest":
             return ordered_versions[0][1]
         return [original for _, original in reversed(ordered_versions)]
 
@@ -246,8 +240,8 @@ def version_matcher(
 
     original_matches = [original for _, original in matches]
 
-    if newest is True:
+    if selection == "newest":
         return original_matches[-1] if original_matches else None
-    if newest is False:
+    if selection == "oldest":
         return original_matches[0] if original_matches else None
     return list(reversed(original_matches))

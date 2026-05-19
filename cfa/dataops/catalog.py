@@ -292,9 +292,33 @@ class BlobEndpoint:
     def _get_version_blobs(
         self, version: str = "latest", newest=True, print_version=True
     ) -> list:
+        """Return blob metadata for the requested version selection.
+
+        Args:
+            version (str, optional): Version selector to pass through to
+                ``version_matcher``. Defaults to ``"latest"``.
+            newest (bool, optional): When matching multiple versions, choose the
+                newest matching version when ``True`` or the oldest matching version
+                when ``False``.
+            print_version (bool, optional): Whether to print the resolved version
+                before fetching blobs.
+
+        Returns:
+            list: Blob metadata dictionaries sorted by creation time for the
+            resolved version or versions.
+
+        Raises:
+            ValueError: If the requested version cannot be resolved.
+        """
+        if version == "latest":
+            version = None
+            selection = "newest"
+        else:
+            selection = "newest" if newest else "oldest"
+
         if not self.is_ledger:
             available_versions = self.get_versions()
-            version = version_matcher(version, available_versions, newest=newest)
+            version = version_matcher(version, available_versions, selection=selection)
             if not version:
                 raise ValueError(
                     f"Version {version} not found in available versions: {available_versions}"
