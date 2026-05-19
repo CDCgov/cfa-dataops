@@ -222,9 +222,6 @@ def version_matcher(
     version_pairs = [(normalize(v), v) for v in available_versions]
 
     if spec is None:
-        if not available_versions:
-            return None
-
         ordered_versions = sort_version_pairs(version_pairs)
 
         if selection == "newest":
