@@ -413,7 +413,7 @@ class BlobEndpoint:
         self,
         output: Literal["pandas", "pd"] = "pandas",
         version_spec: str | None = None,
-        selection: Literal["newest", "oldest", "all"] = "newest",
+        selection: Literal["newest", "oldest"] = "newest",
     ) -> pd.DataFrame: ...
 
     @overload
@@ -421,7 +421,7 @@ class BlobEndpoint:
         self,
         output: Literal["polars", "pl"],
         version_spec: str | None = None,
-        selection: Literal["newest", "oldest", "all"] = "newest",
+        selection: Literal["newest", "oldest"] = "newest",
     ) -> pl.DataFrame: ...
 
     @overload
@@ -429,14 +429,14 @@ class BlobEndpoint:
         self,
         output: Literal["pl_lazy", "lazy"],
         version_spec: str | None = None,
-        selection: Literal["newest", "oldest", "all"] = "newest",
+        selection: Literal["newest", "oldest"] = "newest",
     ) -> pl.LazyFrame: ...
 
     def get_dataframe(
         self,
         output: Literal["pandas", "pd", "polars", "pl", "pl_lazy", "lazy"] = "pandas",
         version_spec: str | None = None,
-        selection: Literal["newest", "oldest", "all"] = "newest",
+        selection: Literal["newest", "oldest"] = "newest",
     ) -> pd.DataFrame | pl.DataFrame | pl.LazyFrame:
         """Get the data as a pandas or polars dataframe
 
