@@ -193,52 +193,49 @@ def normalize(version: str) -> str:
     return version.replace("T", ".").replace("-", ".")
 
 
-def sort_version_pairs(version_pairs: list[tuple[str, str]]) -> list[tuple[str, str]]:
-    return sorted(version_pairs, key=lambda version_pair: Version(version_pair[0]))
-
-
 def version_matcher(
-    spec: str = None,
-    available_versions: list[str] = None,
+    version_spec: str | None,
+    available_versions: list[str],
     selection: Literal["newest", "oldest", "all"] = "newest",
 ) -> str | list[str] | None:
-    """Match available versions against an exact version or specifier set.
+    """Select version strings from a list using an optional specifier.
 
     Args:
-        spec (str): Version selector. Accepts either ``None`` or a packaging-compatible version specifier such as
-            ``"==2026-05-18"`` or ``">=2026-01-01,<2027-01-01"``. Both ``spec`` and
-            ``available_versions`` are normalized by replacing ``"T"`` and ``"-"``
-            with ``"."`` before comparison so date-like versions can be matched.
-        available_versions (list[str]): Available version strings to evaluate.
-        selection (Literal["newest", "oldest", "all"]): Controls the return shape. ``"newest"`` returns the newest
-            matching version, ``"oldest"`` returns the oldest matching version, and
-            ``"all"`` returns all matching versions in descending order.
+        version_spec (str | None): Optional packaging-compatible version specifier such as
+            ``"==2025-12-15"`` or ``">=2025-01-01,<2026-01-01"``. If ``None``,
+            all available versions are considered.
+        available_versions (list[str]): Version strings to evaluate.
+        selection (Literal["newest", "oldest", "all"]): Controls the return shape.
+            ``"newest"`` returns the newest matching version, ``"oldest"`` returns
+            the oldest matching version, and ``"all"`` returns all matching versions
+            in descending order.
 
     Returns:
-        str | list[str] | None: The newest or oldest matching original version string,
-        a list of matching original version strings when ``selection`` is ``"all"``, or
-        ``None`` when no match is found.
+        str | list[str] | None: A single matching version, all matching versions in
+        descending order, or ``None`` if no match is found.
+
+    Raises:
+        packaging.specifiers.InvalidSpecifier: If ``version_spec`` is not ``None`` and is not
+            a valid packaging specifier after normalization.
+        packaging.version.InvalidVersion: If any version string cannot be parsed by
+            ``packaging.version.Version``.
     """
-    version_pairs = [(normalize(v), v) for v in available_versions]
+    versions = sorted(
+        (Version(normalize(version)), version) for version in available_versions
+    )
 
-    if spec is None:
-        ordered_versions = sort_version_pairs(version_pairs)
+    if version_spec is not None:
+        specset = SpecifierSet(normalize(version_spec))
+        versions = [
+            (parsed, original) for parsed, original in versions if parsed in specset
+        ]
 
-        if selection == "newest":
-            return ordered_versions[-1][1]
-        if selection == "oldest":
-            return ordered_versions[0][1]
-        return [original for _, original in reversed(ordered_versions)]
+    originals = [original for _, original in versions]
 
-    specset = SpecifierSet(normalize(spec))
-
-    matching_pairs = [pair for pair in version_pairs if Version(pair[0]) in specset]
-    matches = sort_version_pairs(matching_pairs)
-
-    original_matches = [original for _, original in matches]
-
-    if selection == "newest":
-        return original_matches[-1] if original_matches else None
-    if selection == "oldest":
-        return original_matches[0] if original_matches else None
-    return list(reversed(original_matches))
+    match selection:
+        case "newest":
+            return originals[-1] if originals else None
+        case "oldest":
+            return originals[0] if originals else None
+        case "all":
+            return originals[::-1]
