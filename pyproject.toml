@@ -67,4 +67,4 @@ dataops_save = "cfa.dataops.command:save_data_locally"
 
 
 [tool.pytest.ini_options]
-#addopts = "tests cfa/dataops/utils.py --doctest-modules -vv --cov=cfa --cov-report html --cov-report term"
+addopts = "tests cfa/dataops/utils.py --doctest-modules -vv --cov=cfa --cov-report html --cov-report term"

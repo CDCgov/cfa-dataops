@@ -12,6 +12,12 @@ try:
 except ImportError:
     __version__ = "unknown"
 
-from .catalog import datacat, reportcat
+__all__ = ["__version__", "datacat", "reportcat"]
 
-__all__ = [__version__, datacat, reportcat]
+
+def __getattr__(name: str):
+    if name in {"datacat", "reportcat"}:
+        from .catalog import datacat, reportcat
+
+        return datacat if name == "datacat" else reportcat
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

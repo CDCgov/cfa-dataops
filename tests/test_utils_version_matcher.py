@@ -16,7 +16,7 @@ class TestVersionMatcher:
         ]
 
         assert (
-            version_matcher(selection="newest", available_versions=available_versions)
+            version_matcher(None, available_versions, selection="newest")
             == "2025-12-17T00-00-00"
         )
 
@@ -28,7 +28,7 @@ class TestVersionMatcher:
         ]
 
         assert (
-            version_matcher(selection="oldest", available_versions=available_versions)
+            version_matcher(None, available_versions, selection="oldest")
             == "2025-12-15T00-00-00"
         )
 
