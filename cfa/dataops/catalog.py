@@ -295,6 +295,9 @@ class BlobEndpoint:
     def _get_version_blobs(
         self, version: str = "latest", newest=True, print_version=True
     ) -> list:
+        # check credential access
+        if not check_ext_env():
+            raise RuntimeError("No EXT access configured.")
         if not self.is_ledger:
             available_versions = self.get_versions()
             version = version_matcher(version, available_versions, newest=newest)
