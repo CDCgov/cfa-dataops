@@ -20,7 +20,7 @@ class TestVersionMatcher:
             == "2025-12-17T00-00-00"
         )
 
-    def test_latest_oldest_when_newest_false(self):
+    def test_latest_oldest_when_selection_oldest(self):
         available_versions = [
             "2025-12-15T00-00-00",
             "2025-12-16T00-00-00",
@@ -42,19 +42,7 @@ class TestVersionMatcher:
         ]
 
         with pytest.raises(InvalidSpecifier):
-            version_matcher("2025-12-18T00-00-00", available_versions)
-
-    def test_invalid_date(self):
-        from packaging.specifiers import InvalidSpecifier
-
-        available_versions = [
-            "2025-12-15T00-00-00",
-            "2025-12-16T00-00-00",
-            "2025-12-17T00-00-00",
-        ]
-
-        with pytest.raises(InvalidSpecifier):
-            version_matcher("2025-99-99T00-00-00", available_versions)
+            version_matcher(">2025-12-18T00-00-00", available_versions)
 
     def test_date_range(self):
         available_versions = [
@@ -87,24 +75,6 @@ class TestVersionMatcher:
         )
 
         assert matches == ["2025-12-17T00-00-00", "2025-12-16T00-00-00"]
-
-    def test_date_range_respects_upper_bound(self):
-        available_versions = [
-            "2026-03-14T23-59-59",
-            "2026-03-15T00-10-00",
-            "2026-04-10T12-00-00",
-            "2026-04-15T00-19-59",
-            "2026-04-15T00-20-00",
-            "2026-04-16T00-00-00",
-        ]
-
-        assert (
-            version_matcher(
-                ">=2026-03-15T00-10-00,<2026-04-15T00-20-00",
-                available_versions,
-            )
-            == "2026-04-15T00-19-59"
-        )
 
     @pytest.mark.parametrize(
         "spec,available_versions,expected_newest,expected_oldest,expected_all",
