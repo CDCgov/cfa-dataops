@@ -33,7 +33,6 @@ class TestVersionMatcher:
         )
 
     def test_newer_than_latest(self):
-        from packaging.specifiers import InvalidSpecifier
 
         available_versions = [
             "2025-12-15T00-00-00",
@@ -41,8 +40,12 @@ class TestVersionMatcher:
             "2025-12-17T00-00-00",
         ]
 
-        with pytest.raises(InvalidSpecifier):
-            version_matcher(">2025-12-18T00-00-00", available_versions)
+        assert (
+            version_matcher(
+                ">2025-12-17T00-00-00", available_versions, selection="newest"
+            )
+            is None
+        )
 
     def test_date_range(self):
         available_versions = [

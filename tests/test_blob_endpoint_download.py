@@ -60,7 +60,7 @@ class TestDownloadVersionToLocal:
         with tempfile.TemporaryDirectory() as tmpdir:
             result = blob_endpoint.download_version_to_local(
                 local_path=tmpdir,
-                version_spec="2025-01-01T12-00-00",
+                version_spec="==2025-01-01T12-00-00",
                 force=False,
             )
 
@@ -108,7 +108,7 @@ class TestDownloadVersionToLocal:
         with tempfile.TemporaryDirectory() as tmpdir:
             result = blob_endpoint.download_version_to_local(
                 local_path=tmpdir,
-                version_spec="2025-01-01T12-00-00",
+                version_spec="==2025-01-01T12-00-00",
                 force=False,
             )
 
@@ -151,7 +151,7 @@ class TestDownloadVersionToLocal:
         with tempfile.TemporaryDirectory() as tmpdir:
             result = blob_endpoint.download_version_to_local(
                 local_path=tmpdir,
-                version_spec="2025-01-01T12-00-00",
+                version_spec="==2025-01-01T12-00-00",
                 force=False,
             )
 
@@ -243,7 +243,7 @@ class TestDownloadVersionToLocal:
 
             result = blob_endpoint.download_version_to_local(
                 local_path=tmpdir,
-                version_spec="2025-01-01T12-00-00",
+                version_spec="==2025-01-01T12-00-00",
                 force=False,
             )
 
@@ -286,7 +286,7 @@ class TestDownloadVersionToLocal:
 
             result = blob_endpoint.download_version_to_local(
                 local_path=tmpdir,
-                version_spec="2025-01-01T12-00-00",
+                version_spec="==2025-01-01T12-00-00",
                 force=True,
             )
 
@@ -322,7 +322,7 @@ class TestDownloadVersionToLocal:
         with tempfile.TemporaryDirectory() as tmpdir:
             result = blob_endpoint.download_version_to_local(
                 local_path=tmpdir,
-                version_spec="2025-01-01T12-00-00",
+                version_spec="==2025-01-01T12-00-00",
                 force=False,
             )
 
@@ -377,7 +377,7 @@ class TestDownloadVersionToLocal:
 
             blob_endpoint.download_version_to_local(
                 local_path=tmpdir,
-                version_spec="2025-01-01T12-00-00",
+                version_spec="==2025-01-01T12-00-00",
                 force=False,
             )
 
@@ -426,7 +426,7 @@ class TestDownloadVersionToLocal:
 
             result = blob_endpoint.download_version_to_local(
                 local_path=tmpdir,
-                version_spec="2025-01-01T12-00-00",
+                version_spec="==2025-01-01T12-00-00",
                 force=False,
             )
 
