@@ -27,6 +27,10 @@ class _ConfigStub(SimpleNamespace):
 
 def _install_test_stubs() -> None:
     _ensure_module(
+        "cfa.cloudops.util",
+        check_ext_env=lambda *args, **kwargs: True,
+    )
+    _ensure_module(
         "cfa.cloudops.blob_helpers",
         read_blob_stream=lambda *args, **kwargs: b"",
         walk_blobs_in_container=lambda *args, **kwargs: [],
@@ -34,6 +38,7 @@ def _install_test_stubs() -> None:
     )
     _ensure_module("cfa.cloudops")
     sys.modules["cfa.cloudops"].blob_helpers = sys.modules["cfa.cloudops.blob_helpers"]
+    sys.modules["cfa.cloudops"].util = sys.modules["cfa.cloudops.util"]
 
     _ensure_module(
         "azure.identity",

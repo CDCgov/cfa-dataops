@@ -41,7 +41,6 @@ Read the [Dataset Developer Guide](docs/data_developer_guide.md) for information
 ## Project admins
 
 - Thomas Hladish <utx5@cdc.gov> (CDC/OD/ORR/CFA)
-- Phillip Rogers <ap66@cdc.gov> (CDC/OD/ORR/CFA)(CTR)
 - Ryan Raasch <xng3@cdc.gov> (CDC/OD/ORR/CFA)(CTR)
 
 ---
