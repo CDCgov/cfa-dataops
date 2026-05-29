@@ -27,6 +27,10 @@ class _ConfigStub(SimpleNamespace):
 
 def _install_test_stubs() -> None:
     _ensure_module(
+        "cfa.cloudops.util",
+        check_ext_env=lambda *args, **kwargs: True,
+    )
+    _ensure_module(
         "cfa.cloudops.blob_helpers",
         read_blob_stream=lambda *args, **kwargs: b"",
         walk_blobs_in_container=lambda *args, **kwargs: [],
