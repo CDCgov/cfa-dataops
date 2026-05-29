@@ -34,6 +34,7 @@ def _install_test_stubs() -> None:
     )
     _ensure_module("cfa.cloudops")
     sys.modules["cfa.cloudops"].blob_helpers = sys.modules["cfa.cloudops.blob_helpers"]
+    sys.modules["cfa.cloudops"].util = sys.modules["cfa.cloudops.util"]
 
     _ensure_module(
         "azure.identity",
