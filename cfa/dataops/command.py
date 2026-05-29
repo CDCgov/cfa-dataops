@@ -151,13 +151,13 @@ def save_data_locally():
         version = versions[0]
     local_path = os.path.abspath(args.location)
     if args.oldest:
-        newest = False
+        selection = "oldest"
     elif args.full_range:
-        newest = None
+        selection = "all"
     else:
-        newest = True
+        selection = "newest"
     written = eval(
-        f"datacat.{dataset}.{stage}.download_version_to_local('{local_path}', version='{version}', force={args.force}, newest={newest})"
+        f"datacat.{dataset}.{stage}.download_version_to_local('{local_path}', version_spec='{version}', force={args.force}, selection='{selection}')"
     )
     if not written:
         Console().print(

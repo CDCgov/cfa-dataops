@@ -221,18 +221,21 @@ class BlobEndpoint:
         # print(f"file written to: {full_path}")
 
     def read_blobs(
-        self, version: str = "latest", newest: bool = True, print_version: bool = True
+        self,
+        version_spec: str | None = None,
+        selection: Literal["newest", "oldest", "all"] = "newest",
+        print_version: bool = True,
     ) -> list[bytes]:
         """Read a blob in as bytes so it can be loaded into a dataframe
 
         Args:
-            version (str, optional): the version of the data to read.
+            version_spec (str | None, optional): the version of the data to read.
                 Defaults to "latest".
-            newest (bool, optional): whether to get the newest matching version. Defaults to True.
+            selection (Literal["newest", "oldest", "all"], optional): whether to get the newest, oldest, or all matching versions. Defaults to "newest".
             print_version (bool, optional): whether to print the version being used. Defaults to True.
         """
         blobs = self._get_version_blobs(
-            version, newest=newest, print_version=print_version
+            version_spec=version_spec, selection=selection, print_version=print_version
         )
         blob_bytes = [
             read_blob_stream(
@@ -276,25 +279,53 @@ class BlobEndpoint:
             reverse=True,
         )
 
-    def get_file_ext(self, version: str = "latest") -> str:
+    def get_file_ext(
+        self,
+        version_spec: str | None = None,
+        selection: Literal["newest", "oldest", "all"] = "newest",
+    ) -> str:
         """returns the file extension for handy routing of read byte types for
         DataFrame reading
 
         Args:
-            version (str, optional): the version of the data to get.
+            version_spec (str | None, optional): the version specifier to get.
+            selection (Literal["newest", "oldest", "all"], optional): which version to select. Defaults to "newest".
         Returns:
             str: the file extension
         """
-        return self._get_version_blobs(version=version, print_version=False)[0][
-            "name"
-        ].split(".")[-1]
+        return self._get_version_blobs(
+            version_spec=version_spec, selection=selection, print_version=False
+        )[0]["name"].split(".")[-1]
 
     def _get_version_blobs(
-        self, version: str = "latest", newest=True, print_version=True
+        self,
+        version_spec: str | None = None,
+        selection: Literal["newest", "oldest", "all"] = "newest",
+        print_version=True,
     ) -> list:
+        """Return blob metadata for the requested version selection.
+
+        Args:
+            version_spec (str | None, optional): Version specifier to pass through to
+                ``version_matcher``. Defaults to ``None``.
+            selection (Literal["newest", "oldest", "all"], optional): When matching multiple versions, choose the
+                newest matching version when ``"newest"``, the oldest matching version
+                when ``"oldest"``, or all matching versions when ``"all"``.
+            print_version (bool, optional): Whether to print the resolved version
+                before fetching blobs.
+
+        Returns:
+            list: Blob metadata dictionaries sorted by creation time for the
+            resolved version or versions.
+
+        Raises:
+            ValueError: If the requested version cannot be resolved.
+        """
         if not self.is_ledger:
             available_versions = self.get_versions()
-            version = version_matcher(version, available_versions, newest=newest)
+            version = version_matcher(
+                version_spec, available_versions, selection=selection
+            )
             if not version:
                 raise ValueError(
                     f"Version {version} not found in available versions: {available_versions}"
@@ -336,22 +367,23 @@ class BlobEndpoint:
     def download_version_to_local(
         self,
         local_path: str,
-        version: str = "latest",
+        version_spec: str | None = None,
         force: bool = False,
-        newest: bool = True,
+        selection: Literal["newest", "oldest", "all"] = "newest",
     ) -> bool:
         """Download a specific version of the data to a local path
 
         Args:
             local_path (str): the local path to download to
-            version (str, optional): the version to download. Defaults to "latest".
+            version_spec (str | None, optional): the version specifier to download. Defaults to None.
             force (bool, optional): whether to force re-download if local.
-            newest (bool, optional): whether to get the newest matching version. Defaults to True.
+            selection (Literal["newest", "oldest", "all"], optional): which version to select. Defaults to "newest".
         Returns:
             bool: whether any files were written
         """
+
         written = False
-        blobs = self._get_version_blobs(version, newest=newest)
+        blobs = self._get_version_blobs(version_spec=version_spec, selection=selection)
         for blob in blobs:
             blob_data = read_blob_stream(
                 blob_url=blob["name"],
@@ -380,41 +412,40 @@ class BlobEndpoint:
     def get_dataframe(
         self,
         output: Literal["pandas", "pd"] = "pandas",
-        version: str = "latest",
-        newest: bool = True,
+        version_spec: str | None = None,
+        selection: Literal["newest", "oldest"] = "newest",
     ) -> pd.DataFrame: ...
 
     @overload
     def get_dataframe(
         self,
         output: Literal["polars", "pl"],
-        version: str = "latest",
-        newest: bool = True,
+        version_spec: str | None = None,
+        selection: Literal["newest", "oldest"] = "newest",
     ) -> pl.DataFrame: ...
 
     @overload
     def get_dataframe(
         self,
         output: Literal["pl_lazy", "lazy"],
-        version: str = "latest",
-        newest: bool = True,
+        version_spec: str | None = None,
+        selection: Literal["newest", "oldest"] = "newest",
     ) -> pl.LazyFrame: ...
 
     def get_dataframe(
         self,
         output: Literal["pandas", "pd", "polars", "pl", "pl_lazy", "lazy"] = "pandas",
-        version: str = "latest",
-        newest: bool = True,
+        version_spec: str | None = None,
+        selection: Literal["newest", "oldest"] = "newest",
     ) -> pd.DataFrame | pl.DataFrame | pl.LazyFrame:
         """Get the data as a pandas or polars dataframe
 
         Args:
             output (str, optional): the type of dataframe to return,
                 either 'pandas' or 'polars' or 'pl_lazy'. Defaults to "pandas".
-            version (str, optional): the version of the data to get.
+            version_spec (str, optional): the version of the data to get.
                 Defaults to "latest".
-            newest (bool, optional): whether to get the newest matching version. Defaults to True.
-                False returns the oldest matching version.
+            selection (Literal["newest", "oldest", "all"], optional): whether to get the newest, oldest, or all matching versions. Defaults to "newest".
 
         Raises:
             ValueError: if output is not one of
@@ -428,10 +459,12 @@ class BlobEndpoint:
                 f"Output {output} needs to be 'pandas', 'polars', 'pd', 'pl', 'pl_lazy', or 'lazy'."
             )
         # Fetch version blobs once and validate before deriving file extension.
-        version_blobs = self._get_version_blobs(version=version, newest=newest)
+        version_blobs = self._get_version_blobs(
+            version_spec=version_spec, selection=selection
+        )
         if not version_blobs:
             raise ValueError(
-                f"No blobs found for version '{version}' in container '{self.container}'."
+                f"No blobs found for version '{version_spec}' in container '{self.container}'."
             )
         name = version_blobs[0]["name"]
         file_ext = PurePosixPath(name).suffix.lstrip(".").lower()
@@ -476,7 +509,9 @@ class BlobEndpoint:
                 return df
             else:
                 raise ValueError(f"Lazy loading not supported for {file_ext} files.")
-        blobs = self.read_blobs(version, newest=newest, print_version=False)
+        blobs = self.read_blobs(
+            version_spec=version_spec, selection=selection, print_version=False
+        )
         blob_bytes = [
             blob if isinstance(blob, bytes) else blob.content_as_bytes()
             for blob in blobs
