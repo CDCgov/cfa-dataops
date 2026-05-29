@@ -5,8 +5,6 @@ format. Use the existing configuration files as a starting point. Validations
 will run on all configurations.
 """
 
-from cfa.dataops.utils import check_ext_env
-
 try:
     from importlib.metadata import version
 
@@ -14,9 +12,14 @@ try:
 except ImportError:
     __version__ = "unknown"
 
-if not check_ext_env():
-    raise RuntimeError("No EXT access configured.")
-
 from .catalog import datacat, reportcat
 
-__all__ = [__version__, datacat, reportcat]
+__all__ = ["__version__", "datacat", "reportcat"]
+
+
+def __getattr__(name: str):
+    if name in {"datacat", "reportcat"}:
+        from .catalog import datacat, reportcat
+
+        return datacat if name == "datacat" else reportcat
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

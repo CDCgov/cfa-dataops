@@ -31,7 +31,7 @@ df = datacat.private.scenarios.seroprevalence.extract.get_dataframe(output="pola
 
 # Get specific version
 df = datacat.private.scenarios.covid19vax_trends.load.get_dataframe(
-    version="2025-06-03T17-56-50"
+    version_spec="==2025-06-03T17-56-50"
 )
 ```
 
@@ -53,7 +53,7 @@ To get a specific version:
 
 ```python
 df = datacat.private.scenarios.covid19vax_trends.load.get_dataframe(
-    version="2025-06-03T17-59-16"
+    version_spec="==2025-06-03T17-59-16"
 )
 ```
 
@@ -98,7 +98,7 @@ raw_vax = datacat.private.scenarios.covid19vax_trends.extract.get_dataframe()
 
 When `get_dataframe(...)` completes successfully, it prints a short confirmation line like:
 
-Used version(s): [...]
+Used version: [...]
 
 Examples:
 
@@ -107,38 +107,38 @@ from cfa.dataops import datacat
 
 # newest match in the range (single version)
 df = datacat.private.scenarios.covid19vax_trends.load.get_dataframe(
-   version=">=2025-05-01,<2025-06-01"
+   version_spec=">=2025-05-01,<2025-06-01"
 )
 ```
 
 *Console output (example):*
 ```
-Used version(s): '2025-05-30T19-55-51'
+Used version: '2025-05-30T19-55-51'
 ```
 
 ```python
-# oldest match in the same range (newest=False)
+# oldest match in the same range (selection=oldest)
 df_old = datacat.private.scenarios.covid19vax_trends.load.get_dataframe(
-   version=">=2025-05-01,<2025-06-01", newest=False
+   version_spec=">=2025-05-01,<2025-06-01", selection = "oldest"
 )
 ```
 
 *Console output (example):*
 ```
-Used version(s): '2025-05-30T14-50-36'
+Used version: '2025-05-30T14-50-36'
 ```
 
 ```python
 # Fetch all matches and concatenate all tables
 df_v = datacat.private.scenarios.covid19vax_trends.load.get_dataframe(
-   version=">=2025-05-01,<2025-06-01",
-   newest=None
+   version_spec=">=2025-05-01,<2025-06-01",
+   selection="all"
 )
 ```
 
 *Console output (example):*
 ```
-Used version(s): ['2025-05-30T19-55-51', '2025-05-30T14-50-36']
+Used version: ['2025-05-30T19-55-51', '2025-05-30T14-50-36']
 ```
 
 Use the helper `version_matcher` (from `cfa.dataops.utils`) to experiment with version boundary logic to see what matches occur prior to loading large datasets into memory.
@@ -148,13 +148,13 @@ Use the helper `version_matcher` (from `cfa.dataops.utils`) to experiment with v
 >>> available_versions = ['1.0', '1.1', '1.2', '2.0']
 >>> version_matcher('>=1.1,<2.0', available_versions)
 '1.2'
->>> version_matcher('>=1.1,<2.0', available_versions, newest=False)
+>>> version_matcher('>=1.1,<2.0', available_versions, selection = "oldest")
 '1.1'
->>> version_matcher('latest', available_versions)
+>>> version_matcher(None, available_versions)
 '2.0'
 >>> version_matcher('~=1', available_versions)
 '1.2'
->>> version_matcher('>=1.1,<2.0', available_versions, newest=None)
+>>> version_matcher('>=1.1,<2.0', available_versions, selection = "all")
 ['1.2', '1.1']
 ```
 

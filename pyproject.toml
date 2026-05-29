@@ -1,6 +1,6 @@
 [project]
 name = "cfa.dataops"
-version = "2026.04.27.0"
+version = "2026.05.29.0"
 description = "Data cataloging, ETL, modeling, verification, and validation for CFA"
 authors = [
     { name = "Phil Rogers", email = "ap66@cdc.gov" },
@@ -33,6 +33,7 @@ dependencies = [
     "rich (>=14.1.0,<14.4.0)",
     "pydantic (>=2.11.7,<2.13.0)",
     "faker (>=37.8.0,<40.12.0)",
+    "packaging (>=26.2)"
 ]
 
 [tool.poetry]

@@ -7,6 +7,19 @@ and this project adheres to [Calendar Versioning](https://calver.org/).
 The versioning pattern is `YYYY.MM.DD.micro(a/b/{none if release})
 
 ---
+## [2026.05.29.0]
+
+### Fixed
+
+- version_matcher() functions has better date parsing and error messages
+- updated get_dataframe() and other functions to use the newer version_matcher arguments (version_spec, selection)
+
+## [2026.05.12.0]
+
+### Fixed
+
+- removed the ledger reads and write temporarily
+
 ## [2026.04.27.0]
 
 ### Fixed
