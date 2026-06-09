@@ -7,6 +7,12 @@ and this project adheres to [Calendar Versioning](https://calver.org/).
 The versioning pattern is `YYYY.MM.DD.micro(a/b/{none if release})
 
 ---
+## [2026.06.05.0]
+
+### Updated
+
+- removed package dependency limits
+
 ## [2026.05.29.1]
 
 ### Fixed
