@@ -38,6 +38,9 @@ dependencies = [
 
 [tool.poetry]
 packages = [{ include = "cfa" }]
+include = [
+    { path = "cfa/dataops/py.typed", format = ["sdist", "wheel"] },
+]
 
 
 [tool.poetry.group.dev.dependencies]
