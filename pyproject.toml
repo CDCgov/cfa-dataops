@@ -30,7 +30,9 @@ dependencies = [
     "rich (>=14.1.0)",
     "pydantic (>=2.11.7)",
     "faker (>=37.8.0)",
-    "packaging (>=26.2)"
+    "packaging (>=26.2)",
+    "polars (>=1.26.0)",
+    "tomli (>=2.2.1)"
 ]
 
 [build-system]
