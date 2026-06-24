@@ -116,7 +116,6 @@ class DatasetEndpoint:
         load: "BlobEndpoint"
         extract: "BlobEndpoint"
         data: "BlobEndpoint"
-        _ledger_endpoint: "BlobEndpoint"
 
     def __init__(self, config_path: str, defaults: dict, ns: str):
         """Basic functionality to interact with datasets to be included
