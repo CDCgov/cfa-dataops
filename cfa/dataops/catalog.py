@@ -341,7 +341,7 @@ class BlobEndpoint:
                     f"Version {version} not found in available versions: {available_versions}"
                 )
             if print_version:
-                logger.info(f"Using version: {version}")
+                logger.info("Using version: %s", version)
             if isinstance(version, list):
                 walk_path = [f"{self.prefix}/{v}/" for v in version]
             else:
