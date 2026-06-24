@@ -9,7 +9,7 @@ from importlib import import_module
 from io import BytesIO
 from pathlib import PurePosixPath
 from types import SimpleNamespace
-from typing import Any, Literal, overload
+from typing import TYPE_CHECKING, Any, Literal, overload
 
 import pandas as pd
 import polars as pl
@@ -84,10 +84,39 @@ dataset_namespaces = get_dataset_dot_path(all_dataset_ns_map)
 report_namespaces = get_dataset_dot_path(all_reports_ns_map)
 
 
+class CatalogNamespace(SimpleNamespace):
+    """Recursive namespace wrapper for statically-typed catalog access.
+
+    Runtime instances still behave like ``SimpleNamespace`` objects, but the
+    declared attributes let editors resolve endpoint methods on dynamic access
+    chains such as ``datacat.public.team.dataset.load``.
+    """
+
+    if TYPE_CHECKING:
+        load: "BlobEndpoint"
+        extract: "BlobEndpoint"
+        data: "BlobEndpoint"
+        _ledger_endpoint: "BlobEndpoint"
+        config: dict[str, Any]
+        __namespace_list__: list[str]
+
+    def __getattr__(self, name: str) -> "CatalogNamespace":
+        raise AttributeError(
+            f"{type(self).__name__!s} object has no attribute {name!r}"
+        )
+
+
 class DatasetEndpoint:
     """The DatasetEndpoint class for including in the datacat namespace.
     This ends the namespace branching at a config file and creates all the
     blob endpoints for each 'stage' of the config (e.g., extract, load, stage_01)."""
+
+    if TYPE_CHECKING:
+        config: dict[str, Any]
+        load: "BlobEndpoint"
+        extract: "BlobEndpoint"
+        data: "BlobEndpoint"
+        _ledger_endpoint: "BlobEndpoint"
 
     def __init__(self, config_path: str, defaults: dict, ns: str):
         """Basic functionality to interact with datasets to be included
@@ -736,7 +765,7 @@ class BlobEndpoint:
                 )
 
 
-def dict_to_sn(d: Any, defaults: dict = None, ns: str = "") -> SimpleNamespace:
+def dict_to_sn(d: Any, defaults: dict | None = None, ns: str = "") -> CatalogNamespace:
     """Simple recursive namespace construction
 
     Args:
@@ -745,9 +774,9 @@ def dict_to_sn(d: Any, defaults: dict = None, ns: str = "") -> SimpleNamespace:
         ns (str, optional): the current namespace path. Defaults to ''.
 
     Returns:
-        SimpleNamespace: namespace representation
+        CatalogNamespace: namespace representation
     """
-    x = SimpleNamespace()
+    x = CatalogNamespace()
     ns_prefix = f"{ns}." if ns != "" else ""
     _ = [
         setattr(
@@ -788,13 +817,13 @@ for k in all_reports_ns_map.keys():
     rc.append(report_dict_to_sn({k: all_reports_ns_map[k]}))
 combined_reports_dict = {key: value for ns in rc for key, value in vars(ns).items()}
 
-datacat = SimpleNamespace(**combined_dict)
+datacat: CatalogNamespace = CatalogNamespace(**combined_dict)
 datacat.__setattr__("__namespace_list__", dataset_namespaces)
-reportcat = SimpleNamespace(**combined_reports_dict)
+reportcat: CatalogNamespace = CatalogNamespace(**combined_reports_dict)
 reportcat.__setattr__("__namespace_list__", report_namespaces)
 
 
-def _attach_schema_mock_functions(datacat: SimpleNamespace, catalogs: list) -> None:
+def _attach_schema_mock_functions(datacat: CatalogNamespace, catalogs: list) -> None:
     """Recursively walk the datacat namespace and attach mock_data functions to
     the extract and load BlobEndpoints of each DatasetEndpoint, sourced from
     a schema module co-located with the dataset.
@@ -816,12 +845,12 @@ def _attach_schema_mock_functions(datacat: SimpleNamespace, catalogs: list) -> N
         datacat.<catalog>.<team_path_segments>.<dataset>.load.mock_data()
 
     Args:
-        datacat (SimpleNamespace): the top-level datacat namespace
+        datacat (CatalogNamespace): the top-level datacat namespace
         catalogs (list): list of (catalog_namespace, catalog_name, catalog_path)
             tuples from get_all_catalogs()
     """
 
-    def _walk(ns: SimpleNamespace) -> None:
+    def _walk(ns: CatalogNamespace) -> None:
         for val in vars(ns).values():
             if isinstance(val, DatasetEndpoint):
                 # __ns_str__ is e.g. "public.stf.nhsn_hrd_prelim";
@@ -857,7 +886,7 @@ def _attach_schema_mock_functions(datacat: SimpleNamespace, catalogs: list) -> N
                                     "mock_data",
                                     getattr(mod, func_name),
                                 )
-            elif isinstance(val, SimpleNamespace):
+            elif isinstance(val, CatalogNamespace):
                 _walk(val)
 
     _walk(datacat)
