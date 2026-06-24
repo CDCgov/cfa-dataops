@@ -460,7 +460,7 @@ class BlobEndpoint:
             version_spec (str, optional): the version of the data to get.
                 Defaults to "latest".
             selection (Literal["newest", "oldest", "all"], optional): whether to get the newest, oldest, or all matching versions. Defaults to "newest".
-            print_version (bool, optional): whether to print the version information. Defaults to False.
+            print_version (bool, optional): whether to log the resolved version information. Defaults to False.
 
         Raises:
             ValueError: if output is not one of
