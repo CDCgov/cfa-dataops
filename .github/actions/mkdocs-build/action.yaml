@@ -5,6 +5,6 @@ runs:
   steps:
     - uses: astral-sh/setup-uv@v8.2.0
     - run: |
-        uv sync --group dev
+        uv sync
         uv run mkdocs build
       shell: bash
