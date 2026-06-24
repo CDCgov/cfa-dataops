@@ -43,10 +43,8 @@ _here = os.path.abspath(os.path.dirname(__file__))
 _config = ConfigParser()
 _config.read(os.path.join(_here, "config.ini"))
 
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
-)
 logger = logging.getLogger(__name__)
+logger.addHandler(logging.NullHandler())
 
 
 def get_all_catalogs() -> list:
