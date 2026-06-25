@@ -17,8 +17,8 @@ This project provides data tools and low friction access to versioned datasets w
 
 ## Getting started
 
-1. Clone the repository and install dependencies with `poetry install` (**requires `poetry >= 2.0`**)
-2. Ensure your have access to the relevant resources (e.g., `az login --identity`)
+1. Clone the repository and install dependencies with `uv sync`
+2. Ensure you have access to the relevant resources (e.g., `az login --identity`)
 3. See which datasets are available:
    ```python
    from cfa.dataops import datacat
