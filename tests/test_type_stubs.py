@@ -62,9 +62,7 @@ def _representative_catalog_stub(dataset_config: Path) -> str:
 def test_render_catalog_stub_matches_expected_fixture(tmp_path):
     dataset_config = _write_dataset_config(tmp_path / "example.toml")
     stub = _representative_catalog_stub(dataset_config)
-    expected = (FIXTURES_DIR / "expected_catalog_stub.pyi").read_text(
-        encoding="utf-8"
-    )
+    expected = (FIXTURES_DIR / "expected_catalog_stub.pyi").read_text(encoding="utf-8")
 
     assert stub.strip() == expected.strip()
 
@@ -115,7 +113,9 @@ def test_render_catalog_stub_uses_real_report_paths():
         },
     )
 
-    assert "class _ReportCatalogPublicExamplesBasicReportReport(NotebookEndpoint):" in stub
+    assert (
+        "class _ReportCatalogPublicExamplesBasicReportReport(NotebookEndpoint):" in stub
+    )
     assert "basic_report: _ReportCatalogPublicExamplesBasicReportReport" in stub
 
 

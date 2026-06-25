@@ -222,8 +222,8 @@ def _build_stub_model(
 
 
 def _render_template(template_name: str, **context: Any) -> str:
-    template = files(TEMPLATE_PACKAGE).joinpath(template_name).read_text(
-        encoding="utf-8"
+    template = (
+        files(TEMPLATE_PACKAGE).joinpath(template_name).read_text(encoding="utf-8")
     )
     return Template(template).render(**context)
 

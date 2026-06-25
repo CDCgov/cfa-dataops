@@ -7,10 +7,13 @@ import polars as pl
 
 from .reporting.catalog import NotebookEndpoint
 
+
 def get_all_catalogs() -> list[tuple[str, str, str]]: ...
+
 
 class CatalogNamespace(SimpleNamespace):
     pass
+
 
 class DatasetEndpoint:
     config_path: str
@@ -18,6 +21,7 @@ class DatasetEndpoint:
     config: dict[str, Any]
     __ns_str__: str
     _ledger_location: dict[str, Any]
+
 
 class BlobEndpoint:
     account: str
@@ -95,40 +99,18 @@ class BlobEndpoint:
         auto_version: bool = False,
     ) -> None: ...
 
+
 def dict_to_sn(
     d: Any,
     defaults: dict[str, Any] | None = None,
     ns: str = "",
 ) -> CatalogNamespace: ...
 
-class _DataCatalogPublicStfNhsnHrdPrelimDataset(DatasetEndpoint):
-    config: dict[str, Any]
-    extract: BlobEndpoint
-    stage_01: BlobEndpoint
-    load: BlobEndpoint
-
-class _DataCatalogPublicStfNamespace(CatalogNamespace):
-    nhsn_hrd_prelim: _DataCatalogPublicStfNhsnHrdPrelimDataset
-
-class _DataCatalogPublicNamespace(CatalogNamespace):
-    stf: _DataCatalogPublicStfNamespace
-    _ledger_endpoint: BlobEndpoint
 
 class DataCatalog(CatalogNamespace):
-    public: _DataCatalogPublicNamespace
     __namespace_list__: list[str]
 
-class _ReportCatalogPublicExamplesBasicReportReport(NotebookEndpoint):
-    pass
-
-class _ReportCatalogPublicExamplesNamespace(CatalogNamespace):
-    basic_report: _ReportCatalogPublicExamplesBasicReportReport
-
-class _ReportCatalogPublicNamespace(CatalogNamespace):
-    examples: _ReportCatalogPublicExamplesNamespace
-
 class ReportCatalog(CatalogNamespace):
-    public: _ReportCatalogPublicNamespace
     __namespace_list__: list[str]
 
 datacat: DataCatalog
