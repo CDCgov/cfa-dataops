@@ -59,6 +59,7 @@ dataops_datasets = "cfa.dataops.command:get_available_data"
 dataops_stages = "cfa.dataops.command:get_dataset_stages"
 dataops_versions = "cfa.dataops.command:get_dataset_versions"
 dataops_save = "cfa.dataops.command:save_data_locally"
+dataops_catalog_stubs = "cfa.dataops.type_stubs:main"
 
 
 [tool.pytest.ini_options]

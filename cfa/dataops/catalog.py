@@ -9,7 +9,7 @@ from importlib import import_module
 from io import BytesIO
 from pathlib import PurePosixPath
 from types import SimpleNamespace
-from typing import TYPE_CHECKING, Any, Literal, overload
+from typing import Any, Literal, overload
 
 import pandas as pd
 import polars as pl
@@ -85,37 +85,13 @@ report_namespaces = get_dataset_dot_path(all_reports_ns_map)
 
 
 class CatalogNamespace(SimpleNamespace):
-    """Recursive namespace wrapper for statically-typed catalog access.
-
-    Runtime instances still behave like ``SimpleNamespace`` objects, but the
-    declared attributes let editors resolve endpoint methods on dynamic access
-    chains such as ``datacat.public.team.dataset.load``.
-    """
-
-    if TYPE_CHECKING:
-        load: "BlobEndpoint"
-        extract: "BlobEndpoint"
-        data: "BlobEndpoint"
-        _ledger_endpoint: "BlobEndpoint"
-        config: dict[str, Any]
-        __namespace_list__: list[str]
-
-    def __getattr__(self, name: str) -> "CatalogNamespace":
-        raise AttributeError(
-            f"{type(self).__name__!s} object has no attribute {name!r}"
-        )
+    """Runtime namespace wrapper for catalog access."""
 
 
 class DatasetEndpoint:
     """The DatasetEndpoint class for including in the datacat namespace.
     This ends the namespace branching at a config file and creates all the
     blob endpoints for each 'stage' of the config (e.g., extract, load, stage_01)."""
-
-    if TYPE_CHECKING:
-        config: dict[str, Any]
-        load: "BlobEndpoint"
-        extract: "BlobEndpoint"
-        data: "BlobEndpoint"
 
     def __init__(self, config_path: str, defaults: dict, ns: str):
         """Basic functionality to interact with datasets to be included

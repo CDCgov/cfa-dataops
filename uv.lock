@@ -638,7 +638,7 @@ dependencies = [
 
 [[package]]
 name = "cfa-dataops"
-version = "2026.6.5.0"
+version = "2026.6.25.0"
 source = { editable = "." }
 dependencies = [
     { name = "altair" },
@@ -659,9 +659,11 @@ dependencies = [
     { name = "pandas", version = "3.0.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
     { name = "pandera", extra = ["pandas"] },
     { name = "papermill" },
+    { name = "polars" },
     { name = "pyarrow" },
     { name = "pydantic" },
     { name = "rich" },
+    { name = "tomli" },
     { name = "tqdm" },
     { name = "vl-convert-python" },
 ]
@@ -675,12 +677,10 @@ dev = [
     { name = "mkdocs" },
     { name = "mkdocs-material" },
     { name = "mkdocstrings", extra = ["python"] },
-    { name = "polars" },
     { name = "pytest" },
     { name = "pytest-cov" },
     { name = "pytest-mock" },
     { name = "ruff" },
-    { name = "tomli" },
 ]
 
 [package.metadata]
@@ -702,9 +702,11 @@ requires-dist = [
     { name = "pandas", specifier = ">=2.2.3" },
     { name = "pandera", extras = ["pandas"], specifier = ">=0.24.0" },
     { name = "papermill", specifier = ">=2.6.0" },
+    { name = "polars", specifier = ">=1.26.0" },
     { name = "pyarrow", specifier = ">=19.0.1" },
     { name = "pydantic", specifier = ">=2.11.7" },
     { name = "rich", specifier = ">=14.1.0" },
+    { name = "tomli", specifier = ">=2.2.1" },
     { name = "tqdm", specifier = ">=4.67.1" },
     { name = "vl-convert-python", specifier = ">=1.7.0" },
 ]
@@ -718,12 +720,10 @@ dev = [
     { name = "mkdocs", specifier = ">=1.6.1" },
     { name = "mkdocs-material", specifier = ">=9.6.16" },
     { name = "mkdocstrings", extras = ["python"], specifier = ">=0.30.0" },
-    { name = "polars", specifier = ">=1.26.0" },
     { name = "pytest", specifier = ">=8.3.5" },
     { name = "pytest-cov", specifier = ">=6.1.1" },
     { name = "pytest-mock", specifier = ">=3.14.0" },
     { name = "ruff", specifier = ">=0.9.9" },
-    { name = "tomli", specifier = ">=2.2.1" },
 ]
 
 [[package]]
