@@ -1,6 +1,6 @@
 [project]
 name = "cfa.dataops"
-version = "2026.06.05.0"
+version = "2026.06.25.0"
 description = "Data cataloging, ETL, modeling, verification, and validation for CFA"
 authors = [
     { name = "Phil Rogers", email = "ap66@cdc.gov" },
@@ -39,8 +39,16 @@ dependencies = [
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
+[tool.hatch.build.targets.sdist]
+include = [
+    { path = "cfa/dataops/py.typed" },
+]
+
 [tool.hatch.build.targets.wheel]
 packages = ["cfa"]
+include = [
+    { path = "cfa/dataops/py.typed" },
+]
 
 [tool.hatch.metadata]
 allow-direct-references = true
