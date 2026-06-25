@@ -5,15 +5,10 @@ from typing import Any, Literal, overload
 import pandas as pd
 import polars as pl
 
-from .reporting.catalog import NotebookEndpoint
-
-
 def get_all_catalogs() -> list[tuple[str, str, str]]: ...
-
 
 class CatalogNamespace(SimpleNamespace):
     pass
-
 
 class DatasetEndpoint:
     config_path: str
@@ -21,7 +16,6 @@ class DatasetEndpoint:
     config: dict[str, Any]
     __ns_str__: str
     _ledger_location: dict[str, Any]
-
 
 class BlobEndpoint:
     account: str
@@ -99,13 +93,11 @@ class BlobEndpoint:
         auto_version: bool = False,
     ) -> None: ...
 
-
 def dict_to_sn(
     d: Any,
     defaults: dict[str, Any] | None = None,
     ns: str = "",
 ) -> CatalogNamespace: ...
-
 
 class DataCatalog(CatalogNamespace):
     __namespace_list__: list[str]
