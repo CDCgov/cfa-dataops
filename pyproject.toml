@@ -41,13 +41,15 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.sdist]
 include = [
-    { path = "cfa/dataops/py.typed" },
+    "cfa/dataops/py.typed",
+    "cfa/dataops/stub_templates/*.mako",
 ]
 
 [tool.hatch.build.targets.wheel]
 packages = ["cfa"]
 include = [
-    { path = "cfa/dataops/py.typed" },
+    "cfa/dataops/py.typed",
+    "cfa/dataops/stub_templates/*.mako",
 ]
 
 [tool.hatch.metadata]

@@ -4,13 +4,16 @@ import argparse
 import keyword
 from collections.abc import Mapping
 from dataclasses import dataclass, field
+from importlib.resources import files
 from pathlib import Path
 from typing import Any
 
 import tomli
+from mako.template import Template
 
 DATASET_STAGE_PREFIX = "stage"
 DEFAULT_STUB_ROOT = Path("typings")
+TEMPLATE_PACKAGE = "cfa.dataops.stub_templates"
 
 
 @dataclass
@@ -18,6 +21,24 @@ class _Node:
     children: dict[str, "_Node"] = field(default_factory=dict)
     dataset_config_path: str | None = None
     report_path: str | None = None
+
+
+@dataclass(frozen=True)
+class _StubAttribute:
+    name: str
+    type_name: str
+
+
+@dataclass(frozen=True)
+class _StubClass:
+    name: str
+    base: str
+    attributes: tuple[_StubAttribute, ...] = ()
+
+
+@dataclass(frozen=True)
+class _StubModel:
+    classes: tuple[_StubClass, ...]
 
 
 def _ensure_identifier(name: str, namespace: tuple[str, ...]) -> str:
@@ -100,74 +121,69 @@ def _dataset_stage_names(config_path: str) -> list[str]:
     ]
 
 
-def _indent(lines: list[str], level: int = 1) -> list[str]:
-    prefix = "    " * level
-    return [f"{prefix}{line}" if line else "" for line in lines]
+def _dataset_class(class_name: str, config_path: str) -> _StubClass:
+    attributes = [_StubAttribute("config", "dict[str, Any]")]
+    attributes.extend(
+        _StubAttribute(stage, "BlobEndpoint")
+        for stage in _dataset_stage_names(config_path)
+    )
+    return _StubClass(
+        name=class_name,
+        base="DatasetEndpoint",
+        attributes=tuple(attributes),
+    )
 
 
-def _empty_body(lines: list[str]) -> list[str]:
-    return lines if lines else ["pass"]
+def _report_class(class_name: str) -> _StubClass:
+    return _StubClass(name=class_name, base="NotebookEndpoint")
 
 
-def _emit_dataset_class(
-    lines: list[str],
-    class_name: str,
-    config_path: str,
-) -> None:
-    stages = _dataset_stage_names(config_path)
-    body = ["config: dict[str, Any]"]
-    body.extend(f"{stage}: BlobEndpoint" for stage in stages)
-    lines.append(f"class {class_name}(DatasetEndpoint):")
-    lines.extend(_indent(_empty_body(body)))
-    lines.append("")
-
-
-def _emit_report_class(lines: list[str], class_name: str) -> None:
-    lines.append(f"class {class_name}(NotebookEndpoint):")
-    lines.extend(_indent(["pass"]))
-    lines.append("")
-
-
-def _emit_namespace_class(
-    lines: list[str],
+def _namespace_classes(
     node: _Node,
     *,
     prefix: str,
     path: tuple[str, ...],
     root_name: str,
     is_dataset_catalog: bool,
-) -> str:
+) -> tuple[list[_StubClass], str]:
+    classes: list[_StubClass] = []
     child_attrs: list[tuple[str, str]] = []
     for name, child in sorted(node.children.items()):
         child_path = (*path, name)
         if child.dataset_config_path is not None:
             child_class = _class_name(prefix, child_path, "Dataset")
-            _emit_dataset_class(lines, child_class, child.dataset_config_path)
+            classes.append(_dataset_class(child_class, child.dataset_config_path))
         elif child.report_path is not None:
             child_class = _class_name(prefix, child_path, "Report")
-            _emit_report_class(lines, child_class)
+            classes.append(_report_class(child_class))
         else:
-            child_class = _emit_namespace_class(
-                lines,
+            child_classes, child_class = _namespace_classes(
                 child,
                 prefix=prefix,
                 path=child_path,
                 root_name=root_name,
                 is_dataset_catalog=is_dataset_catalog,
             )
+            classes.extend(child_classes)
         child_attrs.append((name, child_class))
 
     class_name = root_name if not path else _class_name(prefix, path, "Namespace")
-    body = [f"{name}: {child_class}" for name, child_class in child_attrs]
+    attributes = [
+        _StubAttribute(name, child_class) for name, child_class in child_attrs
+    ]
     if not path:
-        body.append("__namespace_list__: list[str]")
+        attributes.append(_StubAttribute("__namespace_list__", "list[str]"))
     elif is_dataset_catalog and len(path) == 1:
-        body.append("_ledger_endpoint: BlobEndpoint")
+        attributes.append(_StubAttribute("_ledger_endpoint", "BlobEndpoint"))
 
-    lines.append(f"class {class_name}(CatalogNamespace):")
-    lines.extend(_indent(_empty_body(body)))
-    lines.append("")
-    return class_name
+    classes.append(
+        _StubClass(
+            name=class_name,
+            base="CatalogNamespace",
+            attributes=tuple(attributes),
+        )
+    )
+    return classes, class_name
 
 
 def _build_dataset_tree(dataset_ns_map: Mapping[str, Any]) -> _Node:
@@ -184,160 +200,48 @@ def _build_report_tree(report_ns_map: Mapping[str, Any]) -> _Node:
     return root
 
 
-def render_catalog_stub(
+def _build_stub_model(
     dataset_ns_map: Mapping[str, Any],
     report_ns_map: Mapping[str, Any],
-) -> str:
-    """Render a precise ``cfa.dataops.catalog`` stub for installed catalogs."""
-
-    lines = [
-        "from collections.abc import Sequence",
-        "from types import SimpleNamespace",
-        "from typing import Any, Literal, overload",
-        "",
-        "import pandas as pd",
-        "import polars as pl",
-        "",
-        "from .reporting.catalog import NotebookEndpoint",
-        "",
-        "",
-        "def get_all_catalogs() -> list[tuple[str, str, str]]: ...",
-        "",
-        "",
-        "class CatalogNamespace(SimpleNamespace):",
-        "    pass",
-        "",
-        "",
-        "class DatasetEndpoint:",
-        "    config_path: str",
-        "    defaults: dict[str, Any]",
-        "    config: dict[str, Any]",
-        "    __ns_str__: str",
-        "    _ledger_location: dict[str, Any]",
-        "",
-        "",
-        "class BlobEndpoint:",
-        "    account: str",
-        "    container: str",
-        "    prefix: str",
-        "    ledger_location: dict[str, Any]",
-        "    is_ledger: bool",
-        "    __ns_str__: str",
-        "    def write_blob(",
-        "        self,",
-        "        file_buffer: bytes | Sequence[bytes],",
-        "        path_after_prefix: str,",
-        "        auto_version: bool = False,",
-        "        append: bool = False,",
-        "    ) -> None: ...",
-        "    def read_blobs(",
-        "        self,",
-        "        version_spec: str | None = None,",
-        '        selection: Literal["newest", "oldest", "all"] = "newest",',
-        "        print_version: bool = True,",
-        "    ) -> list[bytes]: ...",
-        "    def read_csv(self, suffix: str) -> pd.DataFrame: ...",
-        "    def get_versions(self) -> list[str]: ...",
-        "    def get_file_ext(",
-        "        self,",
-        "        version_spec: str | None = None,",
-        '        selection: Literal["newest", "oldest", "all"] = "newest",',
-        "    ) -> str: ...",
-        "    def download_version_to_local(",
-        "        self,",
-        "        local_path: str,",
-        "        version_spec: str | None = None,",
-        "        force: bool = False,",
-        '        selection: Literal["newest", "oldest", "all"] = "newest",',
-        "    ) -> bool: ...",
-        "    @overload",
-        "    def get_dataframe(",
-        "        self,",
-        '        output: Literal["pandas", "pd"] = "pandas",',
-        "        version_spec: str | None = None,",
-        '        selection: Literal["newest", "oldest"] = "newest",',
-        "    ) -> pd.DataFrame: ...",
-        "    @overload",
-        "    def get_dataframe(",
-        "        self,",
-        '        output: Literal["polars", "pl"],',
-        "        version_spec: str | None = None,",
-        '        selection: Literal["newest", "oldest"] = "newest",',
-        "    ) -> pl.DataFrame: ...",
-        "    @overload",
-        "    def get_dataframe(",
-        "        self,",
-        '        output: Literal["pl_lazy", "lazy"],',
-        "        version_spec: str | None = None,",
-        '        selection: Literal["newest", "oldest"] = "newest",',
-        "    ) -> pl.LazyFrame: ...",
-        "    def ledger_entry(self, action: str) -> None: ...",
-        "    def save_dataframe(",
-        "        self,",
-        "        df: pd.DataFrame | pl.DataFrame,",
-        "        path_after_prefix: str,",
-        '        file_format: str = "parquet",',
-        "        auto_version: bool = False,",
-        "    ) -> None: ...",
-        "    def save_file_to_blob(",
-        "        self,",
-        "        file_path: str,",
-        "        path_after_prefix: str,",
-        "        auto_version: bool = False,",
-        "    ) -> None: ...",
-        "    def save_dir_to_blob(",
-        "        self,",
-        "        dir_path: str,",
-        "        path_after_prefix: str,",
-        "        auto_version: bool = False,",
-        "    ) -> None: ...",
-        "",
-        "",
-        "def dict_to_sn(",
-        "    d: Any,",
-        "    defaults: dict[str, Any] | None = None,",
-        '    ns: str = "",',
-        ") -> CatalogNamespace: ...",
-        "",
-        "",
-    ]
-
-    _emit_namespace_class(
-        lines,
+) -> _StubModel:
+    dataset_classes, _ = _namespace_classes(
         _build_dataset_tree(dataset_ns_map),
         prefix="DataCatalog",
         path=(),
         root_name="DataCatalog",
         is_dataset_catalog=True,
     )
-    _emit_namespace_class(
-        lines,
+    report_classes, _ = _namespace_classes(
         _build_report_tree(report_ns_map),
         prefix="ReportCatalog",
         path=(),
         root_name="ReportCatalog",
         is_dataset_catalog=False,
     )
-    lines.extend(
-        [
-            "datacat: DataCatalog",
-            "reportcat: ReportCatalog",
-            "",
-        ]
+    return _StubModel(classes=tuple([*dataset_classes, *report_classes]))
+
+
+def _render_template(template_name: str, **context: Any) -> str:
+    template = files(TEMPLATE_PACKAGE).joinpath(template_name).read_text(
+        encoding="utf-8"
     )
-    return "\n".join(lines)
+    return Template(template).render(**context)
+
+
+def render_catalog_stub(
+    dataset_ns_map: Mapping[str, Any],
+    report_ns_map: Mapping[str, Any],
+) -> str:
+    """Render a precise ``cfa.dataops.catalog`` stub for installed catalogs."""
+
+    return _render_template(
+        "catalog.pyi.mako",
+        model=_build_stub_model(dataset_ns_map, report_ns_map),
+    )
 
 
 def render_init_stub() -> str:
-    return "\n".join(
-        [
-            "from .catalog import datacat as datacat, reportcat as reportcat",
-            "",
-            "__version__: str",
-            '__all__: list[str]',
-            "",
-        ]
-    )
+    return _render_template("init.pyi.mako")
 
 
 def write_catalog_stubs(
