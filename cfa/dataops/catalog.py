@@ -1,6 +1,7 @@
 """building a validated datasource namespace"""
 
 import json
+import logging
 import os
 import pkgutil
 from collections.abc import Sequence
@@ -42,6 +43,9 @@ _here = os.path.abspath(os.path.dirname(__file__))
 _config = ConfigParser()
 _config.read(os.path.join(_here, "config.ini"))
 
+logger = logging.getLogger(__name__)
+logger.addHandler(logging.NullHandler())
+
 
 def get_all_catalogs() -> list:
     """Get a list of all available dataops catalogs.
@@ -58,7 +62,7 @@ def get_all_catalogs() -> list:
             if ispkg:
                 catalogs.append((catalog_nspace, modname, module_finder.path))
     except ModuleNotFoundError:
-        print(f"No catalogs exist in namespace {catalog_nspace}")
+        logger.warning("No catalogs exist in namespace %s", catalog_nspace)
 
     return catalogs
 
@@ -337,7 +341,7 @@ class BlobEndpoint:
                     f"Version {version} not found in available versions: {available_versions}"
                 )
             if print_version:
-                print(f"Using version: {version}")
+                logger.info("Using version: %s", version)
             if isinstance(version, list):
                 walk_path = [f"{self.prefix}/{v}/" for v in version]
             else:
@@ -420,6 +424,7 @@ class BlobEndpoint:
         output: Literal["pandas", "pd"] = "pandas",
         version_spec: str | None = None,
         selection: Literal["newest", "oldest"] = "newest",
+        print_version: bool = False,
     ) -> pd.DataFrame: ...
 
     @overload
@@ -428,6 +433,7 @@ class BlobEndpoint:
         output: Literal["polars", "pl"],
         version_spec: str | None = None,
         selection: Literal["newest", "oldest"] = "newest",
+        print_version: bool = False,
     ) -> pl.DataFrame: ...
 
     @overload
@@ -436,6 +442,7 @@ class BlobEndpoint:
         output: Literal["pl_lazy", "lazy"],
         version_spec: str | None = None,
         selection: Literal["newest", "oldest"] = "newest",
+        print_version: bool = False,
     ) -> pl.LazyFrame: ...
 
     def get_dataframe(
@@ -443,6 +450,7 @@ class BlobEndpoint:
         output: Literal["pandas", "pd", "polars", "pl", "pl_lazy", "lazy"] = "pandas",
         version_spec: str | None = None,
         selection: Literal["newest", "oldest"] = "newest",
+        print_version: bool = False,
     ) -> pd.DataFrame | pl.DataFrame | pl.LazyFrame:
         """Get the data as a pandas or polars dataframe
 
@@ -452,6 +460,7 @@ class BlobEndpoint:
             version_spec (str, optional): the version of the data to get.
                 Defaults to "latest".
             selection (Literal["newest", "oldest", "all"], optional): whether to get the newest, oldest, or all matching versions. Defaults to "newest".
+            print_version (bool, optional): whether to log the resolved version information. Defaults to False.
 
         Raises:
             ValueError: if output is not one of
@@ -468,7 +477,7 @@ class BlobEndpoint:
             )
         # Fetch version blobs once and validate before deriving file extension.
         version_blobs = self._get_version_blobs(
-            version_spec=version_spec, selection=selection
+            version_spec=version_spec, selection=selection, print_version=print_version
         )
         if not version_blobs:
             raise ValueError(
@@ -518,7 +527,7 @@ class BlobEndpoint:
             else:
                 raise ValueError(f"Lazy loading not supported for {file_ext} files.")
         blobs = self.read_blobs(
-            version_spec=version_spec, selection=selection, print_version=False
+            version_spec=version_spec, selection=selection, print_version=print_version
         )
         blob_bytes = [
             blob if isinstance(blob, bytes) else blob.content_as_bytes()
@@ -623,7 +632,7 @@ class BlobEndpoint:
             )
         if file_format in ["json", "jsonl"] and path_after_prefix.endswith(".json"):
             path_after_prefix = path_after_prefix[:-5] + ".jsonl"
-            print("Changing file extension to .jsonl for line-delimited JSON.")
+            logger.info("Changing file extension to .jsonl for line-delimited JSON.")
         if isinstance(df, pd.DataFrame):
             if file_format == "parquet":
                 pq_bytes = df.to_parquet(index=False, compression="snappy")
