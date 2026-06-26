@@ -655,7 +655,7 @@ dependencies = [
 
 [[package]]
 name = "cfa-dataops"
-version = "2026.6.5.0"
+version = "2026.6.25.0"
 source = { editable = "." }
 dependencies = [
     { name = "altair" },
