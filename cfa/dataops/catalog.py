@@ -44,7 +44,8 @@ _config = ConfigParser()
 _config.read(os.path.join(_here, "config.ini"))
 
 logger = logging.getLogger(__name__)
-logger.addHandler(logging.NullHandler())
+if not logger.handlers:
+    logger.addHandler(logging.NullHandler())
 
 
 def get_all_catalogs() -> list:
