@@ -33,6 +33,18 @@ This project provides data tools and low friction access to versioned datasets w
    df = datacat.{{dataset}}.load.get_dataframe()
    df.glimpse()
    ```
+6. Generate project-local type stubs for the installed catalog:
+   ```bash
+   dataops_catalog_stubs
+   ```
+
+   If using uv, run:
+   ```bash
+   uv run dataops_catalog_stubs
+   ```
+
+   This writes stubs under `typings/`, which Pyright/Pylance uses by default.
+   For mypy, include that directory with `MYPYPATH=typings`.
 
 Read the [Dataset User Guide](docs/data_user_guide.md) for more information about accessing datasets.
 
