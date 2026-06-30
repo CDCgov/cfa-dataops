@@ -37,6 +37,12 @@ This project provides data tools and low friction access to versioned datasets w
    ```bash
    dataops_catalog_stubs
    ```
+
+   If using uv, run:
+   ```bash
+   uv run dataops_catalog_stubs
+   ```
+
    This writes stubs under `typings/`, which Pyright/Pylance uses by default.
    For mypy, include that directory with `MYPYPATH=typings`.
 
