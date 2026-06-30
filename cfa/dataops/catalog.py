@@ -62,7 +62,9 @@ def get_all_catalogs() -> list:
         for module_finder, modname, ispkg in pkgutil.iter_modules(catalog_pkg.__path__):
             if ispkg:
                 catalogs.append((catalog_nspace, modname, module_finder.path))
-    except ModuleNotFoundError:
+    except ModuleNotFoundError as e:
+        if e.name != catalog_nspace:
+            raise
         logger.warning("No catalogs exist in namespace %s", catalog_nspace)
 
     return catalogs
