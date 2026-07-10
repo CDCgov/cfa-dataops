@@ -602,6 +602,41 @@ class BlobEndpoint:
             overwrite=False,
         )
 
+    def resolve_version(
+        self,
+        version_spec: str | None = None,
+        selection: Literal["newest", "oldest"] = "newest",
+    ) -> str | None:
+        """Resolve the version of the dataset based on the version specification and selection criteria.
+
+        Args:
+            version_spec (str | None): the version specification to resolve
+            selection (Literal["newest", "oldest"]): whether to select the newest or oldest version
+
+        Returns:
+            str | None: the resolved version, or None if not found
+        """
+        version_blobs = self._get_version_blobs(
+            version_spec=version_spec, selection=selection
+        )
+        if not version_blobs:
+            return {
+                "version": None,
+                "blob_url": None,
+                "version_spec": version_spec,
+                "selection": selection,
+            }
+        name = version_blobs[0]["name"]
+        file_ext = PurePosixPath(name).suffix.lstrip(".").lower()
+        path = str(PurePosixPath(name).parent / f"*.{file_ext}")
+        fullpath = f"az://{self.container}/{path}"
+        return {
+            "version": name,
+            "blob_url": fullpath,
+            "version_spec": version_spec,
+            "selection": selection,
+        }
+
     def save_dataframe(
         self,
         df: pd.DataFrame | pl.DataFrame,
