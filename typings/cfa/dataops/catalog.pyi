@@ -44,6 +44,11 @@ class BlobEndpoint:
         version_spec: str | None = None,
         selection: Literal["newest", "oldest", "all"] = "newest",
     ) -> str: ...
+    def resolve_version(
+        self,
+        version_spec: str | None = None,
+        selection: Literal["newest", "oldest", "all"] = "newest",
+    ) -> dict[str, Any]: ...
     def download_version_to_local(
         self,
         local_path: str,
@@ -57,6 +62,7 @@ class BlobEndpoint:
         output: Literal["pandas", "pd"] = "pandas",
         version_spec: str | None = None,
         selection: Literal["newest", "oldest"] = "newest",
+        print_version: bool = True,
     ) -> pd.DataFrame: ...
     @overload
     def get_dataframe(
@@ -64,6 +70,7 @@ class BlobEndpoint:
         output: Literal["polars", "pl"],
         version_spec: str | None = None,
         selection: Literal["newest", "oldest"] = "newest",
+        print_version: bool = True,
     ) -> pl.DataFrame: ...
     @overload
     def get_dataframe(
@@ -71,6 +78,7 @@ class BlobEndpoint:
         output: Literal["pl_lazy", "lazy"],
         version_spec: str | None = None,
         selection: Literal["newest", "oldest"] = "newest",
+        print_version: bool = True,
     ) -> pl.LazyFrame: ...
     def ledger_entry(self, action: str) -> None: ...
     def save_dataframe(

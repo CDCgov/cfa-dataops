@@ -5,6 +5,7 @@ import os
 import pkgutil
 from collections.abc import Sequence
 from configparser import ConfigParser
+from dataclasses import dataclass
 from importlib import import_module
 from io import BytesIO
 from pathlib import PurePosixPath
@@ -86,6 +87,12 @@ report_namespaces = get_dataset_dot_path(all_reports_ns_map)
 
 class CatalogNamespace(SimpleNamespace):
     """Runtime namespace wrapper for catalog access."""
+
+
+@dataclass(frozen=True)
+class _ResolvedVersion:
+    version: str | list[str] | None
+    blob_prefixes: list[str]
 
 
 class DatasetEndpoint:
@@ -304,6 +311,71 @@ class BlobEndpoint:
             version_spec=version_spec, selection=selection, print_version=False
         )[0]["name"].split(".")[-1]
 
+    def resolve_version(
+        self,
+        version_spec: str | None = None,
+        selection: Literal["newest", "oldest", "all"] = "newest",
+    ) -> dict[str, Any]:
+        """Resolve a version specifier without loading blob data.
+
+        Args:
+            version_spec (str | None, optional): Version specifier to pass through to
+                ``version_matcher``. Defaults to ``None``.
+            selection (Literal["newest", "oldest", "all"], optional): When matching multiple versions, choose the
+                newest matching version when ``"newest"``, the oldest matching version
+                when ``"oldest"``, or all matching versions when ``"all"``.
+
+        Returns:
+            dict[str, Any]: Metadata for the resolved version, including the
+            selected version, original version specifier, selection strategy,
+            resolved blob prefixes, and Azure blob prefix URLs.
+
+        Raises:
+            ValueError: If the requested version cannot be resolved.
+        """
+        resolved = self._resolve_version(
+            version_spec=version_spec, selection=selection
+        )
+
+        return {
+            "version": resolved.version,
+            "version_spec": version_spec,
+            "selection": selection,
+            "account": self.account,
+            "container": self.container,
+            "blob_prefixes": resolved.blob_prefixes,
+            "blob_urls": [
+                f"az://{self.container}/{blob_prefix}"
+                for blob_prefix in resolved.blob_prefixes
+            ],
+        }
+
+    def _resolve_version(
+        self,
+        version_spec: str | None = None,
+        selection: Literal["newest", "oldest", "all"] = "newest",
+    ) -> _ResolvedVersion:
+        """Resolve a version specifier into version metadata."""
+        if not check_ext_env():
+            raise RuntimeError("No EXT access configured.")
+        if self.is_ledger:
+            return _ResolvedVersion(
+                version=None,
+                blob_prefixes=[f"{self.prefix.removesuffix('/')}/"],
+            )
+
+        available_versions = self.get_versions()
+        version = version_matcher(version_spec, available_versions, selection=selection)
+        if not version:
+            raise ValueError(
+                f"Version {version} not found in available versions: {available_versions}"
+            )
+        if isinstance(version, list):
+            blob_prefixes = [f"{self.prefix}/{v}/" for v in version]
+        else:
+            blob_prefixes = [f"{self.prefix}/{version}/"]
+        return _ResolvedVersion(version=version, blob_prefixes=blob_prefixes)
+
     def _get_version_blobs(
         self,
         version_spec: str | None = None,
@@ -328,51 +400,25 @@ class BlobEndpoint:
         Raises:
             ValueError: If the requested version cannot be resolved.
         """
-        # check credential access
-        if not check_ext_env():
-            raise RuntimeError("No EXT access configured.")
-        if not self.is_ledger:
-            available_versions = self.get_versions()
-            version = version_matcher(
-                version_spec, available_versions, selection=selection
-            )
-            if not version:
-                raise ValueError(
-                    f"Version {version} not found in available versions: {available_versions}"
+        resolved = self._resolve_version(
+            version_spec=version_spec, selection=selection
+        )
+        if print_version and not self.is_ledger:
+            print(f"Using version: {resolved.version}")
+
+        all_blobs = []
+        for blob_prefix in resolved.blob_prefixes:
+            all_blobs.extend(
+                walk_blobs_in_container(
+                    name_starts_with=blob_prefix,
+                    account_name=self.account,
+                    container_name=self.container,
                 )
-            if print_version:
-                print(f"Using version: {version}")
-            if isinstance(version, list):
-                walk_path = [f"{self.prefix}/{v}/" for v in version]
-            else:
-                walk_path = f"{self.prefix}/{version}/"
-        else:
-            walk_path = f"{self.prefix.removesuffix('/')}/"
-        if isinstance(walk_path, list):
-            all_blobs = []
-            for wp in walk_path:
-                all_blobs.extend(
-                    walk_blobs_in_container(
-                        name_starts_with=wp,
-                        account_name=self.account,
-                        container_name=self.container,
-                    )
-                )
-            return sorted(
-                all_blobs,
-                key=lambda x: x["creation_time"],
             )
-        else:
-            return sorted(
-                list(
-                    walk_blobs_in_container(
-                        name_starts_with=walk_path,
-                        account_name=self.account,
-                        container_name=self.container,
-                    )
-                ),
-                key=lambda x: x["creation_time"],
-            )
+        return sorted(
+            all_blobs,
+            key=lambda x: x["creation_time"],
+        )
 
     def download_version_to_local(
         self,
@@ -424,6 +470,7 @@ class BlobEndpoint:
         output: Literal["pandas", "pd"] = "pandas",
         version_spec: str | None = None,
         selection: Literal["newest", "oldest"] = "newest",
+        print_version: bool = True,
     ) -> pd.DataFrame: ...
 
     @overload
@@ -432,6 +479,7 @@ class BlobEndpoint:
         output: Literal["polars", "pl"],
         version_spec: str | None = None,
         selection: Literal["newest", "oldest"] = "newest",
+        print_version: bool = True,
     ) -> pl.DataFrame: ...
 
     @overload
@@ -440,6 +488,7 @@ class BlobEndpoint:
         output: Literal["pl_lazy", "lazy"],
         version_spec: str | None = None,
         selection: Literal["newest", "oldest"] = "newest",
+        print_version: bool = True,
     ) -> pl.LazyFrame: ...
 
     def get_dataframe(
@@ -447,6 +496,7 @@ class BlobEndpoint:
         output: Literal["pandas", "pd", "polars", "pl", "pl_lazy", "lazy"] = "pandas",
         version_spec: str | None = None,
         selection: Literal["newest", "oldest"] = "newest",
+        print_version: bool = True,
     ) -> pd.DataFrame | pl.DataFrame | pl.LazyFrame:
         """Get the data as a pandas or polars dataframe
 
@@ -455,7 +505,8 @@ class BlobEndpoint:
                 either 'pandas' or 'polars' or 'pl_lazy'. Defaults to "pandas".
             version_spec (str, optional): the version of the data to get.
                 Defaults to "latest".
-            selection (Literal["newest", "oldest", "all"], optional): whether to get the newest, oldest, or all matching versions. Defaults to "newest".
+            selection (Literal["newest", "oldest"], optional): whether to get the newest or oldest matching version. Defaults to "newest".
+            print_version (bool, optional): whether to print the resolved version. Defaults to True.
 
         Raises:
             ValueError: if output is not one of
@@ -472,7 +523,9 @@ class BlobEndpoint:
             )
         # Fetch version blobs once and validate before deriving file extension.
         version_blobs = self._get_version_blobs(
-            version_spec=version_spec, selection=selection
+            version_spec=version_spec,
+            selection=selection,
+            print_version=print_version,
         )
         if not version_blobs:
             raise ValueError(
