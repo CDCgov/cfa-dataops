@@ -634,7 +634,7 @@ class BlobEndpoint:
         path = str(PurePosixPath(name).parent / f"*.{file_ext}")
         fullpath = f"az://{self.container}/{path}"
         return {
-            "version": name,
+            "version": version,
             "blob_url": fullpath,
             "version_spec": version_spec,
             "selection": selection,
