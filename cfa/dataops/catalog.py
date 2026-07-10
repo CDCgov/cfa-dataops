@@ -424,6 +424,7 @@ class BlobEndpoint:
         output: Literal["pandas", "pd"] = "pandas",
         version_spec: str | None = None,
         selection: Literal["newest", "oldest"] = "newest",
+        with_metadata: bool = False,
         print_version: bool = False,
     ) -> pd.DataFrame: ...
 
@@ -433,6 +434,7 @@ class BlobEndpoint:
         output: Literal["polars", "pl"],
         version_spec: str | None = None,
         selection: Literal["newest", "oldest"] = "newest",
+        with_metadata: bool = False,
         print_version: bool = False,
     ) -> pl.DataFrame: ...
 
@@ -442,6 +444,7 @@ class BlobEndpoint:
         output: Literal["pl_lazy", "lazy"],
         version_spec: str | None = None,
         selection: Literal["newest", "oldest"] = "newest",
+        with_metadata: bool = False,
         print_version: bool = False,
     ) -> pl.LazyFrame: ...
 
@@ -450,6 +453,7 @@ class BlobEndpoint:
         output: Literal["pandas", "pd", "polars", "pl", "pl_lazy", "lazy"] = "pandas",
         version_spec: str | None = None,
         selection: Literal["newest", "oldest"] = "newest",
+        with_metadata: bool = False,
         print_version: bool = False,
     ) -> pd.DataFrame | pl.DataFrame | pl.LazyFrame:
         """Get the data as a pandas or polars dataframe
@@ -460,6 +464,7 @@ class BlobEndpoint:
             version_spec (str, optional): the version of the data to get.
                 Defaults to "latest".
             selection (Literal["newest", "oldest", "all"], optional): whether to get the newest, oldest, or all matching versions. Defaults to "newest".
+            with_metadata (bool, optional): whether to include metadata columns. Defaults to False.
             print_version (bool, optional): whether to print the version being used. Defaults to False.
 
         Raises:
@@ -475,6 +480,12 @@ class BlobEndpoint:
             raise ValueError(
                 f"Output {output} needs to be 'pandas', 'polars', 'pd', 'pl', 'pl_lazy', or 'lazy'."
             )
+        if with_metadata:
+            available_versions = self.get_versions()
+            version = version_matcher(
+                version_spec, available_versions, selection=selection
+            )
+
         # Fetch version blobs once and validate before deriving file extension.
         version_blobs = self._get_version_blobs(
             version_spec=version_spec, selection=selection, print_version=print_version
@@ -485,10 +496,10 @@ class BlobEndpoint:
             )
         name = version_blobs[0]["name"]
         file_ext = PurePosixPath(name).suffix.lstrip(".").lower()
+        path = str(PurePosixPath(name).parent / f"*.{file_ext}")
+        fullpath = f"az://{self.container}/{path}"
         if output in ["pl_lazy", "lazy"]:
             if file_ext in ["parquet", "parq"]:
-                path = str(PurePosixPath(name).parent / f"*.{file_ext}")
-                fullpath = f"az://{self.container}/{path}"
                 df = pl.scan_parquet(
                     fullpath,
                     storage_options={"account_name": self.account},
@@ -538,6 +549,11 @@ class BlobEndpoint:
             if output in ["pandas", "pd"]:
                 df = pd.concat([pd.read_csv(blob) for blob in blob_files])
                 df.reset_index(inplace=True, drop=True)
+                if with_metadata:
+                    df.attrs["version"] = version
+                    df.attrs["blob_url"] = fullpath
+                    df.attrs["version_spec"] = version_spec
+                    df.attrs["selection"] = selection
             else:
                 df = pl.concat(
                     [
@@ -551,6 +567,11 @@ class BlobEndpoint:
             if output in ["pandas", "pd"]:
                 df = pd.concat([pd.read_json(blob) for blob in blob_files])
                 df.reset_index(inplace=True, drop=True)
+                if with_metadata:
+                    df.attrs["version"] = version
+                    df.attrs["blob_url"] = fullpath
+                    df.attrs["version_spec"] = version_spec
+                    df.attrs["selection"] = selection
             else:
                 df = pl.concat(
                     [
@@ -564,6 +585,11 @@ class BlobEndpoint:
             if output in ["pandas", "pd"]:
                 df = pd.concat([pd.read_json(blob, lines=True) for blob in blob_files])
                 df.reset_index(inplace=True, drop=True)
+                if with_metadata:
+                    df.attrs["version"] = version
+                    df.attrs["blob_url"] = fullpath
+                    df.attrs["version_spec"] = version_spec
+                    df.attrs["selection"] = selection
             else:
                 df = pl.concat(
                     [pl.read_ndjson(blob) for blob in blob_files],
@@ -574,6 +600,11 @@ class BlobEndpoint:
             if output in ["pandas", "pd"]:
                 df = pd.concat([pd.read_parquet(pq_file) for pq_file in blob_files])
                 df.reset_index(inplace=True, drop=True)
+                if with_metadata:
+                    df.attrs["version"] = version
+                    df.attrs["blob_url"] = fullpath
+                    df.attrs["version_spec"] = version_spec
+                    df.attrs["selection"] = selection
             else:
                 df = pl.concat(
                     [pl.read_parquet(pq_file) for pq_file in blob_files],
