@@ -424,6 +424,7 @@ class BlobEndpoint:
         output: Literal["pandas", "pd"] = "pandas",
         version_spec: str | None = None,
         selection: Literal["newest", "oldest"] = "newest",
+        print_version: bool = False,
     ) -> pd.DataFrame: ...
 
     @overload
@@ -432,6 +433,7 @@ class BlobEndpoint:
         output: Literal["polars", "pl"],
         version_spec: str | None = None,
         selection: Literal["newest", "oldest"] = "newest",
+        print_version: bool = False,
     ) -> pl.DataFrame: ...
 
     @overload
@@ -440,6 +442,7 @@ class BlobEndpoint:
         output: Literal["pl_lazy", "lazy"],
         version_spec: str | None = None,
         selection: Literal["newest", "oldest"] = "newest",
+        print_version: bool = False,
     ) -> pl.LazyFrame: ...
 
     def get_dataframe(
@@ -447,6 +450,7 @@ class BlobEndpoint:
         output: Literal["pandas", "pd", "polars", "pl", "pl_lazy", "lazy"] = "pandas",
         version_spec: str | None = None,
         selection: Literal["newest", "oldest"] = "newest",
+        print_version: bool = False,
     ) -> pd.DataFrame | pl.DataFrame | pl.LazyFrame:
         """Get the data as a pandas or polars dataframe
 
@@ -456,6 +460,7 @@ class BlobEndpoint:
             version_spec (str, optional): the version of the data to get.
                 Defaults to "latest".
             selection (Literal["newest", "oldest", "all"], optional): whether to get the newest, oldest, or all matching versions. Defaults to "newest".
+            print_version (bool, optional): whether to print the version being used. Defaults to False.
 
         Raises:
             ValueError: if output is not one of
@@ -472,7 +477,7 @@ class BlobEndpoint:
             )
         # Fetch version blobs once and validate before deriving file extension.
         version_blobs = self._get_version_blobs(
-            version_spec=version_spec, selection=selection
+            version_spec=version_spec, selection=selection, print_version=print_version
         )
         if not version_blobs:
             raise ValueError(
