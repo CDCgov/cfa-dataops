@@ -616,10 +616,13 @@ class BlobEndpoint:
         Returns:
             str | None: the resolved version, or None if not found
         """
+        available_versions = self.get_versions()
+        version = version_matcher(version_spec, available_versions, selection=selection)
         version_blobs = self._get_version_blobs(
-            version_spec=version_spec, selection=selection
+            version_spec=version_spec, selection=selection, print_version=False
         )
-        if not version_blobs:
+
+        if not version:
             return {
                 "version": None,
                 "blob_url": None,
