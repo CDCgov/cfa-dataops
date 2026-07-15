@@ -463,7 +463,7 @@ class BlobEndpoint:
                 either 'pandas' or 'polars' or 'pl_lazy'. Defaults to "pandas".
             version_spec (str, optional): the version of the data to get.
                 Defaults to "latest".
-            selection (Literal["newest", "oldest", "all"], optional): whether to get the newest, oldest, or all matching versions. Defaults to "newest".
+            selection (Literal["newest", "oldest"], optional): whether to get the newest or oldest matching version. Defaults to "newest".
             with_metadata (bool, optional): whether to include metadata attributes. Defaults to False.
             print_version (bool, optional): whether to print the version being used. Defaults to False.
 
