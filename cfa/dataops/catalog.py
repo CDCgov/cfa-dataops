@@ -507,6 +507,11 @@ class BlobEndpoint:
                         credential=ManagedIdentityCredential()
                     ),
                 )
+                if with_metadata:
+                    df.config_meta.set(version=version)
+                    df.config_meta.set(blob_url=fullpath)
+                    df.config_meta.set(version_spec=version_spec)
+                    df.config_meta.set(selection=selection)
                 # self.ledger_entry(action="read")
                 return df
             elif file_ext == "csv":
@@ -520,6 +525,11 @@ class BlobEndpoint:
                         credential=ManagedIdentityCredential()
                     ),
                 )
+                if with_metadata:
+                    df.config_meta.set(version=version)
+                    df.config_meta.set(blob_url=fullpath)
+                    df.config_meta.set(version_spec=version_spec)
+                    df.config_meta.set(selection=selection)
                 ##self.ledger_entry(action="read")
                 return df
             elif file_ext == "ndjson" or file_ext == "jsonl":
@@ -562,6 +572,11 @@ class BlobEndpoint:
                     ],
                     how="diagonal",
                 )
+                if with_metadata:
+                    df.config_meta.set(version=version)
+                    df.config_meta.set(blob_url=fullpath)
+                    df.config_meta.set(version_spec=version_spec)
+                    df.config_meta.set(selection=selection)
             return df
         elif file_ext == "json":
             if output in ["pandas", "pd"]:
@@ -580,6 +595,11 @@ class BlobEndpoint:
                     ],
                     how="diagonal",
                 )
+                if with_metadata:
+                    df.config_meta.set(version=version)
+                    df.config_meta.set(blob_url=fullpath)
+                    df.config_meta.set(version_spec=version_spec)
+                    df.config_meta.set(selection=selection)
             return df
         elif file_ext == "jsonl" or file_ext == "ndjson":
             if output in ["pandas", "pd"]:
@@ -595,6 +615,11 @@ class BlobEndpoint:
                     [pl.read_ndjson(blob) for blob in blob_files],
                     how="diagonal",
                 )
+                if with_metadata:
+                    df.config_meta.set(version=version)
+                    df.config_meta.set(blob_url=fullpath)
+                    df.config_meta.set(version_spec=version_spec)
+                    df.config_meta.set(selection=selection)
             return df
         elif file_ext == "parquet" or file_ext == "parq":
             if output in ["pandas", "pd"]:
@@ -610,6 +635,11 @@ class BlobEndpoint:
                     [pl.read_parquet(pq_file) for pq_file in blob_files],
                     how="diagonal",
                 )
+                if with_metadata:
+                    df.config_meta.set(version=version)
+                    df.config_meta.set(blob_url=fullpath)
+                    df.config_meta.set(version_spec=version_spec)
+                    df.config_meta.set(selection=selection)
             return df
 
     def ledger_entry(self, action: str) -> None:
