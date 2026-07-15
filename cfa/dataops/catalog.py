@@ -672,7 +672,7 @@ class BlobEndpoint:
         self,
         version_spec: str | None = None,
         selection: Literal["newest", "oldest"] = "newest",
-    ) -> str | None:
+    ) -> dict[str, str | None]:
         """Resolve the version of the dataset based on the version specification and selection criteria.
 
         Args:
