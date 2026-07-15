@@ -543,6 +543,11 @@ class BlobEndpoint:
                         credential=ManagedIdentityCredential()
                     ),
                 )
+                if with_metadata:
+                    df.config_meta.set(version=version)
+                    df.config_meta.set(blob_url=fullpath)
+                    df.config_meta.set(version_spec=version_spec)
+                    df.config_meta.set(selection=selection)
                 ##self.ledger_entry(action="read")
                 return df
             else:

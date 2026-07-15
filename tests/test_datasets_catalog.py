@@ -269,3 +269,64 @@ def test_datasets_catalog_get_dataframe_pl_lazy(
         scan_calls[1][0]
         == "az://container_test/prefix_test/transformed/test_dataset/2025-06-03T17-56-50/*.parquet"
     )
+
+
+def test_datasets_catalog_get_dataframe_pl_lazy_ndjson_with_metadata(
+    mocker, mock_write_blob_stream, dataset_ns_map, dataset_defaults
+):
+    datacat = dict_to_sn(dataset_ns_map, dataset_defaults)
+    dataset_namespaces = get_dataset_dot_path(dataset_ns_map)
+    datacat.__setattr__("__namespace_list__", dataset_namespaces)
+
+    mocker.patch(
+        "cfa.dataops.catalog.write_blob_stream",
+        mock_write_blob_stream,
+    )
+    mocker.patch.object(
+        datacat.tests.etl_test.load,
+        "get_versions",
+        return_value=["2025-06-03T17-56-50"],
+    )
+    mocker.patch.object(
+        datacat.tests.etl_test.load,
+        "_get_version_blobs",
+        return_value=[
+            {
+                "name": "prefix_test/transformed/test_dataset/2025-06-03T17-56-50/data.ndjson",
+                "container": "container_test",
+            }
+        ],
+    )
+
+    mocker.patch("cfa.dataops.catalog.ManagedIdentityCredential", return_value=object())
+    mocker.patch(
+        "cfa.dataops.catalog.pl.CredentialProviderAzure",
+        side_effect=lambda credential: object(),
+    )
+
+    metadata = {}
+
+    class MockConfigMeta:
+        def set(self, **kwargs):
+            metadata.update(kwargs)
+
+    class MockLazyFrame:
+        def __init__(self):
+            self.config_meta = MockConfigMeta()
+
+    mocker.patch(
+        "cfa.dataops.catalog.pl.scan_ndjson",
+        return_value=MockLazyFrame(),
+    )
+
+    out_lazy = datacat.tests.etl_test.load.get_dataframe(
+        output="pl_lazy", with_metadata=True
+    )
+
+    assert isinstance(out_lazy, MockLazyFrame)
+    assert metadata == {
+        "version": "2025-06-03T17-56-50",
+        "blob_url": "az://container_test/prefix_test/transformed/test_dataset/2025-06-03T17-56-50/*.ndjson",
+        "version_spec": None,
+        "selection": "newest",
+    }
