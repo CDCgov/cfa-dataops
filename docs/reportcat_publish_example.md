@@ -78,7 +78,7 @@ After successful execution:
 
 Example output location:
 
-	https://edavsynapsedatalake.blob.core.windows.net/od-cfa/TID/Test_Data/minimal_report.html
+	https://<storage_account>.blob.core.windows.net/<container>/TID/Test_Data/minimal_report.html
 
 ---
 
