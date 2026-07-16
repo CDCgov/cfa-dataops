@@ -707,7 +707,7 @@ class BlobEndpoint:
             }
 
         version_blobs = self._get_version_blobs(
-            version_spec=version, selection=selection, print_version=False
+            version_spec=version_spec, selection=selection, print_version=False
         )
         name = version_blobs[0]["name"]
         file_ext = PurePosixPath(name).suffix.lstrip(".").lower()
