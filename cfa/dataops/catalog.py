@@ -694,6 +694,7 @@ class BlobEndpoint:
 
         Returns:
             dict[str, str | None]: Mapping containing "version", "blob_url", "version_spec", and "selection".
+        """
         available_versions = self.get_versions()
         version = version_matcher(version_spec, available_versions, selection=selection)
 
