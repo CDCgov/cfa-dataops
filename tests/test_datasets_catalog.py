@@ -191,7 +191,7 @@ def test_datasets_catalog_get_dataframe_parquet_pandas_with_metadata(
         "_get_version_blobs",
         return_value=[
             {
-                "name": "prefix_test/transformed/test_dataset/2025-06-03T17-56-50/data.parquet",
+                "name": "prefix_test/transformed/test_dataset/2025-05-30T14-50-36/data.parquet",
                 "container": "container_test",
             }
         ],
@@ -207,7 +207,7 @@ def test_datasets_catalog_get_dataframe_parquet_pandas_with_metadata(
     assert isinstance(blobs_df, pd.DataFrame)
     assert blobs_df.attrs == {
         "version": "2025-05-30T14-50-36",
-        "blob_url": "az://container_test/prefix_test/transformed/test_dataset/2025-06-03T17-56-50/*.parquet",
+        "blob_url": "az://container_test/prefix_test/transformed/test_dataset/2025-05-30T14-50-36/*.parquet",
         "version_spec": ">=2025-05-01,<2025-07-01",
         "selection": "oldest",
     }
