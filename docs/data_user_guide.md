@@ -14,6 +14,12 @@ print("Available datasets:", datacat.__namespace_list__)
 
 # Access a dataset
 df = datacat.private.scenarios.covid19vax_trends.load.get_dataframe()
+
+# Include resolved version metadata on the returned dataframe
+df_with_meta = datacat.private.scenarios.covid19vax_trends.load.get_dataframe(
+   with_metadata=True
+)
+print(df_with_meta.attrs["version"])
 ```
 
 ## Accessing Data
@@ -29,6 +35,11 @@ df = datacat.private.scenarios.covid19vax_trends.load.get_dataframe()
 # Get raw data as polars DataFrame
 df = datacat.private.scenarios.seroprevalence.extract.get_dataframe(output="polars")
 
+# Get transformed data with metadata attached
+df_with_meta = datacat.private.scenarios.covid19vax_trends.load.get_dataframe(
+   with_metadata=True
+)
+
 # Get specific version
 df = datacat.private.scenarios.covid19vax_trends.load.get_dataframe(
     version_spec="==2025-06-03T17-56-50"
@@ -40,8 +51,55 @@ df = datacat.private.scenarios.covid19vax_trends.load.get_dataframe(
 - `datacat.{catalog}.{dataset}.load.get_dataframe()`: Access transformed data
 - `datacat.{catalog}.{dataset}.extract.get_dataframe()`: Access raw data
 - Parameters for `get_dataframe()`:
-  - `version`: Either 'latest' or specific version timestamp (default: 'latest')
-  - `output`: Either 'pandas' or 'polars' DataFrame (default: 'pandas')
+   - `output`: One of `pandas`, `polars`, or `pl_lazy` (default: `pandas`)
+   - `version_spec`: Version constraint string used to resolve matching dataset versions
+   - `selection`: Which matching version to return, such as `newest` or `oldest`
+   - `with_metadata`: Attach resolved version metadata to the returned dataframe
+   - `print_version`: Print the resolved version while loading data
+
+### Accessing Metadata with `with_metadata=True`
+
+When `with_metadata=True`, `get_dataframe()` adds the resolved dataset metadata to the returned dataframe.
+
+Available metadata keys:
+
+- `version`: The resolved dataset version that was loaded
+- `blob_url`: The Azure blob URL pattern used for the load
+- `version_spec`: The version constraint passed to `get_dataframe()`
+- `selection`: The version selection mode used during resolution
+
+For pandas outputs, metadata is stored in `df.attrs`:
+
+```python
+from cfa.dataops import datacat
+
+df = datacat.private.scenarios.covid19vax_trends.load.get_dataframe(
+      with_metadata=True
+)
+
+print(df.attrs["version"])
+print(df.attrs["blob_url"])
+print(df.attrs["version_spec"])
+print(df.attrs["selection"])
+```
+
+For polars `DataFrame` outputs, metadata is stored in `df.config_meta`:
+
+```python
+from cfa.dataops import datacat
+
+df = datacat.private.scenarios.seroprevalence.extract.get_dataframe(
+      output="polars",
+      with_metadata=True,
+)
+
+print(df.config_meta.get("version"))
+print(df.config_meta.get("blob_url"))
+print(df.config_meta.get("version_spec"))
+print(df.config_meta.get("selection"))
+```
+
+The same metadata access pattern applies to lazy polars outputs returned with `output="pl_lazy"`.
 
 ## Working with Data
 
@@ -92,6 +150,12 @@ vax_df = datacat.private.scenarios.covid19vax_trends.load.get_dataframe()
 
 # Get raw data for analysis
 raw_vax = datacat.private.scenarios.covid19vax_trends.extract.get_dataframe()
+
+# Get transformed data plus resolved version metadata
+vax_df_with_meta = datacat.private.scenarios.covid19vax_trends.load.get_dataframe(
+   with_metadata=True
+)
+print(vax_df_with_meta.attrs["version"])
 ```
 
 ### Fetching Versions within a Range

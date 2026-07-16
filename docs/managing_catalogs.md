@@ -58,6 +58,12 @@ datacat.private.scenarios.covid19vax_trends.load.get_dataframe()
 datacat.private.surveillance.flu_trends.load.get_dataframe()
 datacat.private.my_project.custom_dataset.load.get_dataframe()
 
+# Include version metadata on returned dataframes when needed
+df = datacat.private.scenarios.covid19vax_trends.load.get_dataframe(
+   with_metadata=True
+)
+print(df.attrs["version"])
+
 # Access reports from any installed catalog
 reportcat.private.scenarios.examples.basics_ipynb
 reportcat.private.surveillance.weekly.summary_ipynb
@@ -139,6 +145,8 @@ surveillance_data = datacat.surveillance.flu_trends.load.get_dataframe()
 # Create combined analysis
 combined_analysis = analyze_trends(scenarios_data, surveillance_data)
 ```
+
+If you need lineage details during cross-catalog analysis, call `get_dataframe(with_metadata=True)`. Pandas dataframes expose the metadata in `df.attrs`, and polars dataframes expose it in `df.config_meta`.
 
 ### Catalog-Specific Reports
 ```python

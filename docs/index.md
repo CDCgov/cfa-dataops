@@ -26,5 +26,10 @@ print("Reports:", reportcat.__namespace_list__)
 
 # Access data and reports (example)
 df = datacat.private.scenarios.covid19vax_trends.load.get_dataframe()
+df_with_meta = datacat.private.scenarios.covid19vax_trends.load.get_dataframe(
+	with_metadata=True
+)
 report_html = reportcat.private.examples.basics_ipynb.nb_to_html_str()
 ```
+
+Use `with_metadata=True` when you need the resolved dataset version and blob location on the returned dataframe. For pandas outputs, read metadata from `df.attrs`; for polars outputs, read it from `df.config_meta`.

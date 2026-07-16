@@ -473,6 +473,14 @@ class BlobEndpoint:
 
         Returns:
             pd.DataFrame | pl.DataFrame | pl.LazyFrame: the dataframe
+
+        Using metadata attributes:
+            If with_metadata is True, the returned dataframe will have the following attributes:
+                - version: the resolved version of the data
+                - blob_url: the full blob URL of the data
+                - version_spec: the version specification used to resolve the version
+                - selection: the selection criteria used to resolve the version
+            If output is pandas, attributes will be stored in df.attrs. If output is polars, attributes will be stored in df.config_meta.
         """
         if not check_ext_env():
             raise RuntimeError("No EXT access configured.")
