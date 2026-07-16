@@ -689,9 +689,6 @@ class BlobEndpoint:
         """
         available_versions = self.get_versions()
         version = version_matcher(version_spec, available_versions, selection=selection)
-        version_blobs = self._get_version_blobs(
-            version_spec=version_spec, selection=selection, print_version=False
-        )
 
         if not version:
             return {
@@ -700,6 +697,10 @@ class BlobEndpoint:
                 "version_spec": version_spec,
                 "selection": selection,
             }
+
+        version_blobs = self._get_version_blobs(
+            version_spec=version, selection=selection, print_version=False
+        )
         name = version_blobs[0]["name"]
         file_ext = PurePosixPath(name).suffix.lstrip(".").lower()
         path = str(PurePosixPath(name).parent / f"*.{file_ext}")
