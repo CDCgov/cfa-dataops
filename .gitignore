@@ -370,7 +370,6 @@ deps/src/
 # applications that require a static environment.
 #Manifest.toml
 
-*.lock
 .vscode
 tmp/
 */logs/

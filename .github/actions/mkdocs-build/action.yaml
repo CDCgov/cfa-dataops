@@ -3,12 +3,8 @@ description: Build mkdocs
 runs:
   using: composite
   steps:
-    - run: pipx install poetry
-      shell: bash
-    - uses: actions/setup-python@v5
-      with:
-        python-version: 3.10.12
-    - run: poetry install --only mkdocs
-      shell: bash
-    - run: poetry run mkdocs build
+    - uses: astral-sh/setup-uv@v8.2.0
+    - run: |
+        uv sync
+        uv run mkdocs build
       shell: bash
