@@ -372,7 +372,6 @@ class BlobEndpoint:
                 walk_path = f"{self.prefix}/{version}/"
         else:
             walk_path = f"{self.prefix.removesuffix('/')}/"
-            version = "ledger"
         if isinstance(walk_path, list):
             all_blobs = []
             for wp in walk_path:
