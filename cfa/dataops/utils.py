@@ -193,6 +193,18 @@ def normalize(version: str) -> str:
     return version.replace("T", ".").replace("-", ".")
 
 
+def construct_version_spec(version: str | None) -> str | None:
+    """Normalize a version string into a packaging specifier.
+
+    If the input already starts with a comparator character (``>``, ``<``, or ``=``),
+    it is returned unchanged. Otherwise, an exact-match specifier is created
+    by prepending ``==``.
+    """
+    if version is None or version.startswith((">", "<", "=")):
+        return version
+    return f"=={version}"
+
+
 def version_matcher(
     version_spec: str | None,
     available_versions: list[str],
@@ -223,7 +235,7 @@ def version_matcher(
     versions = sorted(
         (Version(normalize(version)), version) for version in available_versions
     )
-
+    version_spec = construct_version_spec(version_spec)
     if version_spec is not None:
         specset = SpecifierSet(normalize(version_spec))
         versions = [
