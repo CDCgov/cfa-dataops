@@ -24,6 +24,16 @@ class TestConstructVersionSpec:
     def test_construct_version_spec(self, raw_version, expected):
         assert construct_version_spec(raw_version) == expected
 
+    def test_version_matcher_accepts_raw_version(self):
+        available_versions = [
+            "2025-12-15T00-00-00",
+            "2025-12-16T00-00-00",
+            "2025-12-17T00-00-00",
+        ]
+        assert (
+            version_matcher("2025-12-16T00-00-00", available_versions)
+            == "2025-12-16T00-00-00"
+        )
 
 class TestVersionMatcher:
     """Tests for the version_matcher function."""
