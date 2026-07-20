@@ -61,11 +61,11 @@ resolved = datacat.private.scenarios.covid19vax_trends.load.resolve_version(
    selection="newest",
 )
 
-print(resolved["version"])
-print(resolved["blob_url"])
+print(resolved.version)
+print(resolved.blob_url)
 ```
 
-`resolve_version()` returns a dictionary with `version`, `blob_url`, `version_spec`, and `selection`. Use those same arguments in `get_dataframe()` to load the dataframe you previewed.
+`resolve_version()` returns a `VersionMetadata` dataclass with fields `version`, `blob_url`, `version_spec`, and `selection`. Use those same arguments in `get_dataframe()` to load the dataframe you previewed.
 
 To get a specific version:
 

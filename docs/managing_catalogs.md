@@ -63,7 +63,7 @@ df_meta = datacat.private.scenarios.covid19vax_trends.load.resolve_version(
    version_spec=">=2025-05-01,<2025-06-01",
    selection="newest",
 )
-print(df_meta["version"])
+print(df_meta.version)
 
 # Access reports from any installed catalog
 reportcat.private.scenarios.examples.basics_ipynb

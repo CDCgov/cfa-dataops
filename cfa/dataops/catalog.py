@@ -47,7 +47,7 @@ _config.read(os.path.join(_here, "config.ini"))
 logger = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(frozen=True)
 class VersionMetadata:
     """Result of resolving a version specification against available versions."""
 
