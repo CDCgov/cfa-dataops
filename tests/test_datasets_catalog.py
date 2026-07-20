@@ -151,7 +151,47 @@ def test_datasets_catalog_get_dataframe_parquet(
     assert isinstance(blobs_df, pl.DataFrame)
 
 
-def test_datasets_catalog_get_dataframe_parquet_pandas_with_metadata(
+def test_datasets_catalog_resolve_version(
+    mocker, mock_write_blob_stream, dataset_ns_map, dataset_defaults
+):
+    datacat = dict_to_sn(dataset_ns_map, dataset_defaults)
+    dataset_namespaces = get_dataset_dot_path(dataset_ns_map)
+    datacat.__setattr__("__namespace_list__", dataset_namespaces)
+
+    mocker.patch(
+        "cfa.dataops.catalog.write_blob_stream",
+        mock_write_blob_stream,
+    )
+    mocker.patch.object(
+        datacat.tests.etl_test.load,
+        "get_versions",
+        return_value=["2025-06-03T17-56-50", "2025-05-30T14-50-36"],
+    )
+    mocker.patch.object(
+        datacat.tests.etl_test.load,
+        "_get_version_blobs",
+        return_value=[
+            {
+                "name": "prefix_test/transformed/test_dataset/2025-05-30T14-50-36/data.parquet",
+                "container": "container_test",
+            }
+        ],
+    )
+
+    resolved = datacat.tests.etl_test.load.resolve_version(
+        version_spec=">=2025-05-01,<2025-07-01",
+        selection="oldest",
+    )
+
+    assert resolved == {
+        "version": "2025-05-30T14-50-36",
+        "blob_url": "az://container_test/prefix_test/transformed/test_dataset/2025-05-30T14-50-36/*.parquet",
+        "version_spec": ">=2025-05-01,<2025-07-01",
+        "selection": "oldest",
+    }
+
+
+def test_datasets_catalog_resolve_version_no_match(
     mocker, mock_write_blob_stream, dataset_ns_map, dataset_defaults
 ):
     datacat = dict_to_sn(dataset_ns_map, dataset_defaults)
@@ -168,119 +208,15 @@ def test_datasets_catalog_get_dataframe_parquet_pandas_with_metadata(
         return_value=["2025-06-03T17-56-50", "2025-05-30T14-50-36"],
     )
 
-    def mock_read_blob_stream_parquet_df(
-        blob_url: str,
-        account_name: str,
-        container_name: str,
-    ) -> bytes:
-        df = pd.DataFrame(
-            [
-                {"test": 1, "data": 2},
-                {"test": 3, "data": 4},
-            ]
-        )
-        data = df.to_parquet(index=False)
-        return MockBlob(data)
-
-    mocker.patch(
-        "cfa.dataops.catalog.read_blob_stream",
-        mock_read_blob_stream_parquet_df,
-    )
-    mocker.patch.object(
-        datacat.tests.etl_test.load,
-        "_get_version_blobs",
-        return_value=[
-            {
-                "name": "prefix_test/transformed/test_dataset/2025-05-30T14-50-36/data.parquet",
-                "container": "container_test",
-            }
-        ],
+    resolved = datacat.tests.etl_test.load.resolve_version(
+        version_spec=">2026-01-01",
+        selection="newest",
     )
 
-    blobs_df = datacat.tests.etl_test.load.get_dataframe(
-        output="pd",
-        version_spec=">=2025-05-01,<2025-07-01",
-        selection="oldest",
-        with_metadata=True,
-    )
-
-    assert isinstance(blobs_df, pd.DataFrame)
-    assert blobs_df.attrs == {
-        "version": "2025-05-30T14-50-36",
-        "blob_url": "az://container_test/prefix_test/transformed/test_dataset/2025-05-30T14-50-36/*.parquet",
-        "version_spec": ">=2025-05-01,<2025-07-01",
-        "selection": "oldest",
-    }
-
-
-def test_datasets_catalog_get_dataframe_parquet_polars_with_metadata(
-    mocker, mock_write_blob_stream, dataset_ns_map, dataset_defaults
-):
-    datacat = dict_to_sn(dataset_ns_map, dataset_defaults)
-    dataset_namespaces = get_dataset_dot_path(dataset_ns_map)
-    datacat.__setattr__("__namespace_list__", dataset_namespaces)
-
-    mocker.patch(
-        "cfa.dataops.catalog.write_blob_stream",
-        mock_write_blob_stream,
-    )
-    mocker.patch.object(
-        datacat.tests.etl_test.load,
-        "get_versions",
-        return_value=["2025-06-03T17-56-50"],
-    )
-    mocker.patch.object(
-        datacat.tests.etl_test.load,
-        "_get_version_blobs",
-        return_value=[
-            {
-                "name": "prefix_test/transformed/test_dataset/2025-06-03T17-56-50/data.parquet",
-                "container": "container_test",
-            }
-        ],
-    )
-
-    def mock_read_blob_stream_parquet_bytes(
-        blob_url: str,
-        account_name: str,
-        container_name: str,
-    ) -> bytes:
-        return MockBlob(b"parquet-bytes-not-used")
-
-    mocker.patch(
-        "cfa.dataops.catalog.read_blob_stream",
-        mock_read_blob_stream_parquet_bytes,
-    )
-
-    metadata = {}
-
-    class MockConfigMeta:
-        def set(self, **kwargs):
-            metadata.update(kwargs)
-
-    class MockPolarsFrame:
-        def __init__(self):
-            self.config_meta = MockConfigMeta()
-
-    mocker.patch(
-        "cfa.dataops.catalog.pl.read_parquet",
-        return_value=object(),
-    )
-    mocker.patch(
-        "cfa.dataops.catalog.pl.concat",
-        return_value=MockPolarsFrame(),
-    )
-
-    blobs_df = datacat.tests.etl_test.load.get_dataframe(
-        output="pl",
-        with_metadata=True,
-    )
-
-    assert isinstance(blobs_df, MockPolarsFrame)
-    assert metadata == {
-        "version": "2025-06-03T17-56-50",
-        "blob_url": "az://container_test/prefix_test/transformed/test_dataset/2025-06-03T17-56-50/*.parquet",
-        "version_spec": None,
+    assert resolved == {
+        "version": None,
+        "blob_url": None,
+        "version_spec": ">2026-01-01",
         "selection": "newest",
     }
 
@@ -403,64 +339,3 @@ def test_datasets_catalog_get_dataframe_pl_lazy(
         scan_calls[1][0]
         == "az://container_test/prefix_test/transformed/test_dataset/2025-06-03T17-56-50/*.parquet"
     )
-
-
-def test_datasets_catalog_get_dataframe_pl_lazy_ndjson_with_metadata(
-    mocker, mock_write_blob_stream, dataset_ns_map, dataset_defaults
-):
-    datacat = dict_to_sn(dataset_ns_map, dataset_defaults)
-    dataset_namespaces = get_dataset_dot_path(dataset_ns_map)
-    datacat.__setattr__("__namespace_list__", dataset_namespaces)
-
-    mocker.patch(
-        "cfa.dataops.catalog.write_blob_stream",
-        mock_write_blob_stream,
-    )
-    mocker.patch.object(
-        datacat.tests.etl_test.load,
-        "get_versions",
-        return_value=["2025-06-03T17-56-50"],
-    )
-    mocker.patch.object(
-        datacat.tests.etl_test.load,
-        "_get_version_blobs",
-        return_value=[
-            {
-                "name": "prefix_test/transformed/test_dataset/2025-06-03T17-56-50/data.ndjson",
-                "container": "container_test",
-            }
-        ],
-    )
-
-    mocker.patch("cfa.dataops.catalog.ManagedIdentityCredential", return_value=object())
-    mocker.patch(
-        "cfa.dataops.catalog.pl.CredentialProviderAzure",
-        side_effect=lambda credential: object(),
-    )
-
-    metadata = {}
-
-    class MockConfigMeta:
-        def set(self, **kwargs):
-            metadata.update(kwargs)
-
-    class MockLazyFrame:
-        def __init__(self):
-            self.config_meta = MockConfigMeta()
-
-    mocker.patch(
-        "cfa.dataops.catalog.pl.scan_ndjson",
-        return_value=MockLazyFrame(),
-    )
-
-    out_lazy = datacat.tests.etl_test.load.get_dataframe(
-        output="pl_lazy", with_metadata=True
-    )
-
-    assert isinstance(out_lazy, MockLazyFrame)
-    assert metadata == {
-        "version": "2025-06-03T17-56-50",
-        "blob_url": "az://container_test/prefix_test/transformed/test_dataset/2025-06-03T17-56-50/*.ndjson",
-        "version_spec": None,
-        "selection": "newest",
-    }

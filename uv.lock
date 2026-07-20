@@ -677,7 +677,6 @@ dependencies = [
     { name = "pandera", extra = ["pandas"] },
     { name = "papermill" },
     { name = "polars" },
-    { name = "polars-config-meta" },
     { name = "pyarrow" },
     { name = "pydantic" },
     { name = "rich" },
@@ -721,7 +720,6 @@ requires-dist = [
     { name = "pandera", extras = ["pandas"], specifier = ">=0.24.0" },
     { name = "papermill", specifier = ">=2.6.0" },
     { name = "polars", specifier = ">=1.26.0" },
-    { name = "polars-config-meta", specifier = ">=0.1.2" },
     { name = "pyarrow", specifier = ">=19.0.1" },
     { name = "pydantic", specifier = ">=2.11.7" },
     { name = "rich", specifier = ">=14.1.0" },
@@ -3754,15 +3752,6 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/93/ab/f19e592fce9e000da49c96bf35e77cef67f9cb4b040bfa538a2764c0263e/polars-1.39.3.tar.gz", hash = "sha256:2e016c7f3e8d14fa777ef86fe0477cec6c67023a20ba4c94d6e8431eefe4a63c", size = 728987, upload-time = "2026-03-20T11:16:24.836Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/b4/db/08f4ca10c5018813e7e0b59e4472302328b3d2ab1512f5a2157a814540e0/polars-1.39.3-py3-none-any.whl", hash = "sha256:c2b955ccc0a08a2bc9259785decf3d5c007b489b523bf2390cf21cec2bb82a56", size = 823985, upload-time = "2026-03-20T11:14:23.619Z" },
-]
-
-[[package]]
-name = "polars-config-meta"
-version = "0.3.4"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/84/43/efd31df9fc34c9cd906e9a252366f37ecf37b6e07fe349455c77f3b2d010/polars_config_meta-0.3.4.tar.gz", hash = "sha256:5ca11dac1e61cbb0cbecd5928e37b96c728cb416cddf9b5efd949ca060864c25", size = 10487, upload-time = "2026-04-15T18:10:01.998Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/6e/ae/76fb528c6112a3df5a581a18f1a2ceee5983d54977d7f2b6bc883637fe4c/polars_config_meta-0.3.4-py3-none-any.whl", hash = "sha256:fa53bab8326a17cee5155296e830dc479398b8e705f126df82c51bed38e43ce9", size = 12185, upload-time = "2026-04-15T18:10:00.538Z" },
 ]
 
 [[package]]
