@@ -330,7 +330,7 @@ class BlobEndpoint:
         version_spec: str | None = None,
         selection: Literal["newest", "oldest", "all"] = "newest",
         print_version=True,
-    ) -> tuple[list, str]:
+    ) -> tuple[list, str | list[str] | None]:
         """Return blob metadata for the requested version selection.
 
         Args:
