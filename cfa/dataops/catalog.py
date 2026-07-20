@@ -505,14 +505,16 @@ class BlobEndpoint:
         version_blobs, _ = self._get_version_blobs(
             version_spec=version_spec, selection=selection, print_version=print_version
         )
+        version_meta = self.resolve_version(
+            version_spec=version_spec, selection=selection
+        )
         if not version_blobs:
             raise ValueError(
                 f"No blobs found for version '{version_spec}' in container '{self.container}'."
             )
-        name = version_blobs[0]["name"]
-        file_ext = PurePosixPath(name).suffix.lstrip(".").lower()
-        path = str(PurePosixPath(name).parent / f"*.{file_ext}")
-        fullpath = f"az://{self.container}/{path}"
+
+        file_ext = version_meta.blob_url.split(".")[-1].lower()
+        fullpath = version_meta.blob_url
         if output in ["pl_lazy", "lazy"]:
             if file_ext in ["parquet", "parq"]:
                 df = pl.scan_parquet(
@@ -525,8 +527,6 @@ class BlobEndpoint:
                 # self.ledger_entry(action="read")
                 return df
             elif file_ext == "csv":
-                path = str(PurePosixPath(name).parent / f"*.{file_ext}")
-                fullpath = f"az://{self.container}/{path}"
                 df = pl.scan_csv(
                     fullpath,
                     infer_schema_length=None,
@@ -538,8 +538,6 @@ class BlobEndpoint:
                 ##self.ledger_entry(action="read")
                 return df
             elif file_ext == "ndjson" or file_ext == "jsonl":
-                path = str(PurePosixPath(name).parent / f"*.{file_ext}")
-                fullpath = f"az://{self.container}/{path}"
                 df = pl.scan_ndjson(
                     fullpath,
                     infer_schema_length=None,
