@@ -424,7 +424,6 @@ class BlobEndpoint:
         output: Literal["pandas", "pd"] = "pandas",
         version_spec: str | None = None,
         selection: Literal["newest", "oldest"] = "newest",
-        with_metadata: bool = False,
         print_version: bool = False,
     ) -> pd.DataFrame: ...
 
@@ -434,7 +433,6 @@ class BlobEndpoint:
         output: Literal["polars", "pl"],
         version_spec: str | None = None,
         selection: Literal["newest", "oldest"] = "newest",
-        with_metadata: bool = False,
         print_version: bool = False,
     ) -> pl.DataFrame: ...
 
@@ -444,7 +442,6 @@ class BlobEndpoint:
         output: Literal["pl_lazy", "lazy"],
         version_spec: str | None = None,
         selection: Literal["newest", "oldest"] = "newest",
-        with_metadata: bool = False,
         print_version: bool = False,
     ) -> pl.LazyFrame: ...
 
@@ -453,7 +450,6 @@ class BlobEndpoint:
         output: Literal["pandas", "pd", "polars", "pl", "pl_lazy", "lazy"] = "pandas",
         version_spec: str | None = None,
         selection: Literal["newest", "oldest"] = "newest",
-        with_metadata: bool = False,
         print_version: bool = False,
     ) -> pd.DataFrame | pl.DataFrame | pl.LazyFrame:
         """Get the data as a pandas or polars dataframe
@@ -464,7 +460,6 @@ class BlobEndpoint:
             version_spec (str, optional): the version of the data to get.
                 Defaults to "latest".
             selection (Literal["newest", "oldest"], optional): whether to get the newest or oldest matching version. Defaults to "newest".
-            with_metadata (bool, optional): whether to include metadata attributes. Defaults to False.
             print_version (bool, optional): whether to print the version being used. Defaults to False.
 
         Raises:
@@ -473,25 +468,12 @@ class BlobEndpoint:
 
         Returns:
             pd.DataFrame | pl.DataFrame | pl.LazyFrame: the dataframe
-
-        Using metadata attributes:
-            If with_metadata is True, the returned dataframe will have the following attributes:
-                - version: the resolved version of the data
-                - blob_url: the full blob URL of the data
-                - version_spec: the version specification used to resolve the version
-                - selection: the selection criteria used to resolve the version
-            If output is pandas, attributes will be stored in df.attrs. If output is polars, attributes will be stored in df.config_meta.
         """
         if not check_ext_env():
             raise RuntimeError("No EXT access configured.")
         if output not in ["pandas", "polars", "pd", "pl", "pl_lazy", "lazy"]:
             raise ValueError(
                 f"Output {output} needs to be 'pandas', 'polars', 'pd', 'pl', 'pl_lazy', or 'lazy'."
-            )
-        if with_metadata:
-            available_versions = self.get_versions()
-            version = version_matcher(
-                version_spec, available_versions, selection=selection
             )
 
         # Fetch version blobs once and validate before deriving file extension.
@@ -515,11 +497,6 @@ class BlobEndpoint:
                         credential=ManagedIdentityCredential()
                     ),
                 )
-                if with_metadata:
-                    df.config_meta.set(version=version)
-                    df.config_meta.set(blob_url=fullpath)
-                    df.config_meta.set(version_spec=version_spec)
-                    df.config_meta.set(selection=selection)
                 # self.ledger_entry(action="read")
                 return df
             elif file_ext == "csv":
@@ -533,11 +510,6 @@ class BlobEndpoint:
                         credential=ManagedIdentityCredential()
                     ),
                 )
-                if with_metadata:
-                    df.config_meta.set(version=version)
-                    df.config_meta.set(blob_url=fullpath)
-                    df.config_meta.set(version_spec=version_spec)
-                    df.config_meta.set(selection=selection)
                 ##self.ledger_entry(action="read")
                 return df
             elif file_ext == "ndjson" or file_ext == "jsonl":
@@ -551,11 +523,6 @@ class BlobEndpoint:
                         credential=ManagedIdentityCredential()
                     ),
                 )
-                if with_metadata:
-                    df.config_meta.set(version=version)
-                    df.config_meta.set(blob_url=fullpath)
-                    df.config_meta.set(version_spec=version_spec)
-                    df.config_meta.set(selection=selection)
                 ##self.ledger_entry(action="read")
                 return df
             else:
@@ -572,11 +539,6 @@ class BlobEndpoint:
             if output in ["pandas", "pd"]:
                 df = pd.concat([pd.read_csv(blob) for blob in blob_files])
                 df.reset_index(inplace=True, drop=True)
-                if with_metadata:
-                    df.attrs["version"] = version
-                    df.attrs["blob_url"] = fullpath
-                    df.attrs["version_spec"] = version_spec
-                    df.attrs["selection"] = selection
             else:
                 df = pl.concat(
                     [
@@ -585,21 +547,11 @@ class BlobEndpoint:
                     ],
                     how="diagonal",
                 )
-                if with_metadata:
-                    df.config_meta.set(version=version)
-                    df.config_meta.set(blob_url=fullpath)
-                    df.config_meta.set(version_spec=version_spec)
-                    df.config_meta.set(selection=selection)
             return df
         elif file_ext == "json":
             if output in ["pandas", "pd"]:
                 df = pd.concat([pd.read_json(blob) for blob in blob_files])
                 df.reset_index(inplace=True, drop=True)
-                if with_metadata:
-                    df.attrs["version"] = version
-                    df.attrs["blob_url"] = fullpath
-                    df.attrs["version_spec"] = version_spec
-                    df.attrs["selection"] = selection
             else:
                 df = pl.concat(
                     [
@@ -608,51 +560,26 @@ class BlobEndpoint:
                     ],
                     how="diagonal",
                 )
-                if with_metadata:
-                    df.config_meta.set(version=version)
-                    df.config_meta.set(blob_url=fullpath)
-                    df.config_meta.set(version_spec=version_spec)
-                    df.config_meta.set(selection=selection)
             return df
         elif file_ext == "jsonl" or file_ext == "ndjson":
             if output in ["pandas", "pd"]:
                 df = pd.concat([pd.read_json(blob, lines=True) for blob in blob_files])
                 df.reset_index(inplace=True, drop=True)
-                if with_metadata:
-                    df.attrs["version"] = version
-                    df.attrs["blob_url"] = fullpath
-                    df.attrs["version_spec"] = version_spec
-                    df.attrs["selection"] = selection
             else:
                 df = pl.concat(
                     [pl.read_ndjson(blob) for blob in blob_files],
                     how="diagonal",
                 )
-                if with_metadata:
-                    df.config_meta.set(version=version)
-                    df.config_meta.set(blob_url=fullpath)
-                    df.config_meta.set(version_spec=version_spec)
-                    df.config_meta.set(selection=selection)
             return df
         elif file_ext == "parquet" or file_ext == "parq":
             if output in ["pandas", "pd"]:
                 df = pd.concat([pd.read_parquet(pq_file) for pq_file in blob_files])
                 df.reset_index(inplace=True, drop=True)
-                if with_metadata:
-                    df.attrs["version"] = version
-                    df.attrs["blob_url"] = fullpath
-                    df.attrs["version_spec"] = version_spec
-                    df.attrs["selection"] = selection
             else:
                 df = pl.concat(
                     [pl.read_parquet(pq_file) for pq_file in blob_files],
                     how="diagonal",
                 )
-                if with_metadata:
-                    df.config_meta.set(version=version)
-                    df.config_meta.set(blob_url=fullpath)
-                    df.config_meta.set(version_spec=version_spec)
-                    df.config_meta.set(selection=selection)
             return df
 
     def ledger_entry(self, action: str) -> None:
