@@ -459,7 +459,6 @@ class BlobEndpoint:
         version_spec: str | None = None,
         selection: Literal["newest", "oldest"] = "newest",
         print_version: bool = False,
-        print_version: bool = False,
     ) -> pd.DataFrame | pl.DataFrame | pl.LazyFrame:
         """Get the data as a pandas or polars dataframe
 
