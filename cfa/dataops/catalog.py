@@ -531,7 +531,7 @@ class BlobEndpoint:
             else:
                 raise ValueError(f"Lazy loading not supported for {file_ext} files.")
         blobs = self.read_blobs(
-            version_spec=version_spec, selection=selection, print_version=print_version
+            version_spec=version_spec, selection=selection, print_version=False
         )
         blob_bytes = [
             blob if isinstance(blob, bytes) else blob.content_as_bytes()
