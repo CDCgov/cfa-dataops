@@ -6,6 +6,7 @@ import os
 import pkgutil
 from collections.abc import Sequence
 from configparser import ConfigParser
+from dataclasses import dataclass
 from importlib import import_module
 from io import BytesIO
 from pathlib import PurePosixPath
@@ -44,6 +45,18 @@ _config = ConfigParser()
 _config.read(os.path.join(_here, "config.ini"))
 
 logger = logging.getLogger(__name__)
+
+
+@dataclass
+class VersionResolution:
+    """Result of resolving a version specification against available versions."""
+
+    version: str | list[str] | None
+    blob_url: str | None
+    version_spec: str | None
+    selection: str
+
+
 if not logger.handlers:
     logger.addHandler(logging.NullHandler())
 
@@ -468,6 +481,7 @@ class BlobEndpoint:
             version_spec (str, optional): the version of the data to get.
                 Defaults to "latest".
             selection (Literal["newest", "oldest", "all"], optional): whether to get the newest, oldest, or all matching versions. Defaults to "newest".
+            print_version (bool, optional): whether to print the version being used. Defaults to False.
 
         Raises:
             ValueError: if output is not one of
@@ -619,7 +633,7 @@ class BlobEndpoint:
         self,
         version_spec: str | None = None,
         selection: Literal["newest", "oldest"] = "newest",
-    ) -> dict[str, str | None]:
+    ) -> VersionResolution:
         """Resolve the version of the dataset based on the version specification and selection criteria.
 
         Args:
@@ -627,18 +641,18 @@ class BlobEndpoint:
             selection (Literal["newest", "oldest"]): whether to select the newest or oldest version
 
         Returns:
-            dict[str, str | None]: Mapping containing "version", "blob_url", "version_spec", and "selection".
+            VersionResolution: Resolution containing resolved version, blob URL, and selection details.
         """
         available_versions = self.get_versions()
         version = version_matcher(version_spec, available_versions, selection=selection)
 
         if not version:
-            return {
-                "version": None,
-                "blob_url": None,
-                "version_spec": version_spec,
-                "selection": selection,
-            }
+            return VersionResolution(
+                version=None,
+                blob_url=None,
+                version_spec=version_spec,
+                selection=selection,
+            )
 
         version_blobs = self._get_version_blobs(
             version_spec=version_spec, selection=selection, print_version=False
@@ -647,12 +661,12 @@ class BlobEndpoint:
         file_ext = PurePosixPath(name).suffix.lstrip(".").lower()
         path = str(PurePosixPath(name).parent / f"*.{file_ext}")
         fullpath = f"az://{self.container}/{path}"
-        return {
-            "version": version,
-            "blob_url": fullpath,
-            "version_spec": version_spec,
-            "selection": selection,
-        }
+        return VersionResolution(
+            version=version,
+            blob_url=fullpath,
+            version_spec=version_spec,
+            selection=selection,
+        )
 
     def save_dataframe(
         self,

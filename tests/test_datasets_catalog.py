@@ -183,12 +183,13 @@ def test_datasets_catalog_resolve_version(
         selection="oldest",
     )
 
-    assert resolved == {
-        "version": "2025-05-30T14-50-36",
-        "blob_url": "az://container_test/prefix_test/transformed/test_dataset/2025-05-30T14-50-36/*.parquet",
-        "version_spec": ">=2025-05-01,<2025-07-01",
-        "selection": "oldest",
-    }
+    assert resolved.version == "2025-05-30T14-50-36"
+    assert (
+        resolved.blob_url
+        == "az://container_test/prefix_test/transformed/test_dataset/2025-05-30T14-50-36/*.parquet"
+    )
+    assert resolved.version_spec == ">=2025-05-01,<2025-07-01"
+    assert resolved.selection == "oldest"
 
 
 def test_datasets_catalog_resolve_version_no_match(
@@ -213,12 +214,10 @@ def test_datasets_catalog_resolve_version_no_match(
         selection="newest",
     )
 
-    assert resolved == {
-        "version": None,
-        "blob_url": None,
-        "version_spec": ">2026-01-01",
-        "selection": "newest",
-    }
+    assert resolved.version is None
+    assert resolved.blob_url is None
+    assert resolved.version_spec == ">2026-01-01"
+    assert resolved.selection == "newest"
 
 
 def test_datasets_catalog_get_dataframe_json(
