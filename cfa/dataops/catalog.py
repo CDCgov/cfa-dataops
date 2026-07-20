@@ -330,7 +330,7 @@ class BlobEndpoint:
         version_spec: str | None = None,
         selection: Literal["newest", "oldest", "all"] = "newest",
         print_version=True,
-    ) -> tuple[list, str]:
+    ) -> tuple[list, str | list[str] | None]:
         """Return blob metadata for the requested version selection.
 
         Args:
@@ -353,6 +353,7 @@ class BlobEndpoint:
         # check credential access
         if not check_ext_env():
             raise RuntimeError("No EXT access configured.")
+        version = None
         if not self.is_ledger:
             available_versions = self.get_versions()
             version = version_matcher(
