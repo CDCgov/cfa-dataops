@@ -91,7 +91,7 @@ def test_datasets_catalog(
     mocker.patch.object(
         datacat.tests.etl_test.load,
         "_get_version_blobs",
-        return_value=blobs_sig_mock,
+        return_value=(blobs_sig_mock, "2025-06-03T17-56-50"),
     )
 
     blobs_read = datacat.tests.etl_test.load.read_blobs()
@@ -137,12 +137,15 @@ def test_datasets_catalog_get_dataframe_parquet(
     mocker.patch.object(
         datacat.tests.etl_test.load,
         "_get_version_blobs",
-        return_value=[
-            {
-                "name": "prefix_test/transformed/test_dataset/2025-06-03T17-56-50/data.parquet",
-                "container": "container_test",
-            }
-        ],
+        return_value=(
+            [
+                {
+                    "name": "prefix_test/transformed/test_dataset/2025-06-03T17-56-50/data.parquet",
+                    "container": "container_test",
+                }
+            ],
+            "2025-06-03T17-56-50",
+        ),
     )
 
     blobs_df = datacat.tests.etl_test.load.get_dataframe(output="pd")
@@ -170,12 +173,15 @@ def test_datasets_catalog_resolve_version(
     mocker.patch.object(
         datacat.tests.etl_test.load,
         "_get_version_blobs",
-        return_value=[
-            {
-                "name": "prefix_test/transformed/test_dataset/2025-05-30T14-50-36/data.parquet",
-                "container": "container_test",
-            }
-        ],
+        return_value=(
+            [
+                {
+                    "name": "prefix_test/transformed/test_dataset/2025-05-30T14-50-36/data.parquet",
+                    "container": "container_test",
+                }
+            ],
+            "2025-05-30T14-50-36",
+        ),
     )
 
     resolved = datacat.tests.etl_test.load.resolve_version(
@@ -258,12 +264,15 @@ def test_datasets_catalog_get_dataframe_json(
     mocker.patch.object(
         datacat.tests.etl_test.load,
         "_get_version_blobs",
-        return_value=[
-            {
-                "name": "prefix_test/transformed/test_dataset/2025-06-03T17-56-50/data.json",
-                "container": "container_test",
-            }
-        ],
+        return_value=(
+            [
+                {
+                    "name": "prefix_test/transformed/test_dataset/2025-06-03T17-56-50/data.json",
+                    "container": "container_test",
+                }
+            ],
+            "2025-06-03T17-56-50",
+        ),
     )
 
     blobs_df = datacat.tests.etl_test.load.get_dataframe(output="pd")
@@ -293,12 +302,15 @@ def test_datasets_catalog_get_dataframe_pl_lazy(
     mocker.patch.object(
         datacat.tests.etl_test.load,
         "_get_version_blobs",
-        return_value=[
-            {
-                "name": "prefix_test/transformed/test_dataset/2025-06-03T17-56-50/data.parquet",
-                "container": "container_test",
-            }
-        ],
+        return_value=(
+            [
+                {
+                    "name": "prefix_test/transformed/test_dataset/2025-06-03T17-56-50/data.parquet",
+                    "container": "container_test",
+                }
+            ],
+            "2025-06-03T17-56-50",
+        ),
     )
     mocker.patch.object(
         datacat.tests.etl_test.load,

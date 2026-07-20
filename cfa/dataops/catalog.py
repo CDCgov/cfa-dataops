@@ -48,7 +48,7 @@ logger = logging.getLogger(__name__)
 
 
 @dataclass
-class VersionResolution:
+class VersionMetadata:
     """Result of resolving a version specification against available versions."""
 
     version: str | list[str] | None
@@ -259,7 +259,7 @@ class BlobEndpoint:
             selection (Literal["newest", "oldest", "all"], optional): whether to get the newest, oldest, or all matching versions. Defaults to "newest".
             print_version (bool, optional): whether to print the version being used. Defaults to True.
         """
-        blobs = self._get_version_blobs(
+        blobs, _ = self._get_version_blobs(
             version_spec=version_spec, selection=selection, print_version=print_version
         )
         blob_bytes = [
@@ -320,16 +320,17 @@ class BlobEndpoint:
         Returns:
             str: the file extension
         """
-        return self._get_version_blobs(
+        blobs, _ = self._get_version_blobs(
             version_spec=version_spec, selection=selection, print_version=False
-        )[0]["name"].split(".")[-1]
+        )
+        return blobs[0]["name"].split(".")[-1]
 
     def _get_version_blobs(
         self,
         version_spec: str | None = None,
         selection: Literal["newest", "oldest", "all"] = "newest",
         print_version=True,
-    ) -> list:
+    ) -> tuple[list, str]:
         """Return blob metadata for the requested version selection.
 
         Args:
@@ -344,6 +345,7 @@ class BlobEndpoint:
         Returns:
             list: Blob metadata dictionaries sorted by creation time for the
             resolved version or versions.
+            str: version string for resolved version
 
         Raises:
             ValueError: If the requested version cannot be resolved.
@@ -382,7 +384,7 @@ class BlobEndpoint:
             return sorted(
                 all_blobs,
                 key=lambda x: x["creation_time"],
-            )
+            ), version
         else:
             return sorted(
                 list(
@@ -393,7 +395,7 @@ class BlobEndpoint:
                     )
                 ),
                 key=lambda x: x["creation_time"],
-            )
+            ), version
 
     def download_version_to_local(
         self,
@@ -414,7 +416,9 @@ class BlobEndpoint:
         """
 
         written = False
-        blobs = self._get_version_blobs(version_spec=version_spec, selection=selection)
+        blobs, _ = self._get_version_blobs(
+            version_spec=version_spec, selection=selection
+        )
         for blob in blobs:
             blob_data = read_blob_stream(
                 blob_url=blob["name"],
@@ -498,7 +502,7 @@ class BlobEndpoint:
             )
 
         # Fetch version blobs once and validate before deriving file extension.
-        version_blobs = self._get_version_blobs(
+        version_blobs, _ = self._get_version_blobs(
             version_spec=version_spec, selection=selection, print_version=print_version
         )
         if not version_blobs:
@@ -633,7 +637,7 @@ class BlobEndpoint:
         self,
         version_spec: str | None = None,
         selection: Literal["newest", "oldest"] = "newest",
-    ) -> VersionResolution:
+    ) -> VersionMetadata:
         """Resolve the version of the dataset based on the version specification and selection criteria.
 
         Args:
@@ -641,27 +645,33 @@ class BlobEndpoint:
             selection (Literal["newest", "oldest"]): whether to select the newest or oldest version
 
         Returns:
-            VersionResolution: Resolution containing resolved version, blob URL, and selection details.
+            VersionMetadata: Resolution containing resolved version, blob URL, and selection details.
         """
-        available_versions = self.get_versions()
-        version = version_matcher(version_spec, available_versions, selection=selection)
-
-        if not version:
-            return VersionResolution(
+        try:
+            version_blobs, version = self._get_version_blobs(
+                version_spec=version_spec, selection=selection, print_version=False
+            )
+        except ValueError:
+            return VersionMetadata(
                 version=None,
                 blob_url=None,
                 version_spec=version_spec,
                 selection=selection,
             )
 
-        version_blobs = self._get_version_blobs(
-            version_spec=version_spec, selection=selection, print_version=False
-        )
+        if not version:
+            return VersionMetadata(
+                version=None,
+                blob_url=None,
+                version_spec=version_spec,
+                selection=selection,
+            )
+
         name = version_blobs[0]["name"]
         file_ext = PurePosixPath(name).suffix.lstrip(".").lower()
         path = str(PurePosixPath(name).parent / f"*.{file_ext}")
         fullpath = f"az://{self.container}/{path}"
-        return VersionResolution(
+        return VersionMetadata(
             version=version,
             blob_url=fullpath,
             version_spec=version_spec,
