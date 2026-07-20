@@ -196,11 +196,18 @@ def normalize(version: str) -> str:
 def construct_version_spec(version: str | None) -> str | None:
     """Normalize a version string into a packaging specifier.
 
-    If the input already starts with a comparator character (``>``, ``<``, or ``=``),
-    it is returned unchanged. Otherwise, an exact-match specifier is created
+    If the input already starts with a specifier operator (e.g. ``>``, ``<``, ``=``, ``~``, or ``!``),
+    it is returned unchanged (after stripping whitespace). Otherwise, an exact-match specifier is created
     by prepending ``==``.
     """
-    if version is None or version.startswith((">", "<", "=")):
+    if version is None:
+        return None
+
+    version = version.strip()
+    if version == "":
+        return ""
+
+    if version.startswith((">", "<", "=", "~", "!")):
         return version
     return f"=={version}"
 
