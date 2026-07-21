@@ -215,8 +215,8 @@ def construct_version_spec(version: str | None) -> str | None:
 def version_matcher(
     version_spec: str | None,
     available_versions: list[str],
-    selection: Literal["newest", "oldest", "all"] = "newest",
-) -> str | list[str] | None:
+    selection: Literal["newest", "oldest"] = "newest",
+) -> str | None:
     """Select version strings from a list using an optional specifier.
 
     Args:
@@ -224,21 +224,22 @@ def version_matcher(
             ``"==2025-12-15"`` or ``">=2025-01-01,<2026-01-01"``. If ``None``,
             all available versions are considered.
         available_versions (list[str]): Version strings to evaluate.
-        selection (Literal["newest", "oldest", "all"]): Controls the return shape.
-            ``"newest"`` returns the newest matching version, ``"oldest"`` returns
-            the oldest matching version, and ``"all"`` returns all matching versions
-            in descending order.
+        selection (Literal["newest", "oldest"]): Controls which matching
+            version is returned.
 
     Returns:
-        str | list[str] | None: A single matching version, all matching versions in
-        descending order, or ``None`` if no match is found.
+        str | None: A single matching version, or ``None`` if no match is found.
 
     Raises:
+        ValueError: If ``selection`` is not one of ``"newest"`` or ``"oldest"``.
         packaging.specifiers.InvalidSpecifier: If ``version_spec`` is not ``None`` and is not
             a valid packaging specifier after normalization.
         packaging.version.InvalidVersion: If any version string cannot be parsed by
             ``packaging.version.Version``.
     """
+    if selection not in {"newest", "oldest"}:
+        raise ValueError("selection must be 'newest' or 'oldest'")
+
     versions = sorted(
         (Version(normalize(version)), version) for version in available_versions
     )
@@ -251,10 +252,6 @@ def version_matcher(
 
     originals = [original for _, original in versions]
 
-    match selection:
-        case "newest":
-            return originals[-1] if originals else None
-        case "oldest":
-            return originals[0] if originals else None
-        case "all":
-            return originals[::-1]
+    if selection == "newest":
+        return originals[-1] if originals else None
+    return originals[0] if originals else None

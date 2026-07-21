@@ -102,16 +102,26 @@ class TestVersionMatcher:
             "2025-12-18T00-00-00",
         ]
 
-        matches = version_matcher(
+        match = version_matcher(
             ">=2025-12-16T00-00-00,<2025-12-18T00-00-00",
             available_versions,
-            selection="all",
+            selection="oldest",
         )
 
-        assert matches == ["2025-12-17T00-00-00", "2025-12-16T00-00-00"]
+        assert match == "2025-12-16T00-00-00"
+
+    def test_invalid_selection_raises(self):
+        available_versions = [
+            "2025-12-15T00-00-00",
+            "2025-12-16T00-00-00",
+            "2025-12-17T00-00-00",
+        ]
+
+        with pytest.raises(ValueError, match="selection must be 'newest' or 'oldest'"):
+            version_matcher(None, available_versions, selection="all")
 
     @pytest.mark.parametrize(
-        "spec,available_versions,expected_newest,expected_oldest,expected_all",
+        "spec,available_versions,expected_newest,expected_oldest",
         [
             (
                 "==2025-12-15",
@@ -123,7 +133,6 @@ class TestVersionMatcher:
                 ],
                 "2025-12-15T00-00-00",
                 "2025-12-15T00-00-00",
-                ["2025-12-15T00-00-00"],
             ),
             (
                 "<2025-12-15",
@@ -134,7 +143,6 @@ class TestVersionMatcher:
                 ],
                 "2025-12-14T23-59-59",
                 "2025-12-14T23-59-59",
-                ["2025-12-14T23-59-59"],
             ),
             (
                 ">2025",
@@ -146,11 +154,6 @@ class TestVersionMatcher:
                 ],
                 "2026-01-01T00-00-00",
                 "2025-01-01T00-00-00",
-                [
-                    "2026-01-01T00-00-00",
-                    "2025-12-15T00-00-00",
-                    "2025-01-01T00-00-00",
-                ],
             ),
         ],
     )
@@ -160,13 +163,9 @@ class TestVersionMatcher:
         available_versions,
         expected_newest,
         expected_oldest,
-        expected_all,
     ):
         assert version_matcher(spec, available_versions) == expected_newest
         assert (
             version_matcher(spec, available_versions, selection="oldest")
             == expected_oldest
-        )
-        assert (
-            version_matcher(spec, available_versions, selection="all") == expected_all
         )

@@ -34,7 +34,7 @@ class BlobEndpoint:
     def read_blobs(
         self,
         version_spec: str | None = None,
-        selection: Literal["newest", "oldest", "all"] = "newest",
+        selection: Literal["newest", "oldest"] = "newest",
         print_version: bool = True,
     ) -> list[bytes]: ...
     def read_csv(self, suffix: str) -> pd.DataFrame: ...
@@ -42,14 +42,14 @@ class BlobEndpoint:
     def get_file_ext(
         self,
         version_spec: str | None = None,
-        selection: Literal["newest", "oldest", "all"] = "newest",
+        selection: Literal["newest", "oldest"] = "newest",
     ) -> str: ...
     def download_version_to_local(
         self,
         local_path: str,
         version_spec: str | None = None,
         force: bool = False,
-        selection: Literal["newest", "oldest", "all"] = "newest",
+        selection: Literal["newest", "oldest"] = "newest",
     ) -> bool: ...
     @overload
     def get_dataframe(

@@ -51,7 +51,7 @@ logger = logging.getLogger(__name__)
 class VersionMetadata:
     """Result of resolving a version specification against available versions."""
 
-    version: str | list[str] | None
+    version: str | None
     blob_url: str | None
     version_spec: str | None
     selection: str
@@ -248,7 +248,7 @@ class BlobEndpoint:
     def read_blobs(
         self,
         version_spec: str | None = None,
-        selection: Literal["newest", "oldest", "all"] = "newest",
+        selection: Literal["newest", "oldest"] = "newest",
         print_version: bool = True,
     ) -> list[bytes]:
         """Read a blob in as bytes so it can be loaded into a dataframe
@@ -256,7 +256,7 @@ class BlobEndpoint:
         Args:
             version_spec (str | None, optional): the version of the data to read.
                 Defaults to "latest".
-            selection (Literal["newest", "oldest", "all"], optional): whether to get the newest, oldest, or all matching versions. Defaults to "newest".
+            selection (Literal["newest", "oldest"], optional): whether to get the newest or oldest matching versions. Defaults to "newest".
             print_version (bool, optional): whether to print the version being used. Defaults to True.
         """
         blobs, _ = self._get_version_blobs(
@@ -309,14 +309,14 @@ class BlobEndpoint:
     def get_file_ext(
         self,
         version_spec: str | None = None,
-        selection: Literal["newest", "oldest", "all"] = "newest",
+        selection: Literal["newest", "oldest"] = "newest",
     ) -> str:
         """returns the file extension for handy routing of read byte types for
         DataFrame reading
 
         Args:
             version_spec (str | None, optional): the version specifier to get.
-            selection (Literal["newest", "oldest", "all"], optional): which version to select. Defaults to "newest".
+            selection (Literal["newest", "oldest"], optional): which version to select. Defaults to "newest".
         Returns:
             str: the file extension
         """
@@ -328,24 +328,24 @@ class BlobEndpoint:
     def _get_version_blobs(
         self,
         version_spec: str | None = None,
-        selection: Literal["newest", "oldest", "all"] = "newest",
+        selection: Literal["newest", "oldest"] = "newest",
         print_version=True,
-    ) -> tuple[list, str | list[str] | None]:
+    ) -> tuple[list, str | None]:
         """Return blob metadata for the requested version selection.
 
         Args:
             version_spec (str | None, optional): Version specifier to pass through to
                 ``version_matcher``. Defaults to ``None``.
-            selection (Literal["newest", "oldest", "all"], optional): When matching multiple versions, choose the
-                newest matching version when ``"newest"``, the oldest matching version
-                when ``"oldest"``, or all matching versions when ``"all"``.
+            selection (Literal["newest", "oldest"], optional): When matching multiple versions, choose the
+                newest matching version when ``"newest"``, or the oldest matching version
+                when ``"oldest"``.
             print_version (bool, optional): Whether to print the resolved version
                 before fetching blobs.
 
         Returns:
             list: Blob metadata dictionaries sorted by creation time for the
-            resolved version or versions.
-            str: version string for resolved version
+            resolved version.
+            str | None: version string for resolved version
 
         Raises:
             ValueError: If the requested version cannot be resolved.
@@ -366,44 +366,26 @@ class BlobEndpoint:
             logger.info(f"Using version: {version}")
             if print_version:
                 print(f"Using version: {version}")
-            if isinstance(version, list):
-                walk_path = [f"{self.prefix}/{v}/" for v in version]
-            else:
-                walk_path = f"{self.prefix}/{version}/"
+            walk_path = f"{self.prefix}/{version}/"
         else:
             walk_path = f"{self.prefix.removesuffix('/')}/"
-        if isinstance(walk_path, list):
-            all_blobs = []
-            for wp in walk_path:
-                all_blobs.extend(
-                    walk_blobs_in_container(
-                        name_starts_with=wp,
-                        account_name=self.account,
-                        container_name=self.container,
-                    )
+        return sorted(
+            list(
+                walk_blobs_in_container(
+                    name_starts_with=walk_path,
+                    account_name=self.account,
+                    container_name=self.container,
                 )
-            return sorted(
-                all_blobs,
-                key=lambda x: x["creation_time"],
-            ), version
-        else:
-            return sorted(
-                list(
-                    walk_blobs_in_container(
-                        name_starts_with=walk_path,
-                        account_name=self.account,
-                        container_name=self.container,
-                    )
-                ),
-                key=lambda x: x["creation_time"],
-            ), version
+            ),
+            key=lambda x: x["creation_time"],
+        ), version
 
     def download_version_to_local(
         self,
         local_path: str,
         version_spec: str | None = None,
         force: bool = False,
-        selection: Literal["newest", "oldest", "all"] = "newest",
+        selection: Literal["newest", "oldest"] = "newest",
     ) -> bool:
         """Download a specific version of the data to a local path
 
@@ -411,7 +393,7 @@ class BlobEndpoint:
             local_path (str): the local path to download to
             version_spec (str | None, optional): the version specifier to download. Defaults to None.
             force (bool, optional): whether to force re-download if local.
-            selection (Literal["newest", "oldest", "all"], optional): which version to select. Defaults to "newest".
+            selection (Literal["newest", "oldest"], optional): which version to select. Defaults to "newest".
         Returns:
             bool: whether any files were written
         """
@@ -485,7 +467,7 @@ class BlobEndpoint:
                 either 'pandas' or 'polars' or 'pl_lazy'. Defaults to "pandas".
             version_spec (str, optional): the version of the data to get.
                 Defaults to "latest".
-            selection (Literal["newest", "oldest", "all"], optional): whether to get the newest, oldest, or all matching versions. Defaults to "newest".
+            selection (Literal["newest", "oldest"], optional): whether to get the newest or oldest matching versions. Defaults to "newest".
             print_version (bool, optional): whether to print the version being used. Defaults to False.
 
         Raises:

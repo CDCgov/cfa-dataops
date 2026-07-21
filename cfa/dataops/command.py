@@ -133,12 +133,6 @@ def save_data_locally():
         help="download the oldest version of data instead of the newest",
         action="store_true",
     )
-    parser.add_argument(
-        "--full_range",
-        "-r",
-        help="download the full range of data versions that meet the version criteria",
-        action="store_true",
-    )
     args = parser.parse_args()
     dataset = args.dataset
     stage = args.stage
@@ -152,8 +146,6 @@ def save_data_locally():
     local_path = os.path.abspath(args.location)
     if args.oldest:
         selection = "oldest"
-    elif args.full_range:
-        selection = "all"
     else:
         selection = "newest"
     written = eval(

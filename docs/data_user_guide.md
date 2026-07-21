@@ -147,16 +147,14 @@ Used version: '2025-05-30T14-50-36'
 ```
 
 ```python
-# Fetch all matches and concatenate all tables
-df_v = datacat.private.scenarios.covid19vax_trends.load.get_dataframe(
+# Preview the exact version that would be loaded for the same range
+resolved = datacat.private.scenarios.covid19vax_trends.load.resolve_version(
    version_spec=">=2025-05-01,<2025-06-01",
-   selection="all"
+   selection="newest"
 )
-```
 
-*Console output (example):*
-```
-Used version: ['2025-05-30T19-55-51', '2025-05-30T14-50-36']
+resolved.version
+# '2025-05-30T19-55-51'
 ```
 
 Use the helper `version_matcher` (from `cfa.dataops.utils`) to experiment with version boundary logic to see what matches occur prior to loading large datasets into memory.
@@ -174,8 +172,6 @@ For a direct preview from the dataset endpoint itself, call `resolve_version()` 
 '2.0'
 >>> version_matcher('~=1', available_versions)
 '1.2'
->>> version_matcher('>=1.1,<2.0', available_versions, selection = "all")
-['1.2', '1.1']
 ```
 
 ## Common Issues
