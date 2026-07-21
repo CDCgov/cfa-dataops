@@ -658,14 +658,13 @@ class BlobEndpoint:
                 selection=selection,
             )
 
-        if not version:
+        if not version_blobs:
             return VersionMetadata(
                 version=None,
                 blob_url=None,
                 version_spec=version_spec,
                 selection=selection,
             )
-
         name = version_blobs[0]["name"]
         file_ext = PurePosixPath(name).suffix.lstrip(".").lower()
         path = str(PurePosixPath(name).parent / f"*.{file_ext}")
