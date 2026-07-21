@@ -2,7 +2,38 @@
 
 import pytest
 
-from cfa.dataops.utils import version_matcher
+from cfa.dataops.utils import construct_version_spec, version_matcher
+
+
+class TestConstructVersionSpec:
+    """Tests for construct_version_spec helper."""
+
+    @pytest.mark.parametrize(
+        "raw_version,expected",
+        [
+            ("2025-12-15T00-00-00", "==2025-12-15T00-00-00"),
+            (">2025-12-15T00-00-00", ">2025-12-15T00-00-00"),
+            ("<2025-12-15T00-00-00", "<2025-12-15T00-00-00"),
+            ("==2025-12-15T00-00-00", "==2025-12-15T00-00-00"),
+            ("~=2025-12-15T00-00-00", "~=2025-12-15T00-00-00"),
+            ("!=2025-12-15T00-00-00", "!=2025-12-15T00-00-00"),
+            ("", ""),
+            ("   ", ""),
+        ],
+    )
+    def test_construct_version_spec(self, raw_version, expected):
+        assert construct_version_spec(raw_version) == expected
+
+    def test_version_matcher_accepts_raw_version(self):
+        available_versions = [
+            "2025-12-15T00-00-00",
+            "2025-12-16T00-00-00",
+            "2025-12-17T00-00-00",
+        ]
+        assert (
+            version_matcher("2025-12-16T00-00-00", available_versions)
+            == "2025-12-16T00-00-00"
+        )
 
 
 class TestVersionMatcher:
