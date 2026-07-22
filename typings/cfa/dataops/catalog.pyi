@@ -5,10 +5,16 @@ from typing import Any, Literal, overload
 import pandas as pd
 import polars as pl
 
-def get_all_catalogs() -> list[tuple[str, str, str]]: ...
+def get_all_catalogs() -> list: ...
 
 class CatalogNamespace(SimpleNamespace):
     pass
+
+class VersionMetadata:
+    version: str | None
+    blob_url: str | None
+    version_spec: str | None
+    selection: Literal["newest", "oldest"]
 
 class DatasetEndpoint:
     config_path: str
@@ -34,22 +40,21 @@ class BlobEndpoint:
     def read_blobs(
         self,
         version_spec: str | None = None,
-        selection: Literal["newest", "oldest", "all"] = "newest",
+        selection: Literal["newest", "oldest"] = "newest",
         print_version: bool = True,
     ) -> list[bytes]: ...
     def read_csv(self, suffix: str) -> pd.DataFrame: ...
-    def get_versions(self) -> list[str]: ...
+    def get_versions(self) -> list: ...
     def get_file_ext(
         self,
-        version_spec: str | None = None,
-        selection: Literal["newest", "oldest", "all"] = "newest",
+        version_meta: VersionMetadata,
     ) -> str: ...
     def download_version_to_local(
         self,
         local_path: str,
         version_spec: str | None = None,
         force: bool = False,
-        selection: Literal["newest", "oldest", "all"] = "newest",
+        selection: Literal["newest", "oldest"] = "newest",
     ) -> bool: ...
     @overload
     def get_dataframe(
@@ -57,6 +62,7 @@ class BlobEndpoint:
         output: Literal["pandas", "pd"] = "pandas",
         version_spec: str | None = None,
         selection: Literal["newest", "oldest"] = "newest",
+        print_version: bool = False,
     ) -> pd.DataFrame: ...
     @overload
     def get_dataframe(
@@ -64,6 +70,7 @@ class BlobEndpoint:
         output: Literal["polars", "pl"],
         version_spec: str | None = None,
         selection: Literal["newest", "oldest"] = "newest",
+        print_version: bool = False,
     ) -> pl.DataFrame: ...
     @overload
     def get_dataframe(
@@ -71,7 +78,13 @@ class BlobEndpoint:
         output: Literal["pl_lazy", "lazy"],
         version_spec: str | None = None,
         selection: Literal["newest", "oldest"] = "newest",
+        print_version: bool = False,
     ) -> pl.LazyFrame: ...
+    def resolve_version(
+        self,
+        version_spec: str | None = None,
+        selection: Literal["newest", "oldest"] = "newest",
+    ) -> VersionMetadata: ...
     def ledger_entry(self, action: str) -> None: ...
     def save_dataframe(
         self,

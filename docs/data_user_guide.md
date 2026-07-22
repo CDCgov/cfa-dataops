@@ -40,14 +40,32 @@ df = datacat.private.scenarios.covid19vax_trends.load.get_dataframe(
 - `datacat.{catalog}.{dataset}.load.get_dataframe()`: Access transformed data
 - `datacat.{catalog}.{dataset}.extract.get_dataframe()`: Access raw data
 - Parameters for `get_dataframe()`:
-  - `version`: Either 'latest' or specific version timestamp (default: 'latest')
-  - `output`: Either 'pandas' or 'polars' DataFrame (default: 'pandas')
+   - `output`: One of `pandas`, `polars`, or `pl_lazy` (default: `pandas`)
+   - `version_spec`: Version constraint string used to resolve matching dataset versions
+   - `selection`: Which matching version to return, such as `newest` or `oldest`
+   - `print_version`: Print the resolved version while loading data
 
 ## Working with Data
 
 ### Data Versions
 
 Data is versioned using timestamps. Each version represents a snapshot of the data at that point in time.
+
+If you want to see which version will be returned before loading the dataframe, use `resolve_version()` with the same `version_spec` and `selection` values you plan to pass to `get_dataframe()`:
+
+```python
+from cfa.dataops import datacat
+
+resolved = datacat.private.scenarios.covid19vax_trends.load.resolve_version(
+   version_spec=">=2025-05-01,<2025-06-01",
+   selection="newest",
+)
+
+print(resolved.version)
+print(resolved.blob_url)
+```
+
+`resolve_version()` returns a `VersionMetadata` dataclass with fields `version`, `blob_url`, `version_spec`, and `selection`. Use those same arguments in `get_dataframe()` to load the dataframe you previewed.
 
 To get a specific version:
 
@@ -129,19 +147,19 @@ Used version: '2025-05-30T14-50-36'
 ```
 
 ```python
-# Fetch all matches and concatenate all tables
-df_v = datacat.private.scenarios.covid19vax_trends.load.get_dataframe(
+# Preview the exact version that would be loaded for the same range
+resolved = datacat.private.scenarios.covid19vax_trends.load.resolve_version(
    version_spec=">=2025-05-01,<2025-06-01",
-   selection="all"
+   selection="newest"
 )
-```
 
-*Console output (example):*
-```
-Used version: ['2025-05-30T19-55-51', '2025-05-30T14-50-36']
+resolved.version
+# '2025-05-30T19-55-51'
 ```
 
 Use the helper `version_matcher` (from `cfa.dataops.utils`) to experiment with version boundary logic to see what matches occur prior to loading large datasets into memory.
+
+For a direct preview from the dataset endpoint itself, call `resolve_version()` with the same `version_spec` and `selection` arguments you plan to use with `get_dataframe()`.
 
 ```python
 >>> from cfa.dataops.utils import version_matcher
@@ -154,8 +172,6 @@ Use the helper `version_matcher` (from `cfa.dataops.utils`) to experiment with v
 '2.0'
 >>> version_matcher('~=1', available_versions)
 '1.2'
->>> version_matcher('>=1.1,<2.0', available_versions, selection = "all")
-['1.2', '1.1']
 ```
 
 ## Common Issues
