@@ -54,7 +54,7 @@ class VersionMetadata:
     version: str | None
     blob_url: str | None
     version_spec: str | None
-    selection: str
+    selection: Literal["newest", "oldest"]
 
 
 if not logger.handlers:
@@ -308,22 +308,18 @@ class BlobEndpoint:
 
     def get_file_ext(
         self,
-        version_spec: str | None = None,
-        selection: Literal["newest", "oldest"] = "newest",
+        version_meta: VersionMetadata,
     ) -> str:
         """returns the file extension for handy routing of read byte types for
         DataFrame reading
 
         Args:
-            version_spec (str | None, optional): the version specifier to get.
-            selection (Literal["newest", "oldest"], optional): which version to select. Defaults to "newest".
+            version_meta (VersionMetadata): the version metadata object containing the version specifier and selection`.
         Returns:
             str: the file extension
         """
-        blobs, _ = self._get_version_blobs(
-            version_spec=version_spec, selection=selection, print_version=False
-        )
-        return blobs[0]["name"].split(".")[-1]
+        ext = PurePosixPath(version_meta.blob_url).suffix.lstrip(".")
+        return ext
 
     def _get_version_blobs(
         self,
@@ -496,7 +492,7 @@ class BlobEndpoint:
                 f"No blobs found for version '{version_spec}' in container '{self.container}'."
             )
 
-        file_ext = version_meta.blob_url.split(".")[-1].lower()
+        file_ext = self.get_file_ext(version_meta)
         fullpath = version_meta.blob_url
         if output in ["pl_lazy", "lazy"]:
             if file_ext in ["parquet", "parq"]:
