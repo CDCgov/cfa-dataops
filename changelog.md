@@ -7,7 +7,7 @@ and this project adheres to [Calendar Versioning](https://calver.org/).
 The versioning pattern is `YYYY.MM.DD.micro(a/b/{none if release})
 
 ---
-## [2026.07.22.1]
+## [2026.07.22.0]
 
 - add method `resolve_version()` to Blob Endpoints
 
