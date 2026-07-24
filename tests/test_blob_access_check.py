@@ -29,9 +29,10 @@ class TestCheckBlobAccess:
     """Tests for the check_blob_access method."""
 
     def test_check_blob_access_success(self, blob_endpoint):
-        with patch("cfa.dataops.catalog.walk_blobs_in_container", return_value=[]):
+        with patch("cfa.dataops.catalog.BlobServiceClient") as mock_bsc:
+            mock_container = mock_bsc.return_value.get_container_client.return_value
+            mock_container.get_container_properties.return_value = {}
             has_access, message = blob_endpoint.check_blob_access()
-
         assert has_access is True
         assert "Access confirmed" in message
         assert "myaccount" in message
