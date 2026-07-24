@@ -43,7 +43,9 @@ def install_azure_stubs(
 
             try:
                 _catalog.walk_blobs_in_container(
-                    account_name=self._account_url.split("https://", 1)[-1].split(".", 1)[0],
+                    account_name=self._account_url.split("https://", 1)[-1].split(
+                        ".", 1
+                    )[0],
                     container_name=self._container,
                     prefix="",
                 )
@@ -72,7 +74,9 @@ def install_azure_stubs(
             self._credential = credential
 
         def get_container_client(self, container: str) -> _ContainerClientStub:
-            return _ContainerClientStub(account_url=self._account_url, container=container)
+            return _ContainerClientStub(
+                account_url=self._account_url, container=container
+            )
 
     ensure_module(
         "azure.identity",
