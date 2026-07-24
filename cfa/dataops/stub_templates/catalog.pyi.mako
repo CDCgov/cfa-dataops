@@ -32,6 +32,8 @@ class BlobEndpoint:
     ledger_location: dict[str, Any]
     is_ledger: bool
     __ns_str__: str
+    def check_blob_access(self) -> tuple[bool, str]: ...
+    def verify_blob_access(self) -> None: ...
     def write_blob(
         self,
         file_buffer: bytes | Sequence[bytes],

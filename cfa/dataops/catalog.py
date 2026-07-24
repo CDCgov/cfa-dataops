@@ -16,7 +16,13 @@ from typing import Any, Literal, overload
 import pandas as pd
 import polars as pl
 import tomli
+from azure.core.exceptions import (
+    ClientAuthenticationError,
+    HttpResponseError,
+    ResourceNotFoundError,
+)
 from azure.identity import ManagedIdentityCredential
+from azure.storage.blob import BlobServiceClient
 from cfa.cloudops.blob_helpers import (
     read_blob_stream,
     walk_blobs_in_container,
@@ -203,6 +209,89 @@ class BlobEndpoint:
         self.is_ledger = True if ns == "ledger_endpoint" else False
         self.__ns_str__ = ns
 
+    def check_blob_access(self) -> tuple[bool, str]:
+        """Check if the user has access to the Blob storage account and container.
+
+        This method attempts a lightweight operation (getting container properties)
+        to verify access before attempting data operations. This provides clear
+        error messages instead of cryptic Azure SDK errors.
+
+        Returns:
+            tuple[bool, str]: A tuple containing:
+                - bool: True if access is available, False otherwise
+                - str: A message describing the access status or error details
+
+        Raises:
+            Does not raise exceptions; always returns a tuple with status and message.
+        """
+        try:
+            # Create a BlobServiceClient to check access
+            credential = ManagedIdentityCredential()
+            blob_service_client = BlobServiceClient(
+                account_url=f"https://{self.account}.blob.core.windows.net",
+                credential=credential,
+            )
+            # Try to get container properties to verify access
+            container_client = blob_service_client.get_container_client(self.container)
+            container_client.get_container_properties()
+            return True, f"✓ Access confirmed to {self.account}/{self.container}"
+
+        except ClientAuthenticationError as e:
+            return (
+                False,
+                f"Authentication failed for Blob storage account '{self.account}'. "
+                f"Error: {str(e)}. Please check your credentials and ensure you have "
+                f"the required permissions.",
+            )
+        except ResourceNotFoundError as e:
+            return (
+                False,
+                f"Container '{self.container}' not found in storage account '{self.account}'. "
+                f"Error: {str(e)}. Please verify the container name is correct.",
+            )
+        except HttpResponseError as e:
+            if e.status_code == 403:
+                return (
+                    False,
+                    f"Access denied to container '{self.container}' in account '{self.account}'. "
+                    f"You do not have the required permissions. Error: {str(e)}",
+                )
+            elif e.status_code == 401:
+                return (
+                    False,
+                    f"Unauthorized access to '{self.account}'. "
+                    f"Your credentials are invalid or have expired. Error: {str(e)}",
+                )
+            else:
+                return (
+                    False,
+                    f"HTTP error accessing Blob storage: {e.status_code}. Error: {str(e)}",
+                )
+        except Exception as e:
+            return (
+                False,
+                f"Failed to verify access to Blob storage account '{self.account}'. "
+                f"Error type: {type(e).__name__}. Error: {str(e)}",
+            )
+
+    def verify_blob_access(self) -> None:
+        """Verify access to Blob storage and raise an informative error if access is denied.
+
+        This is a convenience method that calls check_blob_access() and raises
+        a RuntimeError with a helpful message if access verification fails.
+
+        Raises:
+            RuntimeError: If access to Blob storage cannot be verified.
+        """
+        has_access, message = self.check_blob_access()
+        if not has_access:
+            raise RuntimeError(
+                f"Cannot access Blob storage. {message}\n"
+                f"Dataset: {self.__ns_str__}\n"
+                f"Account: {self.account}\n"
+                f"Container: {self.container}"
+            )
+
     def write_blob(
         self,
         file_buffer: bytes | Sequence[bytes],
@@ -222,6 +311,7 @@ class BlobEndpoint:
             auto_version (bool, optional): whether to automatically version
             append (bool, optional): whether to append to existing file (only for single file writes).
         """
+        self.verify_blob_access()
         if auto_version and not append:
             path_after_prefix = f"{get_timestamp()}/{path_after_prefix.lstrip('/')}"
         path_after_prefix = path_after_prefix.lstrip("/")
@@ -259,6 +349,7 @@ class BlobEndpoint:
             selection (Literal["newest", "oldest"], optional): whether to get the newest or oldest matching versions. Defaults to "newest".
             print_version (bool, optional): whether to print the version being used. Defaults to True.
         """
+        self.verify_blob_access()
         blobs, _ = self._get_version_blobs(
             version_spec=version_spec, selection=selection, print_version=print_version
         )
@@ -274,6 +365,7 @@ class BlobEndpoint:
         return blob_bytes
 
     def read_csv(self, suffix: str) -> pd.DataFrame:
+        self.verify_blob_access()
         blob = read_blob_stream(
             blob_url=self.prefix + "/" + suffix,
             account_name=self.account,
@@ -293,6 +385,7 @@ class BlobEndpoint:
         """
         if not check_ext_env():
             raise RuntimeError("No EXT access configured.")
+        self.verify_blob_access()
         glob_path = f"{self.prefix}/"
         return sorted(
             [
