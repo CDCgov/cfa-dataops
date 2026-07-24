@@ -3,7 +3,6 @@
 from unittest.mock import patch
 
 import pytest
-from azure.core.exceptions import ClientAuthenticationError, HttpResponseError, ResourceNotFoundError
 
 from cfa.dataops.catalog import BlobEndpoint
 
