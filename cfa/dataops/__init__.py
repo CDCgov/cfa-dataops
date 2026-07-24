@@ -12,8 +12,6 @@ try:
 except ImportError:
     __version__ = "unknown"
 
-from .catalog import datacat, reportcat
-
 __all__ = ["__version__", "datacat", "reportcat"]
 
 
