@@ -224,6 +224,9 @@ class BlobEndpoint:
         Raises:
             Does not raise exceptions; always returns a tuple with status and message.
         """
+        if getattr(self, "_blob_access_verified", False):
+            return True, f"✓ Access confirmed to {self.account}/{self.container}"
+
         try:
             # Create a BlobServiceClient to check access
             credential = ManagedIdentityCredential()
@@ -234,6 +237,7 @@ class BlobEndpoint:
             # Try to get container properties to verify access
             container_client = blob_service_client.get_container_client(self.container)
             container_client.get_container_properties()
+            self._blob_access_verified = True
             return True, f"✓ Access confirmed to {self.account}/{self.container}"
 
         except ClientAuthenticationError as e:
