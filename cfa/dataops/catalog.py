@@ -153,10 +153,10 @@ class CatalogNamespace(SimpleNamespace):
             matches = [ns for ns in namespace_list if ns.endswith(suffix)]
 
         if not matches:
-            raise KeyError(f"No namespace found matching '{ref_name}'.")
+            raise KeyError(f"No dataset found matching '{ref_name}'.")
         if len(matches) > 1:
             raise ValueError(
-                f"Ambiguous namespace '{ref_name}'. Matches: {', '.join(sorted(matches))}"
+                f"Ambiguous dataset name '{ref_name}'. Matches: {', '.join(sorted(matches))}"
             )
 
         return self._resolve_namespace_path(matches[0])
