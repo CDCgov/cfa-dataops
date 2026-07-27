@@ -39,11 +39,38 @@ df = datacat.private.scenarios.covid19vax_trends.load.get_dataframe(
 
 - `datacat.{catalog}.{dataset}.load.get_dataframe()`: Access transformed data
 - `datacat.{catalog}.{dataset}.extract.get_dataframe()`: Access raw data
+- `datacat.get_ref(name)`: Resolve a dataset reference by full path or unique suffix
 - Parameters for `get_dataframe()`:
    - `output`: One of `pandas`, `polars`, or `pl_lazy` (default: `pandas`)
    - `version_spec`: Version constraint string used to resolve matching dataset versions
    - `selection`: Which matching version to return, such as `newest` or `oldest`
    - `print_version`: Print the resolved version while loading data
+
+### Resolving Dataset References with get_ref
+
+Use `datacat.get_ref(...)` when you want to resolve a dataset first and then reuse the reference.
+
+```python
+from cfa.dataops import datacat
+
+# Exact full namespace path
+vax = datacat.get_ref("private.scenarios.covid19vax_trends")
+
+# Unique suffix path (matches one dataset)
+vax = datacat.get_ref("covid19vax_trends")
+
+# Disable suffix matching and require exact namespace path
+vax = datacat.get_ref("private.scenarios.covid19vax_trends", allow_suffix=False)
+```
+
+If no dataset matches, `get_ref` raises `KeyError`.
+If multiple datasets match a suffix, `get_ref` raises `ValueError` and lists matching namespace paths.
+
+```python
+# Ambiguous suffix example (if multiple catalogs have this dataset name)
+# datacat.get_ref("shared")
+# ValueError: Ambiguous namespace 'shared'. Matches: ...
+```
 
 ## Working with Data
 
@@ -180,6 +207,7 @@ For a direct preview from the dataset endpoint itself, call `resolve_version()` 
    - Verify dataset name using `datacat.__namespace_list__`
    - Check for typos in namespace path
    - Ensure the catalog containing the dataset is installed
+   - If using `datacat.get_ref(...)`, try the full namespace path
 2. Version Not Found
    - Use 'latest' to get most recent version (default)
    - Check available versions using `datacat.{catalog}.{dataset}.load.get_versions()`
@@ -187,3 +215,6 @@ For a direct preview from the dataset endpoint itself, call `resolve_version()` 
    - Ensure data matches expected schema
    - Check for missing required columns
    - Verify data types are correct
+4. Ambiguous get_ref Result
+   - Use a longer suffix (for example, `scenarios.covid19vax_trends`)
+   - Use the full namespace path from `datacat.__namespace_list__`
