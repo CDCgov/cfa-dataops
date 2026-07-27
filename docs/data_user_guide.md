@@ -54,14 +54,10 @@ Use `datacat.get_ref(...)` when you want to resolve a dataset first and then reu
 from cfa.dataops import datacat
 
 # Exact full namespace path
-vax = datacat.get_ref("private.scenarios.covid19vax_trends")
+data_ref = datacat.get_ref("ublic.team.data_trends")
 
 # Unique suffix path (matches one dataset)
-vax = datacat.get_ref("covid19vax_trends")
-
-# Disable suffix matching and require exact namespace path
-vax = datacat.get_ref("private.scenarios.covid19vax_trends", allow_suffix=False)
-```
+data_ref = datacat.get_ref("data_trends")
 
 If no dataset matches, `get_ref` raises `KeyError`.
 If multiple datasets match a suffix, `get_ref` raises `ValueError` and lists matching namespace paths.
@@ -216,5 +212,5 @@ For a direct preview from the dataset endpoint itself, call `resolve_version()` 
    - Check for missing required columns
    - Verify data types are correct
 4. Ambiguous get_ref Result
-   - Use a longer suffix (for example, `scenarios.covid19vax_trends`)
+   - Use a longer suffix (for example, `team.data_trends`)
    - Use the full namespace path from `datacat.__namespace_list__`
