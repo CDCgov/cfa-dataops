@@ -157,7 +157,9 @@ def test_ledger_entry_noop_for_ledger_endpoint(mocker):
 
 def test_resolve_version_returns_empty_metadata_when_no_match(mocker):
     endpoint = _make_blob_endpoint()
-    mocker.patch.object(endpoint, "_get_version_blobs", side_effect=ValueError("no match"))
+    mocker.patch.object(
+        endpoint, "_get_version_blobs", side_effect=ValueError("no match")
+    )
 
     out = endpoint.resolve_version(version_spec=">2030", selection="newest")
 
@@ -169,7 +171,9 @@ def test_resolve_version_returns_empty_metadata_when_no_match(mocker):
     )
 
 
-def test_attach_schema_mock_functions_attaches_extract_and_load(dataset_defaults, tmp_path, mocker):
+def test_attach_schema_mock_functions_attaches_extract_and_load(
+    dataset_defaults, tmp_path, mocker
+):
     config_path = tmp_path / "dataset.toml"
     config_path.write_text(
         """
