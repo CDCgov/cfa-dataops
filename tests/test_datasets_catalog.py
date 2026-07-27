@@ -1,8 +1,10 @@
 from io import BytesIO
+from pathlib import Path
 from types import SimpleNamespace
 
 import pandas as pd
 import polars as pl
+import pytest
 
 from cfa.dataops.catalog import BlobEndpoint, DatasetEndpoint, dict_to_sn
 from cfa.dataops.utils import get_dataset_dot_path, get_timestamp
@@ -14,6 +16,10 @@ class MockBlob:
 
     def content_as_bytes(self):
         return self.data
+
+
+_HERE = Path(__file__).resolve().parent
+_TEST_DATASETS_DIR = _HERE / "test_datasets"
 
 
 def test_dict_to_sn(simple_dataset_ns_map):
@@ -97,6 +103,52 @@ def test_datasets_catalog(
     blobs_read = datacat.tests.etl_test.load.read_blobs()
     blobs_df = pd.read_parquet(BytesIO(blobs_read[0]))
     assert isinstance(blobs_df, pd.DataFrame)
+
+
+def test_catalog_get_ref_exact_and_suffix(dataset_ns_map, dataset_defaults):
+    datacat = dict_to_sn(dataset_ns_map, dataset_defaults)
+    datacat.__setattr__("__namespace_list__", get_dataset_dot_path(dataset_ns_map))
+
+    assert datacat.get_ref("tests.etl_test") is datacat.tests.etl_test
+    assert datacat.get_ref("etl_test") is datacat.tests.etl_test
+    assert (
+        datacat.get_ref("multistage.multistage_test")
+        is datacat.tests.multistage.multistage_test
+    )
+
+
+def test_catalog_get_ref_suffix_disabled(dataset_ns_map, dataset_defaults):
+    datacat = dict_to_sn(dataset_ns_map, dataset_defaults)
+    datacat.__setattr__("__namespace_list__", get_dataset_dot_path(dataset_ns_map))
+
+    with pytest.raises(KeyError, match="No namespace found matching"):
+        datacat.get_ref("etl_test", allow_suffix=False)
+
+
+def test_catalog_get_ref_not_found(dataset_ns_map, dataset_defaults):
+    datacat = dict_to_sn(dataset_ns_map, dataset_defaults)
+    datacat.__setattr__("__namespace_list__", get_dataset_dot_path(dataset_ns_map))
+
+    with pytest.raises(KeyError, match="No namespace found matching"):
+        datacat.get_ref("does_not_exist")
+
+
+def test_catalog_get_ref_ambiguous(dataset_defaults):
+    duplicate_ns_map = {
+        "public": {
+            "team_one": {
+                "shared": str(_TEST_DATASETS_DIR / "etl_test.toml"),
+            },
+            "team_two": {
+                "shared": str(_TEST_DATASETS_DIR / "experiment_test.toml"),
+            },
+        }
+    }
+    datacat = dict_to_sn(duplicate_ns_map, dataset_defaults)
+    datacat.__setattr__("__namespace_list__", get_dataset_dot_path(duplicate_ns_map))
+
+    with pytest.raises(ValueError, match="Ambiguous namespace 'shared'"):
+        datacat.get_ref("shared")
 
 
 def test_datasets_catalog_get_dataframe_parquet(
