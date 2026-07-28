@@ -117,8 +117,35 @@ class TestVersionMatcher:
             "2025-12-17T00-00-00",
         ]
 
-        with pytest.raises(ValueError, match="selection must be 'newest' or 'oldest'"):
-            version_matcher(None, available_versions, selection="all")
+        with pytest.raises(
+            ValueError, match="selection must be 'newest', 'oldest', or 'all'"
+        ):
+            version_matcher(None, available_versions, selection="invalid")
+
+    def test_selection_all_returns_all_matches(self):
+        available_versions = [
+            "2025-12-15T00-00-00",
+            "2025-12-16T00-00-00",
+            "2025-12-17T00-00-00",
+        ]
+
+        result = version_matcher(None, available_versions, selection="all")
+        assert result == available_versions
+
+    def test_selection_all_with_spec_returns_matching_versions(self):
+        available_versions = [
+            "2025-12-15T00-00-00",
+            "2025-12-16T00-00-00",
+            "2025-12-17T00-00-00",
+            "2025-12-18T00-00-00",
+        ]
+
+        result = version_matcher(
+            ">=2025-12-16T00-00-00,<2025-12-18T00-00-00",
+            available_versions,
+            selection="all",
+        )
+        assert result == ["2025-12-16T00-00-00", "2025-12-17T00-00-00"]
 
     @pytest.mark.parametrize(
         "spec,available_versions,expected_newest,expected_oldest",
