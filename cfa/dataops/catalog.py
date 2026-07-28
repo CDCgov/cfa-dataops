@@ -357,7 +357,7 @@ class BlobEndpoint:
             )
             if not version:
                 raise ValueError(
-                    f"Version {version} not found in available versions: {available_versions}"
+                    f"Version matching {version_spec} not found in available versions: {available_versions}"
                 )
             logger.info(f"Using version: {version}")
             if print_version:
