@@ -216,7 +216,7 @@ def version_matcher(
     version_spec: str | None,
     available_versions: list[str],
     selection: Literal["newest", "oldest", "all"] = "newest",
-) -> str | None:
+) -> str | None | list[str]:
     """Select version strings from a list using an optional specifier.
 
     Args:
