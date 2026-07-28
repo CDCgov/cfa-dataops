@@ -121,7 +121,7 @@ def test_catalog_get_ref_suffix_disabled(dataset_ns_map, dataset_defaults):
     datacat = dict_to_sn(dataset_ns_map, dataset_defaults)
     datacat.__setattr__("__namespace_list__", get_dataset_dot_path(dataset_ns_map))
 
-    with pytest.raises(KeyError, match="No namespace found matching"):
+    with pytest.raises(KeyError, match="No dataset found matching"):
         datacat.get_ref("etl_test", allow_suffix=False)
 
 
@@ -129,7 +129,7 @@ def test_catalog_get_ref_not_found(dataset_ns_map, dataset_defaults):
     datacat = dict_to_sn(dataset_ns_map, dataset_defaults)
     datacat.__setattr__("__namespace_list__", get_dataset_dot_path(dataset_ns_map))
 
-    with pytest.raises(KeyError, match="No namespace found matching"):
+    with pytest.raises(KeyError, match="No dataset found matching"):
         datacat.get_ref("does_not_exist")
 
 
@@ -147,7 +147,7 @@ def test_catalog_get_ref_ambiguous(dataset_defaults):
     datacat = dict_to_sn(duplicate_ns_map, dataset_defaults)
     datacat.__setattr__("__namespace_list__", get_dataset_dot_path(duplicate_ns_map))
 
-    with pytest.raises(ValueError, match="Ambiguous namespace 'shared'"):
+    with pytest.raises(ValueError, match="Ambiguous dataset name 'shared'"):
         datacat.get_ref("shared")
 
 

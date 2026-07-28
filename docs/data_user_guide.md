@@ -60,13 +60,13 @@ data_ref = datacat.get_ref("public.team.data_trends")
 data_ref = datacat.get_ref("data_trends")
 ~~~
 
-If no dataset matches, `get_ref` raises `KeyError`.
-If multiple datasets match a suffix, `get_ref` raises `ValueError` and lists matching namespace paths.
+If no dataset matches, `get_ref` raises `KeyError` with message: `No dataset found matching '...'`.
+If multiple datasets match a suffix, `get_ref` raises `ValueError` with message: `Ambiguous dataset name '...'. Matches: ...`.
 
 ~~~python
 # Ambiguous suffix example (if multiple catalogs have this dataset name)
 # datacat.get_ref("shared")
-# ValueError: Ambiguous namespace 'shared'. Matches: ...
+# ValueError: Ambiguous dataset name 'shared'. Matches: public.team_one.shared, public.team_two.shared
 ~~~
 
 ## Working with Data
