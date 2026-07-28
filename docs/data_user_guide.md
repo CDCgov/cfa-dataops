@@ -50,23 +50,24 @@ df = datacat.private.scenarios.covid19vax_trends.load.get_dataframe(
 
 Use `datacat.get_ref(...)` when you want to resolve a dataset first and then reuse the reference.
 
-```python
+~~~python
 from cfa.dataops import datacat
 
 # Exact full namespace path
-data_ref = datacat.get_ref("ublic.team.data_trends")
+data_ref = datacat.get_ref("public.team.data_trends")
 
 # Unique suffix path (matches one dataset)
 data_ref = datacat.get_ref("data_trends")
+~~~
 
 If no dataset matches, `get_ref` raises `KeyError`.
 If multiple datasets match a suffix, `get_ref` raises `ValueError` and lists matching namespace paths.
 
-```python
+~~~python
 # Ambiguous suffix example (if multiple catalogs have this dataset name)
 # datacat.get_ref("shared")
 # ValueError: Ambiguous namespace 'shared'. Matches: ...
-```
+~~~
 
 ## Working with Data
 
