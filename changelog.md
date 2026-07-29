@@ -7,6 +7,10 @@ and this project adheres to [Calendar Versioning](https://calver.org/).
 The versioning pattern is `YYYY.MM.DD.micro(a/b/{none if release})
 
 ---
+## [2026.07.29.0]
+
+- fix the error message in `version_matcher` when version does not exist
+
 ## [2026.07.22.0]
 
 - add method `resolve_version()` to Blob Endpoints
