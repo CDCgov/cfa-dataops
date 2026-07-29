@@ -28,3 +28,5 @@ print("Reports:", reportcat.__namespace_list__)
 df = datacat.private.scenarios.covid19vax_trends.load.get_dataframe()
 report_html = reportcat.private.examples.basics_ipynb.nb_to_html_str()
 ```
+
+When you need to preview the version that a dataframe load will use, call `resolve_version()` on the same dataset endpoint with the same `version_spec` and `selection` values you plan to pass to `get_dataframe()`.

@@ -12,7 +12,7 @@ This project provides data tools and low friction access to versioned datasets w
 - Utilities for time-stamping and template loading
 - Data validation and quality checks
 - Custom workflows
-- Tooling for easy access to Socrata Open Data API (e.i., data.cdc.gov) (copied and modified from [here](https://github.com/CDCgov/cfasodapy))
+- Tooling for easy access to Socrata Open Data API (data.cdc.gov) (copied and modified from [here](https://github.com/CDCgov/cfasodapy))
 - Ability to initialize new dataset catalog libraries and maintain datasets in more than one repo
 
 ## Technology Stack
@@ -20,9 +20,8 @@ This project provides data tools and low friction access to versioned datasets w
 - Polars (high-performance data frame library)
 - Azure Blob Storage (centralized data storage)
 - Dagster (workflow orchestration, emerging)
-- GitHub Actions (CI/CD and scheduling)
+- Pandas (data manipulation and analysis python library)
 - Socrata API (public health data access)
-- DVC (under evaluation for data set versioning)
 
 ## Getting started
 
@@ -34,7 +33,9 @@ Before getting started, ensure you have:
 
 ### Steps
 1. Clone the repository and install dependencies with `poetry install` (**requires `poetry >= 2.0`**)
-2. Ensure your have access to the relevant resources (e.g., `az login --identity`)
+2. Ensure your have access to the relevant resources (e.g.`az login --identity`)
+1. Clone the repository and install dependencies with `uv sync`
+2. Ensure you have access to the relevant resources (e.g., `az login --identity`)
 3. See which datasets are available:
    ```python
    from cfa.dataops import datacat
@@ -49,6 +50,18 @@ Before getting started, ensure you have:
    df = datacat.{{dataset}}.load.get_dataframe()
    df.glimpse()
    ```
+6. Generate project-local type stubs for the installed catalog:
+   ```bash
+   dataops_catalog_stubs
+   ```
+
+   If using uv, run:
+   ```bash
+   uv run dataops_catalog_stubs
+   ```
+
+   This writes stubs under `typings/`, which Pyright/Pylance uses by default.
+   For mypy, include that directory with `MYPYPATH=typings`.
 
 Read the [Dataset User Guide](docs/data_user_guide.md) for more information about accessing datasets.
 
@@ -57,7 +70,6 @@ Read the [Dataset Developer Guide](docs/data_developer_guide.md) for information
 ## Project admins
 
 - Thomas Hladish <utx5@cdc.gov> (CDC/OD/ORR/CFA)
-- Phillip Rogers <ap66@cdc.gov> (CDC/OD/ORR/CFA)(CTR)
 - Ryan Raasch <xng3@cdc.gov> (CDC/OD/ORR/CFA)(CTR)
 
 ---

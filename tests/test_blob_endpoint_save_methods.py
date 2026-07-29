@@ -128,25 +128,23 @@ class TestSaveDataframe:
         assert isinstance(call_args[1]["file_buffer"], bytes)
 
     def test_save_pandas_dataframe_json_auto_extension_fix(
-        self, mocker, blob_endpoint, sample_pandas_df, capsys
+        self, mocker, blob_endpoint, sample_pandas_df, caplog
     ):
         """Test that .json extension is automatically changed to .jsonl"""
         mock_write = mocker.patch.object(blob_endpoint, "write_blob")
 
-        blob_endpoint.save_dataframe(
-            df=sample_pandas_df,
-            path_after_prefix="data/output.json",
-            file_format="json",
-            auto_version=False,
-        )
+        with caplog.at_level("INFO"):
+            blob_endpoint.save_dataframe(
+                df=sample_pandas_df,
+                path_after_prefix="data/output.json",
+                file_format="json",
+                auto_version=False,
+            )
 
         mock_write.assert_called_once()
         call_args = mock_write.call_args
         assert call_args[1]["path_after_prefix"] == "data/output.jsonl"
-
-        # Check that warning message was printed
-        captured = capsys.readouterr()
-        assert "Changing file extension to .jsonl" in captured.out
+        assert "Changing file extension to .jsonl" in caplog.text
 
     def test_save_polars_dataframe_parquet(
         self, mocker, blob_endpoint, sample_polars_df

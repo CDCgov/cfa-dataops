@@ -91,7 +91,7 @@ def test_datasets_catalog(
     mocker.patch.object(
         datacat.tests.etl_test.load,
         "_get_version_blobs",
-        return_value=blobs_sig_mock,
+        return_value=(blobs_sig_mock, "2025-06-03T17-56-50"),
     )
 
     blobs_read = datacat.tests.etl_test.load.read_blobs()
@@ -137,18 +137,93 @@ def test_datasets_catalog_get_dataframe_parquet(
     mocker.patch.object(
         datacat.tests.etl_test.load,
         "_get_version_blobs",
-        return_value=[
-            {
-                "name": "prefix_test/transformed/test_dataset/2025-06-03T17-56-50/data.parquet",
-                "container": "container_test",
-            }
-        ],
+        return_value=(
+            [
+                {
+                    "name": "prefix_test/transformed/test_dataset/2025-06-03T17-56-50/data.parquet",
+                    "container": "container_test",
+                }
+            ],
+            "2025-06-03T17-56-50",
+        ),
     )
 
     blobs_df = datacat.tests.etl_test.load.get_dataframe(output="pd")
     assert isinstance(blobs_df, pd.DataFrame)
     blobs_df = datacat.tests.etl_test.load.get_dataframe(output="pl")
     assert isinstance(blobs_df, pl.DataFrame)
+
+
+def test_datasets_catalog_resolve_version(
+    mocker, mock_write_blob_stream, dataset_ns_map, dataset_defaults
+):
+    datacat = dict_to_sn(dataset_ns_map, dataset_defaults)
+    dataset_namespaces = get_dataset_dot_path(dataset_ns_map)
+    datacat.__setattr__("__namespace_list__", dataset_namespaces)
+
+    mocker.patch(
+        "cfa.dataops.catalog.write_blob_stream",
+        mock_write_blob_stream,
+    )
+    mocker.patch.object(
+        datacat.tests.etl_test.load,
+        "get_versions",
+        return_value=["2025-06-03T17-56-50", "2025-05-30T14-50-36"],
+    )
+    mocker.patch.object(
+        datacat.tests.etl_test.load,
+        "_get_version_blobs",
+        return_value=(
+            [
+                {
+                    "name": "prefix_test/transformed/test_dataset/2025-05-30T14-50-36/data.parquet",
+                    "container": "container_test",
+                }
+            ],
+            "2025-05-30T14-50-36",
+        ),
+    )
+
+    resolved = datacat.tests.etl_test.load.resolve_version(
+        version_spec=">=2025-05-01,<2025-07-01",
+        selection="oldest",
+    )
+
+    assert resolved.version == "2025-05-30T14-50-36"
+    assert (
+        resolved.blob_url
+        == "az://container_test/prefix_test/transformed/test_dataset/2025-05-30T14-50-36/*.parquet"
+    )
+    assert resolved.version_spec == ">=2025-05-01,<2025-07-01"
+    assert resolved.selection == "oldest"
+
+
+def test_datasets_catalog_resolve_version_no_match(
+    mocker, mock_write_blob_stream, dataset_ns_map, dataset_defaults
+):
+    datacat = dict_to_sn(dataset_ns_map, dataset_defaults)
+    dataset_namespaces = get_dataset_dot_path(dataset_ns_map)
+    datacat.__setattr__("__namespace_list__", dataset_namespaces)
+
+    mocker.patch(
+        "cfa.dataops.catalog.write_blob_stream",
+        mock_write_blob_stream,
+    )
+    mocker.patch.object(
+        datacat.tests.etl_test.load,
+        "get_versions",
+        return_value=["2025-06-03T17-56-50", "2025-05-30T14-50-36"],
+    )
+
+    resolved = datacat.tests.etl_test.load.resolve_version(
+        version_spec=">2026-01-01",
+        selection="newest",
+    )
+
+    assert resolved.version is None
+    assert resolved.blob_url is None
+    assert resolved.version_spec == ">2026-01-01"
+    assert resolved.selection == "newest"
 
 
 def test_datasets_catalog_get_dataframe_json(
@@ -189,12 +264,15 @@ def test_datasets_catalog_get_dataframe_json(
     mocker.patch.object(
         datacat.tests.etl_test.load,
         "_get_version_blobs",
-        return_value=[
-            {
-                "name": "prefix_test/transformed/test_dataset/2025-06-03T17-56-50/data.json",
-                "container": "container_test",
-            }
-        ],
+        return_value=(
+            [
+                {
+                    "name": "prefix_test/transformed/test_dataset/2025-06-03T17-56-50/data.json",
+                    "container": "container_test",
+                }
+            ],
+            "2025-06-03T17-56-50",
+        ),
     )
 
     blobs_df = datacat.tests.etl_test.load.get_dataframe(output="pd")
@@ -224,12 +302,15 @@ def test_datasets_catalog_get_dataframe_pl_lazy(
     mocker.patch.object(
         datacat.tests.etl_test.load,
         "_get_version_blobs",
-        return_value=[
-            {
-                "name": "prefix_test/transformed/test_dataset/2025-06-03T17-56-50/data.parquet",
-                "container": "container_test",
-            }
-        ],
+        return_value=(
+            [
+                {
+                    "name": "prefix_test/transformed/test_dataset/2025-06-03T17-56-50/data.parquet",
+                    "container": "container_test",
+                }
+            ],
+            "2025-06-03T17-56-50",
+        ),
     )
     mocker.patch.object(
         datacat.tests.etl_test.load,

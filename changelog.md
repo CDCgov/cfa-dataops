@@ -7,6 +7,51 @@ and this project adheres to [Calendar Versioning](https://calver.org/).
 The versioning pattern is `YYYY.MM.DD.micro(a/b/{none if release})
 
 ---
+## [2026.07.28.0]
+
+- add "all" option to version_matcher
+
+## [2026.07.22.0]
+
+- add method `resolve_version()` to Blob Endpoints
+
+## [2026.07.21.0]
+
+- adds function to translate bare versions to version_spec
+
+## [2026.07.20.0]
+
+- change most print statements to logging
+
+## [2026.06.30.0]
+
+- changed SimpleNamespace to CatalogNamespace for more helpful type hints
+
+## [2026.06.05.0]
+
+### Updated
+
+- removed package dependency limits
+
+## [2026.05.29.1]
+
+### Fixed
+
+- added a check to ensure the right environment, otherwise the code fails faster
+
+## [2026.05.29.0]
+
+### Fixed
+
+- version_matcher() functions has better date parsing and error messages
+- updated get_dataframe() and other functions to use the newer version_matcher arguments (version_spec, selection)
+
+## [2026.05.12.0]
+
+### Fixed
+
+- removed the ledger reads and write temporarily
+
 ## [2026.04.27.0]
 
 ### Fixed

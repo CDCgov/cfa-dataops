@@ -128,6 +128,7 @@ dataops_save "catalog.my_dataset" ./data --force
 - `location`: (required) Local directory path where data will be saved (will be created if it doesn't exist)
 - `--stage` or `-s`: (optional) Specific stage to download (defaults to the last stage)
 - `--version` or `-v`: (optional) Specific version to download (defaults to the most recent)
+- `--oldest` or `-o`: (optional) Download the oldest matching version instead of the newest default
 - `--force` or `-f`: (optional) Force re-download even if data already exists locally
 
 **Output Example:**

@@ -29,6 +29,46 @@ def blob_endpoint(mocker, mock_write_blob_stream):
     )
 
 
+def test_get_version_blobs_ledger_returns_none_version(mocker, mock_write_blob_stream):
+    """Ledger endpoints should not fail when no resolved version is set."""
+    mocker.patch(
+        "cfa.dataops.catalog.write_blob_stream",
+        mock_write_blob_stream,
+    )
+    ledger_endpoint = BlobEndpoint(
+        account="account_test",
+        container="container_test",
+        prefix="_access/test/ledger",
+        ledger_location={
+            "account": "account_test",
+            "container": "container_test",
+            "prefix": "_access/test/ledger/",
+        },
+        ns="ledger_endpoint",
+    )
+    mocker.patch(
+        "cfa.dataops.catalog.walk_blobs_in_container",
+        return_value=[
+            {
+                "name": "_access/test/ledger/older.json",
+                "creation_time": "2025-01-01T12:00:00",
+            },
+            {
+                "name": "_access/test/ledger/newer.json",
+                "creation_time": "2025-01-02T12:00:00",
+            },
+        ],
+    )
+
+    blobs, version = ledger_endpoint._get_version_blobs()
+
+    assert version is None
+    assert [blob["name"] for blob in blobs] == [
+        "_access/test/ledger/older.json",
+        "_access/test/ledger/newer.json",
+    ]
+
+
 class TestDownloadVersionToLocal:
     """Tests for the download_version_to_local method"""
 
@@ -49,18 +89,21 @@ class TestDownloadVersionToLocal:
         mocker.patch.object(
             blob_endpoint,
             "_get_version_blobs",
-            return_value=[
-                {
-                    "name": "test/prefix/2025-01-01T12-00-00/data.csv",
-                    "creation_time": "2025-01-01T12:00:00",
-                }
-            ],
+            return_value=(
+                [
+                    {
+                        "name": "test/prefix/2025-01-01T12-00-00/data.csv",
+                        "creation_time": "2025-01-01T12:00:00",
+                    }
+                ],
+                "2025-01-01T12-00-00",
+            ),
         )
 
         with tempfile.TemporaryDirectory() as tmpdir:
             result = blob_endpoint.download_version_to_local(
                 local_path=tmpdir,
-                version="2025-01-01T12-00-00",
+                version_spec="==2025-01-01T12-00-00",
                 force=False,
             )
 
@@ -93,22 +136,25 @@ class TestDownloadVersionToLocal:
         mocker.patch.object(
             blob_endpoint,
             "_get_version_blobs",
-            return_value=[
-                {
-                    "name": "test/prefix/2025-01-01T12-00-00/data_0.parquet",
-                    "creation_time": "2025-01-01T12:00:00",
-                },
-                {
-                    "name": "test/prefix/2025-01-01T12-00-00/data_1.parquet",
-                    "creation_time": "2025-01-01T12:00:01",
-                },
-            ],
+            return_value=(
+                [
+                    {
+                        "name": "test/prefix/2025-01-01T12-00-00/data_0.parquet",
+                        "creation_time": "2025-01-01T12:00:00",
+                    },
+                    {
+                        "name": "test/prefix/2025-01-01T12-00-00/data_1.parquet",
+                        "creation_time": "2025-01-01T12:00:01",
+                    },
+                ],
+                "2025-01-01T12-00-00",
+            ),
         )
 
         with tempfile.TemporaryDirectory() as tmpdir:
             result = blob_endpoint.download_version_to_local(
                 local_path=tmpdir,
-                version="2025-01-01T12-00-00",
+                version_spec="==2025-01-01T12-00-00",
                 force=False,
             )
 
@@ -140,18 +186,21 @@ class TestDownloadVersionToLocal:
         mocker.patch.object(
             blob_endpoint,
             "_get_version_blobs",
-            return_value=[
-                {
-                    "name": "test/prefix/2025-01-01T12-00-00/subdir/nested/file.txt",
-                    "creation_time": "2025-01-01T12:00:00",
-                }
-            ],
+            return_value=(
+                [
+                    {
+                        "name": "test/prefix/2025-01-01T12-00-00/subdir/nested/file.txt",
+                        "creation_time": "2025-01-01T12:00:00",
+                    }
+                ],
+                "2025-01-01T12-00-00",
+            ),
         )
 
         with tempfile.TemporaryDirectory() as tmpdir:
             result = blob_endpoint.download_version_to_local(
                 local_path=tmpdir,
-                version="2025-01-01T12-00-00",
+                version_spec="==2025-01-01T12-00-00",
                 force=False,
             )
 
@@ -187,18 +236,21 @@ class TestDownloadVersionToLocal:
         mocker.patch.object(
             blob_endpoint,
             "_get_version_blobs",
-            return_value=[
-                {
-                    "name": "test/prefix/2025-01-02T12-00-00/data.csv",
-                    "creation_time": "2025-01-02T12:00:00",
-                }
-            ],
+            return_value=(
+                [
+                    {
+                        "name": "test/prefix/2025-01-02T12-00-00/data.csv",
+                        "creation_time": "2025-01-02T12:00:00",
+                    }
+                ],
+                "2025-01-02T12-00-00",
+            ),
         )
 
         with tempfile.TemporaryDirectory() as tmpdir:
             result = blob_endpoint.download_version_to_local(
                 local_path=tmpdir,
-                version="latest",
+                version_spec=None,
                 force=False,
             )
 
@@ -225,12 +277,15 @@ class TestDownloadVersionToLocal:
         mocker.patch.object(
             blob_endpoint,
             "_get_version_blobs",
-            return_value=[
-                {
-                    "name": "test/prefix/2025-01-01T12-00-00/data.csv",
-                    "creation_time": "2025-01-01T12:00:00",
-                }
-            ],
+            return_value=(
+                [
+                    {
+                        "name": "test/prefix/2025-01-01T12-00-00/data.csv",
+                        "creation_time": "2025-01-01T12:00:00",
+                    }
+                ],
+                "2025-01-01T12-00-00",
+            ),
         )
 
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -243,7 +298,7 @@ class TestDownloadVersionToLocal:
 
             result = blob_endpoint.download_version_to_local(
                 local_path=tmpdir,
-                version="2025-01-01T12-00-00",
+                version_spec="==2025-01-01T12-00-00",
                 force=False,
             )
 
@@ -269,12 +324,15 @@ class TestDownloadVersionToLocal:
         mocker.patch.object(
             blob_endpoint,
             "_get_version_blobs",
-            return_value=[
-                {
-                    "name": "test/prefix/2025-01-01T12-00-00/data.csv",
-                    "creation_time": "2025-01-01T12:00:00",
-                }
-            ],
+            return_value=(
+                [
+                    {
+                        "name": "test/prefix/2025-01-01T12-00-00/data.csv",
+                        "creation_time": "2025-01-01T12:00:00",
+                    }
+                ],
+                "2025-01-01T12-00-00",
+            ),
         )
 
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -286,7 +344,7 @@ class TestDownloadVersionToLocal:
 
             result = blob_endpoint.download_version_to_local(
                 local_path=tmpdir,
-                version="2025-01-01T12-00-00",
+                version_spec="==2025-01-01T12-00-00",
                 force=True,
             )
 
@@ -311,18 +369,21 @@ class TestDownloadVersionToLocal:
         mocker.patch.object(
             blob_endpoint,
             "_get_version_blobs",
-            return_value=[
-                {
-                    "name": "test/prefix/2025-01-01T12-00-00/deep/nested/path/data.csv",
-                    "creation_time": "2025-01-01T12:00:00",
-                }
-            ],
+            return_value=(
+                [
+                    {
+                        "name": "test/prefix/2025-01-01T12-00-00/deep/nested/path/data.csv",
+                        "creation_time": "2025-01-01T12:00:00",
+                    }
+                ],
+                "2025-01-01T12-00-00",
+            ),
         )
 
         with tempfile.TemporaryDirectory() as tmpdir:
             result = blob_endpoint.download_version_to_local(
                 local_path=tmpdir,
-                version="2025-01-01T12-00-00",
+                version_spec="==2025-01-01T12-00-00",
                 force=False,
             )
 
@@ -339,42 +400,6 @@ class TestDownloadVersionToLocal:
             )
             assert os.path.exists(expected_file)
             assert os.path.isfile(expected_file)
-
-    def test_download_version_to_local_ledger_entry(self, mocker, blob_endpoint):
-        """Test that ledger entry is created when files are written"""
-        test_content = b"test content"
-
-        def mock_read_blob_stream(blob_url, account_name, container_name):
-            return test_content
-
-        mocker.patch(
-            "cfa.dataops.catalog.read_blob_stream",
-            side_effect=mock_read_blob_stream,
-        )
-
-        mocker.patch.object(
-            blob_endpoint,
-            "_get_version_blobs",
-            return_value=[
-                {
-                    "name": "test/prefix/2025-01-01T12-00-00/data.csv",
-                    "creation_time": "2025-01-01T12:00:00",
-                }
-            ],
-        )
-
-        # Mock ledger_entry to track if it was called
-        mock_ledger = mocker.patch.object(blob_endpoint, "ledger_entry")
-
-        with tempfile.TemporaryDirectory() as tmpdir:
-            blob_endpoint.download_version_to_local(
-                local_path=tmpdir,
-                version="2025-01-01T12-00-00",
-                force=False,
-            )
-
-            # Verify ledger entry was called with 'read' action
-            mock_ledger.assert_called_once_with(action="read")
 
     def test_download_version_to_local_no_ledger_entry_when_not_written(
         self, mocker, blob_endpoint
@@ -393,12 +418,15 @@ class TestDownloadVersionToLocal:
         mocker.patch.object(
             blob_endpoint,
             "_get_version_blobs",
-            return_value=[
-                {
-                    "name": "test/prefix/2025-01-01T12-00-00/data.csv",
-                    "creation_time": "2025-01-01T12:00:00",
-                }
-            ],
+            return_value=(
+                [
+                    {
+                        "name": "test/prefix/2025-01-01T12-00-00/data.csv",
+                        "creation_time": "2025-01-01T12:00:00",
+                    }
+                ],
+                "2025-01-01T12-00-00",
+            ),
         )
 
         # Mock ledger_entry to track if it was called
@@ -413,7 +441,7 @@ class TestDownloadVersionToLocal:
 
             blob_endpoint.download_version_to_local(
                 local_path=tmpdir,
-                version="2025-01-01T12-00-00",
+                version_spec="==2025-01-01T12-00-00",
                 force=False,
             )
 
@@ -441,16 +469,19 @@ class TestDownloadVersionToLocal:
         mocker.patch.object(
             blob_endpoint,
             "_get_version_blobs",
-            return_value=[
-                {
-                    "name": "test/prefix/2025-01-01T12-00-00/file1.txt",
-                    "creation_time": "2025-01-01T12:00:00",
-                },
-                {
-                    "name": "test/prefix/2025-01-01T12-00-00/file2.txt",
-                    "creation_time": "2025-01-01T12:00:01",
-                },
-            ],
+            return_value=(
+                [
+                    {
+                        "name": "test/prefix/2025-01-01T12-00-00/file1.txt",
+                        "creation_time": "2025-01-01T12:00:00",
+                    },
+                    {
+                        "name": "test/prefix/2025-01-01T12-00-00/file2.txt",
+                        "creation_time": "2025-01-01T12:00:01",
+                    },
+                ],
+                "2025-01-01T12-00-00",
+            ),
         )
 
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -462,7 +493,7 @@ class TestDownloadVersionToLocal:
 
             result = blob_endpoint.download_version_to_local(
                 local_path=tmpdir,
-                version="2025-01-01T12-00-00",
+                version_spec="==2025-01-01T12-00-00",
                 force=False,
             )
 

@@ -1,10 +1,12 @@
 """building a validated datasource namespace"""
 
 import json
+import logging
 import os
 import pkgutil
 from collections.abc import Sequence
 from configparser import ConfigParser
+from dataclasses import dataclass
 from importlib import import_module
 from io import BytesIO
 from pathlib import PurePosixPath
@@ -20,6 +22,7 @@ from cfa.cloudops.blob_helpers import (
     walk_blobs_in_container,
     write_blob_stream,
 )
+from cfa.cloudops.util import check_ext_env
 
 from .config_validator import (
     ConfigValidator,
@@ -41,6 +44,22 @@ _here = os.path.abspath(os.path.dirname(__file__))
 _config = ConfigParser()
 _config.read(os.path.join(_here, "config.ini"))
 
+logger = logging.getLogger(__name__)
+
+
+@dataclass(frozen=True)
+class VersionMetadata:
+    """Result of resolving a version specification against available versions."""
+
+    version: str | None
+    blob_url: str | None
+    version_spec: str | None
+    selection: Literal["newest", "oldest"]
+
+
+if not logger.handlers:
+    logger.addHandler(logging.NullHandler())
+
 
 def get_all_catalogs() -> list:
     """Get a list of all available dataops catalogs.
@@ -56,8 +75,10 @@ def get_all_catalogs() -> list:
         for module_finder, modname, ispkg in pkgutil.iter_modules(catalog_pkg.__path__):
             if ispkg:
                 catalogs.append((catalog_nspace, modname, module_finder.path))
-    except ModuleNotFoundError:
-        print(f"No catalogs exist in namespace {catalog_nspace}")
+    except ModuleNotFoundError as e:
+        if e.name != catalog_nspace:
+            raise
+        logger.warning("No catalogs exist in namespace %s", catalog_nspace)
 
     return catalogs
 
@@ -81,6 +102,10 @@ for cns, cat_name, cat_path in all_catalogs:
 
 dataset_namespaces = get_dataset_dot_path(all_dataset_ns_map)
 report_namespaces = get_dataset_dot_path(all_reports_ns_map)
+
+
+class CatalogNamespace(SimpleNamespace):
+    """Runtime namespace wrapper for catalog access."""
 
 
 class DatasetEndpoint:
@@ -217,22 +242,25 @@ class BlobEndpoint:
                 container_name=self.container,
                 append_blob=append,
             )
-        self.ledger_entry(action="write")
+        # self.ledger_entry(action="write")
         # print(f"file written to: {full_path}")
 
     def read_blobs(
-        self, version: str = "latest", newest: bool = True, print_version: bool = True
+        self,
+        version_spec: str | None = None,
+        selection: Literal["newest", "oldest"] = "newest",
+        print_version: bool = True,
     ) -> list[bytes]:
         """Read a blob in as bytes so it can be loaded into a dataframe
 
         Args:
-            version (str, optional): the version of the data to read.
+            version_spec (str | None, optional): the version of the data to read.
                 Defaults to "latest".
-            newest (bool, optional): whether to get the newest matching version. Defaults to True.
+            selection (Literal["newest", "oldest"], optional): whether to get the newest or oldest matching versions. Defaults to "newest".
             print_version (bool, optional): whether to print the version being used. Defaults to True.
         """
-        blobs = self._get_version_blobs(
-            version, newest=newest, print_version=print_version
+        blobs, _ = self._get_version_blobs(
+            version_spec=version_spec, selection=selection, print_version=print_version
         )
         blob_bytes = [
             read_blob_stream(
@@ -242,7 +270,7 @@ class BlobEndpoint:
             )
             for i in blobs
         ]
-        self.ledger_entry(action="read")
+        # self.ledger_entry(action="read")
         return blob_bytes
 
     def read_csv(self, suffix: str) -> pd.DataFrame:
@@ -252,7 +280,7 @@ class BlobEndpoint:
             container_name=self.container,
         )
         df = pd.read_csv(blob)
-        self.ledger_entry(action="read")
+        # self.ledger_entry(action="read")
         return df
 
     def get_versions(self) -> list:
@@ -263,6 +291,8 @@ class BlobEndpoint:
             list: sorted list of data version paths in descending order
             (latest first)
         """
+        if not check_ext_env():
+            raise RuntimeError("No EXT access configured.")
         glob_path = f"{self.prefix}/"
         return sorted(
             [
@@ -276,82 +306,98 @@ class BlobEndpoint:
             reverse=True,
         )
 
-    def get_file_ext(self, version: str = "latest") -> str:
+    def get_file_ext(
+        self,
+        version_meta: VersionMetadata,
+    ) -> str:
         """returns the file extension for handy routing of read byte types for
         DataFrame reading
 
         Args:
-            version (str, optional): the version of the data to get.
+            version_meta (VersionMetadata): the version metadata object containing the version specifier and selection`.
         Returns:
             str: the file extension
         """
-        return self._get_version_blobs(version=version, print_version=False)[0][
-            "name"
-        ].split(".")[-1]
+        ext = PurePosixPath(version_meta.blob_url).suffix.lstrip(".")
+        return ext
 
     def _get_version_blobs(
-        self, version: str = "latest", newest=True, print_version=True
-    ) -> list:
+        self,
+        version_spec: str | None = None,
+        selection: Literal["newest", "oldest"] = "newest",
+        print_version=True,
+    ) -> tuple[list, str | None]:
+        """Return blob metadata for the requested version selection.
+
+        Args:
+            version_spec (str | None, optional): Version specifier to pass through to
+                ``version_matcher``. Defaults to ``None``.
+            selection (Literal["newest", "oldest"], optional): When matching multiple versions, choose the
+                newest matching version when ``"newest"``, or the oldest matching version
+                when ``"oldest"``.
+            print_version (bool, optional): Whether to print the resolved version
+                before fetching blobs.
+
+        Returns:
+            list: Blob metadata dictionaries sorted by creation time for the
+            resolved version.
+            str | None: version string for resolved version
+
+        Raises:
+            ValueError: If the requested version cannot be resolved.
+        """
+        # check credential access
+        if not check_ext_env():
+            raise RuntimeError("No EXT access configured.")
+        version = None
         if not self.is_ledger:
             available_versions = self.get_versions()
-            version = version_matcher(version, available_versions, newest=newest)
+            version = version_matcher(
+                version_spec, available_versions, selection=selection
+            )
             if not version:
                 raise ValueError(
                     f"Version {version} not found in available versions: {available_versions}"
                 )
+            logger.info(f"Using version: {version}")
             if print_version:
                 print(f"Using version: {version}")
-            if isinstance(version, list):
-                walk_path = [f"{self.prefix}/{v}/" for v in version]
-            else:
-                walk_path = f"{self.prefix}/{version}/"
+            walk_path = f"{self.prefix}/{version}/"
         else:
             walk_path = f"{self.prefix.removesuffix('/')}/"
-        if isinstance(walk_path, list):
-            all_blobs = []
-            for wp in walk_path:
-                all_blobs.extend(
-                    walk_blobs_in_container(
-                        name_starts_with=wp,
-                        account_name=self.account,
-                        container_name=self.container,
-                    )
+        return sorted(
+            list(
+                walk_blobs_in_container(
+                    name_starts_with=walk_path,
+                    account_name=self.account,
+                    container_name=self.container,
                 )
-            return sorted(
-                all_blobs,
-                key=lambda x: x["creation_time"],
-            )
-        else:
-            return sorted(
-                list(
-                    walk_blobs_in_container(
-                        name_starts_with=walk_path,
-                        account_name=self.account,
-                        container_name=self.container,
-                    )
-                ),
-                key=lambda x: x["creation_time"],
-            )
+            ),
+            key=lambda x: x["creation_time"],
+        ), version
 
     def download_version_to_local(
         self,
         local_path: str,
-        version: str = "latest",
+        version_spec: str | None = None,
         force: bool = False,
-        newest: bool = True,
+        selection: Literal["newest", "oldest"] = "newest",
     ) -> bool:
         """Download a specific version of the data to a local path
 
         Args:
             local_path (str): the local path to download to
-            version (str, optional): the version to download. Defaults to "latest".
+            version_spec (str | None, optional): the version specifier to download. Defaults to None.
             force (bool, optional): whether to force re-download if local.
-            newest (bool, optional): whether to get the newest matching version. Defaults to True.
+            selection (Literal["newest", "oldest"], optional): which version to select. Defaults to "newest".
         Returns:
             bool: whether any files were written
         """
+
         written = False
-        blobs = self._get_version_blobs(version, newest=newest)
+        blobs, _ = self._get_version_blobs(
+            version_spec=version_spec, selection=selection
+        )
         for blob in blobs:
             blob_data = read_blob_stream(
                 blob_url=blob["name"],
@@ -372,49 +418,53 @@ class BlobEndpoint:
             with open(local_file_path, "wb") as f:
                 f.write(file_bytes)
                 written = True
-        if written:
-            self.ledger_entry(action="read")
+        # if written:
+        # self.ledger_entry(action="read")
         return written
 
     @overload
     def get_dataframe(
         self,
         output: Literal["pandas", "pd"] = "pandas",
-        version: str = "latest",
-        newest: bool = True,
+        version_spec: str | None = None,
+        selection: Literal["newest", "oldest"] = "newest",
+        print_version: bool = False,
     ) -> pd.DataFrame: ...
 
     @overload
     def get_dataframe(
         self,
         output: Literal["polars", "pl"],
-        version: str = "latest",
-        newest: bool = True,
+        version_spec: str | None = None,
+        selection: Literal["newest", "oldest"] = "newest",
+        print_version: bool = False,
     ) -> pl.DataFrame: ...
 
     @overload
     def get_dataframe(
         self,
         output: Literal["pl_lazy", "lazy"],
-        version: str = "latest",
-        newest: bool = True,
+        version_spec: str | None = None,
+        selection: Literal["newest", "oldest"] = "newest",
+        print_version: bool = False,
     ) -> pl.LazyFrame: ...
 
     def get_dataframe(
         self,
         output: Literal["pandas", "pd", "polars", "pl", "pl_lazy", "lazy"] = "pandas",
-        version: str = "latest",
-        newest: bool = True,
+        version_spec: str | None = None,
+        selection: Literal["newest", "oldest"] = "newest",
+        print_version: bool = False,
     ) -> pd.DataFrame | pl.DataFrame | pl.LazyFrame:
         """Get the data as a pandas or polars dataframe
 
         Args:
             output (str, optional): the type of dataframe to return,
                 either 'pandas' or 'polars' or 'pl_lazy'. Defaults to "pandas".
-            version (str, optional): the version of the data to get.
+            version_spec (str, optional): the version of the data to get.
                 Defaults to "latest".
-            newest (bool, optional): whether to get the newest matching version. Defaults to True.
-                False returns the oldest matching version.
+            selection (Literal["newest", "oldest"], optional): whether to get the newest or oldest matching versions. Defaults to "newest".
+            print_version (bool, optional): whether to print the version being used. Defaults to False.
 
         Raises:
             ValueError: if output is not one of
@@ -423,22 +473,29 @@ class BlobEndpoint:
         Returns:
             pd.DataFrame | pl.DataFrame | pl.LazyFrame: the dataframe
         """
+        if not check_ext_env():
+            raise RuntimeError("No EXT access configured.")
         if output not in ["pandas", "polars", "pd", "pl", "pl_lazy", "lazy"]:
             raise ValueError(
                 f"Output {output} needs to be 'pandas', 'polars', 'pd', 'pl', 'pl_lazy', or 'lazy'."
             )
+
         # Fetch version blobs once and validate before deriving file extension.
-        version_blobs = self._get_version_blobs(version=version, newest=newest)
+        version_blobs, _ = self._get_version_blobs(
+            version_spec=version_spec, selection=selection, print_version=print_version
+        )
+        version_meta = self.resolve_version(
+            version_spec=version_spec, selection=selection
+        )
         if not version_blobs:
             raise ValueError(
-                f"No blobs found for version '{version}' in container '{self.container}'."
+                f"No blobs found for version '{version_spec}' in container '{self.container}'."
             )
-        name = version_blobs[0]["name"]
-        file_ext = PurePosixPath(name).suffix.lstrip(".").lower()
+
+        file_ext = self.get_file_ext(version_meta)
+        fullpath = version_meta.blob_url
         if output in ["pl_lazy", "lazy"]:
             if file_ext in ["parquet", "parq"]:
-                path = str(PurePosixPath(name).parent / f"*.{file_ext}")
-                fullpath = f"az://{self.container}/{path}"
                 df = pl.scan_parquet(
                     fullpath,
                     storage_options={"account_name": self.account},
@@ -446,11 +503,9 @@ class BlobEndpoint:
                         credential=ManagedIdentityCredential()
                     ),
                 )
-                self.ledger_entry(action="read")
+                # self.ledger_entry(action="read")
                 return df
             elif file_ext == "csv":
-                path = str(PurePosixPath(name).parent / f"*.{file_ext}")
-                fullpath = f"az://{self.container}/{path}"
                 df = pl.scan_csv(
                     fullpath,
                     infer_schema_length=None,
@@ -459,11 +514,9 @@ class BlobEndpoint:
                         credential=ManagedIdentityCredential()
                     ),
                 )
-                self.ledger_entry(action="read")
+                ##self.ledger_entry(action="read")
                 return df
             elif file_ext == "ndjson" or file_ext == "jsonl":
-                path = str(PurePosixPath(name).parent / f"*.{file_ext}")
-                fullpath = f"az://{self.container}/{path}"
                 df = pl.scan_ndjson(
                     fullpath,
                     infer_schema_length=None,
@@ -472,11 +525,13 @@ class BlobEndpoint:
                         credential=ManagedIdentityCredential()
                     ),
                 )
-                self.ledger_entry(action="read")
+                ##self.ledger_entry(action="read")
                 return df
             else:
                 raise ValueError(f"Lazy loading not supported for {file_ext} files.")
-        blobs = self.read_blobs(version, newest=newest, print_version=False)
+        blobs = self.read_blobs(
+            version_spec=version_spec, selection=selection, print_version=False
+        )
         blob_bytes = [
             blob if isinstance(blob, bytes) else blob.content_as_bytes()
             for blob in blobs
@@ -544,13 +599,59 @@ class BlobEndpoint:
             "action": action,
         }
         log_data = (json.dumps(log_entry) + "\n").encode("utf-8")
-        write_blob_stream(  # TODO: make this a streaming write to a single file (one per day parsed from get_timestamp())
+        ledger_path = f"{self.ledger_location['prefix']}/{get_date()}.jsonl"
+
+        write_blob_stream(
             data=log_data,
-            blob_url=f"{self.ledger_location['prefix']}/{get_date()}.jsonl",
+            blob_url=ledger_path,
             account_name=self.ledger_location["account"],
             container_name=self.ledger_location["container"],
             append_blob=True,
             overwrite=False,
+        )
+
+    def resolve_version(
+        self,
+        version_spec: str | None = None,
+        selection: Literal["newest", "oldest"] = "newest",
+    ) -> VersionMetadata:
+        """Resolve the version of the dataset based on the version specification and selection criteria.
+
+        Args:
+            version_spec (str | None): the version specification to resolve
+            selection (Literal["newest", "oldest"]): whether to select the newest or oldest version
+
+        Returns:
+            VersionMetadata: Resolution containing resolved version, blob URL, and selection details.
+        """
+        try:
+            version_blobs, version = self._get_version_blobs(
+                version_spec=version_spec, selection=selection, print_version=False
+            )
+        except ValueError:
+            return VersionMetadata(
+                version=None,
+                blob_url=None,
+                version_spec=version_spec,
+                selection=selection,
+            )
+
+        if not version_blobs:
+            return VersionMetadata(
+                version=None,
+                blob_url=None,
+                version_spec=version_spec,
+                selection=selection,
+            )
+        name = version_blobs[0]["name"]
+        file_ext = PurePosixPath(name).suffix.lstrip(".").lower()
+        path = str(PurePosixPath(name).parent / f"*.{file_ext}")
+        fullpath = f"az://{self.container}/{path}"
+        return VersionMetadata(
+            version=version,
+            blob_url=fullpath,
+            version_spec=version_spec,
+            selection=selection,
         )
 
     def save_dataframe(
@@ -578,7 +679,7 @@ class BlobEndpoint:
             )
         if file_format in ["json", "jsonl"] and path_after_prefix.endswith(".json"):
             path_after_prefix = path_after_prefix[:-5] + ".jsonl"
-            print("Changing file extension to .jsonl for line-delimited JSON.")
+            logger.info("Changing file extension to .jsonl for line-delimited JSON.")
         if isinstance(df, pd.DataFrame):
             if file_format == "parquet":
                 pq_bytes = df.to_parquet(index=False, compression="snappy")
@@ -691,7 +792,7 @@ class BlobEndpoint:
                 )
 
 
-def dict_to_sn(d: Any, defaults: dict = None, ns: str = "") -> SimpleNamespace:
+def dict_to_sn(d: Any, defaults: dict | None = None, ns: str = "") -> CatalogNamespace:
     """Simple recursive namespace construction
 
     Args:
@@ -700,9 +801,9 @@ def dict_to_sn(d: Any, defaults: dict = None, ns: str = "") -> SimpleNamespace:
         ns (str, optional): the current namespace path. Defaults to ''.
 
     Returns:
-        SimpleNamespace: namespace representation
+        CatalogNamespace: namespace representation
     """
-    x = SimpleNamespace()
+    x = CatalogNamespace()
     ns_prefix = f"{ns}." if ns != "" else ""
     _ = [
         setattr(
@@ -743,13 +844,13 @@ for k in all_reports_ns_map.keys():
     rc.append(report_dict_to_sn({k: all_reports_ns_map[k]}))
 combined_reports_dict = {key: value for ns in rc for key, value in vars(ns).items()}
 
-datacat = SimpleNamespace(**combined_dict)
+datacat: CatalogNamespace = CatalogNamespace(**combined_dict)
 datacat.__setattr__("__namespace_list__", dataset_namespaces)
-reportcat = SimpleNamespace(**combined_reports_dict)
+reportcat: CatalogNamespace = CatalogNamespace(**combined_reports_dict)
 reportcat.__setattr__("__namespace_list__", report_namespaces)
 
 
-def _attach_schema_mock_functions(datacat: SimpleNamespace, catalogs: list) -> None:
+def _attach_schema_mock_functions(datacat: CatalogNamespace, catalogs: list) -> None:
     """Recursively walk the datacat namespace and attach mock_data functions to
     the extract and load BlobEndpoints of each DatasetEndpoint, sourced from
     a schema module co-located with the dataset.
@@ -771,12 +872,12 @@ def _attach_schema_mock_functions(datacat: SimpleNamespace, catalogs: list) -> N
         datacat.<catalog>.<team_path_segments>.<dataset>.load.mock_data()
 
     Args:
-        datacat (SimpleNamespace): the top-level datacat namespace
+        datacat (CatalogNamespace): the top-level datacat namespace
         catalogs (list): list of (catalog_namespace, catalog_name, catalog_path)
             tuples from get_all_catalogs()
     """
 
-    def _walk(ns: SimpleNamespace) -> None:
+    def _walk(ns: CatalogNamespace) -> None:
         for val in vars(ns).values():
             if isinstance(val, DatasetEndpoint):
                 # __ns_str__ is e.g. "public.stf.nhsn_hrd_prelim";
@@ -812,7 +913,7 @@ def _attach_schema_mock_functions(datacat: SimpleNamespace, catalogs: list) -> N
                                     "mock_data",
                                     getattr(mod, func_name),
                                 )
-            elif isinstance(val, SimpleNamespace):
+            elif isinstance(val, CatalogNamespace):
                 _walk(val)
 
     _walk(datacat)
