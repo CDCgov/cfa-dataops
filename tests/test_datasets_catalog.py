@@ -278,6 +278,23 @@ def test_datasets_catalog_resolve_version_no_match(
     assert resolved.selection == "newest"
 
 
+def test_get_version_blobs_error_message_no_match(
+    mocker, dataset_ns_map, dataset_defaults
+):
+    datacat = dict_to_sn(dataset_ns_map, dataset_defaults)
+    mocker.patch.object(
+        datacat.tests.etl_test.load,
+        "get_versions",
+        return_value=["2025-06-03T17-56-50", "2025-05-30T14-50-36"],
+    )
+
+    with pytest.raises(
+        ValueError,
+        match=r"Version matching >2026-01-01 not found in available versions: \['2025-06-03T17-56-50', '2025-05-30T14-50-36'\]",
+    ):
+        datacat.tests.etl_test.load._get_version_blobs(version_spec=">2026-01-01")
+
+
 def test_datasets_catalog_get_dataframe_json(
     mocker, mock_write_blob_stream, dataset_ns_map, dataset_defaults
 ):
