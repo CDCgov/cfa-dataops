@@ -4,12 +4,16 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Calendar Versioning](https://calver.org/).
-The versioning pattern is `YYYY.MM.DD.micro(a/b/{none if release})
+The versioning pattern is `YYYY.MM.DD.micro(a/b/{none if release})`
 
 ---
 ## [2026.07.29.0]
 
 - fix the error message in `version_matcher` when version does not exist
+
+## [2026.07.28.0]
+
+- add "all" option to version_matcher
 
 ## [2026.07.22.0]
 

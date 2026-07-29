@@ -215,8 +215,8 @@ def construct_version_spec(version: str | None) -> str | None:
 def version_matcher(
     version_spec: str | None,
     available_versions: list[str],
-    selection: Literal["newest", "oldest"] = "newest",
-) -> str | None:
+    selection: Literal["newest", "oldest", "all"] = "newest",
+) -> str | None | list[str]:
     """Select version strings from a list using an optional specifier.
 
     Args:
@@ -224,21 +224,21 @@ def version_matcher(
             ``"==2025-12-15"`` or ``">=2025-01-01,<2026-01-01"``. If ``None``,
             all available versions are considered.
         available_versions (list[str]): Version strings to evaluate.
-        selection (Literal["newest", "oldest"]): Controls which matching
+        selection (Literal["newest", "oldest", "all"]): Controls which matching
             version is returned.
 
     Returns:
-        str | None: A single matching version, or ``None`` if no match is found.
+        str | None | list[str]: A single matching version, a list of all matching versions if ``selection`` is ``"all"``, or ``None`` if no match is found.
 
     Raises:
-        ValueError: If ``selection`` is not one of ``"newest"`` or ``"oldest"``.
+        ValueError: If ``selection`` is not one of ``"newest"``, ``"oldest"``, or ``"all"``.
         packaging.specifiers.InvalidSpecifier: If ``version_spec`` is not ``None`` and is not
             a valid packaging specifier after normalization.
         packaging.version.InvalidVersion: If any version string cannot be parsed by
             ``packaging.version.Version``.
     """
-    if selection not in {"newest", "oldest"}:
-        raise ValueError("selection must be 'newest' or 'oldest'")
+    if selection not in {"newest", "oldest", "all"}:
+        raise ValueError("selection must be 'newest', 'oldest', or 'all'")
 
     versions = sorted(
         (Version(normalize(version)), version) for version in available_versions
@@ -254,4 +254,7 @@ def version_matcher(
 
     if selection == "newest":
         return originals[-1] if originals else None
-    return originals[0] if originals else None
+    elif selection == "oldest":
+        return originals[0] if originals else None
+    else:
+        return originals
