@@ -96,17 +96,18 @@ def test_write_blob_splits_partitions_with_suffix(mocker):
     assert write_mock.call_args_list[1].kwargs["blob_url"].endswith("data_1.parquet")
 
 
-def test_get_versions_requires_ext_env(mocker):
+def test_get_versions_returns_empty_when_no_blobs(mocker):
     endpoint = _make_blob_endpoint()
-    mocker.patch("cfa.dataops.catalog.check_ext_env", return_value=False)
+    mocker.patch(
+        "cfa.dataops.catalog.walk_blobs_in_container",
+        return_value=[],
+    )
 
-    with pytest.raises(RuntimeError, match="No EXT access configured"):
-        endpoint.get_versions()
+    assert endpoint.get_versions() == []
 
 
 def test_get_versions_returns_desc_sorted_names(mocker):
     endpoint = _make_blob_endpoint()
-    mocker.patch("cfa.dataops.catalog.check_ext_env", return_value=True)
     mocker.patch(
         "cfa.dataops.catalog.walk_blobs_in_container",
         return_value=[
@@ -122,7 +123,6 @@ def test_get_versions_returns_desc_sorted_names(mocker):
 
 def test_get_version_blobs_for_ledger_uses_prefix_without_version(mocker):
     endpoint = _make_blob_endpoint(ns="ledger_endpoint")
-    mocker.patch("cfa.dataops.catalog.check_ext_env", return_value=True)
     walk_mock = mocker.patch(
         "cfa.dataops.catalog.walk_blobs_in_container",
         return_value=[
@@ -140,7 +140,6 @@ def test_get_version_blobs_for_ledger_uses_prefix_without_version(mocker):
 
 def test_get_dataframe_raises_for_invalid_output(mocker):
     endpoint = _make_blob_endpoint()
-    mocker.patch("cfa.dataops.catalog.check_ext_env", return_value=True)
 
     with pytest.raises(ValueError, match="needs to be 'pandas'"):
         endpoint.get_dataframe(output="arrow")
