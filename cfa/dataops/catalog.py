@@ -22,8 +22,8 @@ from cfa.cloudops.blob_helpers import (
     walk_blobs_in_container,
     write_blob_stream,
 )
-from cfa.cloudops.util import check_ext_env
 
+# from cfa.cloudops.util import check_ext_env
 from .config_validator import (
     ConfigValidator,
     PropertiesValidation,
@@ -291,8 +291,8 @@ class BlobEndpoint:
             list: sorted list of data version paths in descending order
             (latest first)
         """
-        if not check_ext_env():
-            raise RuntimeError("No EXT access configured.")
+        # if not check_ext_env():
+        #    raise RuntimeError("No EXT access configured.")
         glob_path = f"{self.prefix}/"
         return sorted(
             [
@@ -347,8 +347,8 @@ class BlobEndpoint:
             ValueError: If the requested version cannot be resolved.
         """
         # check credential access
-        if not check_ext_env():
-            raise RuntimeError("No EXT access configured.")
+        # if not check_ext_env():
+        #    raise RuntimeError("No EXT access configured.")
         version = None
         if not self.is_ledger:
             available_versions = self.get_versions()
@@ -473,8 +473,8 @@ class BlobEndpoint:
         Returns:
             pd.DataFrame | pl.DataFrame | pl.LazyFrame: the dataframe
         """
-        if not check_ext_env():
-            raise RuntimeError("No EXT access configured.")
+        # if not check_ext_env():
+        #    raise RuntimeError("No EXT access configured.")
         if output not in ["pandas", "polars", "pd", "pl", "pl_lazy", "lazy"]:
             raise ValueError(
                 f"Output {output} needs to be 'pandas', 'polars', 'pd', 'pl', 'pl_lazy', or 'lazy'."
