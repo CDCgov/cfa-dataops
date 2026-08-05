@@ -204,7 +204,7 @@ For a direct preview from the dataset endpoint itself, call `resolve_version()` 
    - Verify dataset name using `datacat.__namespace_list__`
    - Check for typos in namespace path
    - Ensure the catalog containing the dataset is installed
-   - If using `datacat.get_ref(...)`, try the full namespace path
+   - If using `datacat.get_ref(...)`, try a longer suffix.
 2. Version Not Found
    - Use 'latest' to get most recent version (default)
    - Check available versions using `datacat.{catalog}.{dataset}.load.get_versions()`
@@ -214,4 +214,3 @@ For a direct preview from the dataset endpoint itself, call `resolve_version()` 
    - Verify data types are correct
 4. Ambiguous get_ref Result
    - Use a longer suffix (for example, `team.data_trends`)
-   - Use the full namespace path from `datacat.__namespace_list__`
