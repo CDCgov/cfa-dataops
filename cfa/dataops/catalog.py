@@ -113,7 +113,7 @@ class CatalogNamespace(SimpleNamespace):
         for segment in namespace_path.split("."):
             if not hasattr(current, segment):
                 raise KeyError(
-                    f"Namespace path '{namespace_path}' could not be resolved at segment '{segment}'."
+                    f"Given namespace path '{namespace_path}' could not be resolved. Catalog component '{segment}', does not exist or is not specific enough. Check spelling or try adding additional catalog components."
                 )
             current = getattr(current, segment)
         return current
