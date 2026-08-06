@@ -119,7 +119,7 @@ This release marks a significant milestone for the CFA DataOps project, providin
 
 **Key Highlights:**
 - **Unified Data Access**: `datacat` interface for seamless dataset access.
-- **Automated Reporting**: `reportcat` for generating interactive HTML reports from Jupyter notebooks.
+- **Automated Reporting**: `reportcat` for generating interactive HTML reports from Jupyter notebooks. *(Note: `reportcat` and reporting support were removed in a later release.)*
 - **Robust CLI Tools**: Manage catalogs and datasets effortlessly.
 - **Flexible Data Loading**: Advanced version filtering for Pandas and Polars DataFrames.
 
