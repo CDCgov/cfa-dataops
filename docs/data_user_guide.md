@@ -39,11 +39,39 @@ df = datacat.private.scenarios.covid19vax_trends.load.get_dataframe(
 
 - `datacat.{catalog}.{dataset}.load.get_dataframe()`: Access transformed data
 - `datacat.{catalog}.{dataset}.extract.get_dataframe()`: Access raw data
+- `datacat.get_ref(name)`: Resolve a dataset reference by full path or unique suffix
 - Parameters for `get_dataframe()`:
    - `output`: One of `pandas`, `polars`, or `pl_lazy` (default: `pandas`)
    - `version_spec`: Version constraint string used to resolve matching dataset versions
    - `selection`: Which matching version to return, such as `newest` or `oldest`
    - `print_version`: Print the resolved version while loading data
+
+### Resolving Dataset References with get_ref
+
+Use `datacat.get_ref(...)` when you want to resolve a dataset first and then reuse the reference. References point to a DatasetEndpoint which are the foundation for accessing `extract` or `load` components, and then getting versions and dataframes.
+
+The typical way to create a reference is as follows:
+```python
+from cfa.dataops import datacat
+ref = datacat.public.team.data_trends
+```
+
+This can be done much simpler using `get_ref`:
+```python
+from cfa.dataops import datacat
+data_ref = datacat.get_ref("data_trends")
+```
+
+If no dataset matches, `get_ref` raises `KeyError` with message: `No dataset found matching '...'`.
+If multiple datasets match a suffix, `get_ref` raises `ValueError` with message: `Ambiguous dataset name '...'. Matches: ...`.
+
+~~~python
+# Ambiguous suffix example (if multiple catalogs have this dataset name)
+# datacat.get_ref("shared")
+# ValueError: Ambiguous dataset name 'shared'. Matches: public.team_one.shared, public.team_two.shared
+~~~
+
+If multiple catalogs are installed which have the same name, extend the dataset name to include more suffixes. In the ongoing example, it could be `team.data_trends`.
 
 ## Working with Data
 
@@ -180,6 +208,7 @@ For a direct preview from the dataset endpoint itself, call `resolve_version()` 
    - Verify dataset name using `datacat.__namespace_list__`
    - Check for typos in namespace path
    - Ensure the catalog containing the dataset is installed
+   - If using `datacat.get_ref(...)`, try a longer suffix.
 2. Version Not Found
    - Use 'latest' to get most recent version (default)
    - Check available versions using `datacat.{catalog}.{dataset}.load.get_versions()`
@@ -187,3 +216,5 @@ For a direct preview from the dataset endpoint itself, call `resolve_version()` 
    - Ensure data matches expected schema
    - Check for missing required columns
    - Verify data types are correct
+4. Ambiguous get_ref Result
+   - Use a longer suffix (for example, `team.data_trends`)
