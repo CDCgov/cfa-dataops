@@ -5,8 +5,6 @@ from typing import Any, Literal, overload
 import pandas as pd
 import polars as pl
 
-from .reporting.catalog import NotebookEndpoint
-
 def get_all_catalogs() -> list: ...
 
 class CatalogNamespace(SimpleNamespace):
@@ -23,14 +21,11 @@ class DatasetEndpoint:
     defaults: dict[str, Any]
     config: dict[str, Any]
     __ns_str__: str
-    _ledger_location: dict[str, Any]
 
 class BlobEndpoint:
     account: str
     container: str
     prefix: str
-    ledger_location: dict[str, Any]
-    is_ledger: bool
     __ns_str__: str
     def write_blob(
         self,
@@ -87,7 +82,6 @@ class BlobEndpoint:
         version_spec: str | None = None,
         selection: Literal["newest", "oldest"] = "newest",
     ) -> VersionMetadata: ...
-    def ledger_entry(self, action: str) -> None: ...
     def save_dataframe(
         self,
         df: pd.DataFrame | pl.DataFrame,
@@ -126,4 +120,3 @@ class ${cls.name}(${cls.base}):
 
 % endfor
 datacat: DataCatalog
-reportcat: ReportCatalog

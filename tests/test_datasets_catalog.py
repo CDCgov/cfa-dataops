@@ -20,7 +20,6 @@ class MockBlob:
 def test_dict_to_sn(simple_dataset_ns_map):
     defaults = {
         "storage": {"account": "account", "container": "container"},
-        "access_ledger": {"path": "some/path/"},
     }
     result = dict_to_sn(simple_dataset_ns_map, defaults)
     print(result.space.example.config)
@@ -330,12 +329,6 @@ def test_datasets_catalog_get_dataframe_pl_lazy(
             "2025-06-03T17-56-50",
         ),
     )
-    mocker.patch.object(
-        datacat.tests.etl_test.load,
-        "ledger_entry",
-        return_value=None,
-    )
-
     # Avoid real auth wiring during test
     mocker.patch("cfa.dataops.catalog.ManagedIdentityCredential", return_value=object())
     mocker.patch(

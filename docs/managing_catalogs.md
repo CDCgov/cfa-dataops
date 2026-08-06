@@ -4,7 +4,7 @@ This guide explains how to work with multiple catalog repositories in the CFA Da
 
 ## Overview
 
-The DataOps system is designed around catalog repositories that you create using `dataops_catalog_init`. Multiple catalogs can be installed in the same Python environment, providing unified access to all datasets and reports through `datacat` and `reportcat`.
+The DataOps system is designed around catalog repositories that you create using `dataops_catalog_init`. Multiple catalogs can be installed in the same Python environment, providing unified access to datasets through `datacat`.
 
 ## Creating Your First Catalog
 
@@ -21,10 +21,9 @@ The DataOps system is designed around catalog repositories that you create using
 
 3. **Verify installation**:
    ```python
-   from cfa.dataops import datacat, reportcat
+   from cfa.dataops import datacat
 
    print(datacat.__namespace_list__)
-   print(reportcat.__namespace_list__)
    ```
 
 ## Working with Multiple Catalogs
@@ -47,11 +46,10 @@ cd /path/to/my-project-catalog && pip install -e .[dev]
 
 ### Unified Access
 
-All datasets and reports become accessible through unified interfaces:
+Datasets become accessible through a unified interface:
 
 ```python
 from cfa.dataops import datacat
-from cfa.dataops.reporting import reportcat
 
 # Access datasets from any installed catalog
 datacat.private.scenarios.covid19vax_trends.load.get_dataframe()
@@ -65,10 +63,6 @@ df_meta = datacat.private.scenarios.covid19vax_trends.load.resolve_version(
 )
 print(df_meta.version)
 
-# Access reports from any installed catalog
-reportcat.private.scenarios.examples.basics_ipynb
-reportcat.private.surveillance.weekly.summary_ipynb
-reportcat.private.my_project.analysis.trend_report_ipynb
 ```
 
 ### Listing Available Resources
@@ -77,12 +71,8 @@ reportcat.private.my_project.analysis.trend_report_ipynb
 # List all datasets across all catalogs
 print("Available datasets:", datacat.__namespace_list__)
 
-# List all reports across all catalogs
-print("Available reports:", reportcat.__namespace_list__)
-
 # Explore specific catalog namespaces
 print("Scenarios datasets:", dir(datacat.scenarios))
-print("Surveillance reports:", dir(reportcat.surveillance))
 ```
 
 ## Catalog Repository Structure
@@ -99,9 +89,6 @@ my-catalog/
 │           ├── datasets/           # Dataset configurations (TOML files)
 │           │   ├── dataset1.toml
 │           │   └── dataset2.toml
-│           ├── reports/            # Jupyter notebook templates
-│           │   ├── examples/
-│           │   └── analysis/
 │           └── workflows/          # ETL and processing scripts
 │               ├── etl/
 │               ├── multistage/
@@ -122,13 +109,12 @@ my-catalog/
 ### Naming Conventions
 - Use descriptive catalog names that reflect their purpose
 - Keep dataset names consistent within each catalog
-- Use clear, hierarchical organization for reports
 
 ### Development Workflow
 1. Create separate catalogs for different data domains
 2. Install all relevant catalogs in your development environment
-3. Use `datacat` and `reportcat` for unified access
-4. Develop datasets and reports within their appropriate catalog repositories
+3. Use `datacat` for unified access
+4. Develop datasets within their appropriate catalog repositories
 
 ### Sharing Catalogs
 - Catalog repositories can be shared via Git repositories
@@ -145,16 +131,6 @@ surveillance_data = datacat.surveillance.flu_trends.load.get_dataframe()
 
 # Create combined analysis
 combined_analysis = analyze_trends(scenarios_data, surveillance_data)
-```
-
-### Catalog-Specific Reports
-```python
-# Generate reports using data from specific catalogs
-report = reportcat.private.scenarios.analysis.trend_analysis_ipynb
-report.nb_to_html_file(
-    html_out_path="trend_report.html",
-    dataset_namespace="scenarios.covid19vax_trends"
-)
 ```
 
 ## Troubleshooting

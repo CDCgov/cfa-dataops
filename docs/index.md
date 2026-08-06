@@ -1,6 +1,6 @@
 # CFA DataOps Documentation
 
-Welcome to the CFA DataOps system - a catalog-based approach to data management, ETL, and reporting.
+Welcome to the CFA DataOps system - a catalog-based approach to data management and ETL.
 
 ## Getting Started
 
@@ -12,21 +12,18 @@ Welcome to the CFA DataOps system - a catalog-based approach to data management,
 3. **[CLI Tools Reference](cli_tools.md)** - Command-line tools for exploring and downloading datasets
 4. **[Data User Guide](data_user_guide.md)** - Access and work with datasets using `datacat`
 5. **[Data Developer Guide](data_developer_guide.md)** - Add datasets and ETL processes to catalogs
-6. **[Report Generation](report_generation.md)** - Create and generate reports using `reportcat`
 
 ## Quick Reference
 
 ```python
 # Essential imports
-from cfa.dataops import datacat, reportcat
+from cfa.dataops import datacat
 
 # List available resources
 print("Datasets:", datacat.__namespace_list__)
-print("Reports:", reportcat.__namespace_list__)
 
-# Access data and reports (example)
+# Access data (example)
 df = datacat.private.scenarios.covid19vax_trends.load.get_dataframe()
-report_html = reportcat.private.examples.basics_ipynb.nb_to_html_str()
 ```
 
 When you need to preview the version that a dataframe load will use, call `resolve_version()` on the same dataset endpoint with the same `version_spec` and `selection` values you plan to pass to `get_dataframe()`.

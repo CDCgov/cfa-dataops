@@ -21,14 +21,11 @@ class DatasetEndpoint:
     defaults: dict[str, Any]
     config: dict[str, Any]
     __ns_str__: str
-    _ledger_location: dict[str, Any]
 
 class BlobEndpoint:
     account: str
     container: str
     prefix: str
-    ledger_location: dict[str, Any]
-    is_ledger: bool
     __ns_str__: str
     def write_blob(
         self,
@@ -85,7 +82,6 @@ class BlobEndpoint:
         version_spec: str | None = None,
         selection: Literal["newest", "oldest"] = "newest",
     ) -> VersionMetadata: ...
-    def ledger_entry(self, action: str) -> None: ...
     def save_dataframe(
         self,
         df: pd.DataFrame | pl.DataFrame,
@@ -115,8 +111,4 @@ def dict_to_sn(
 class DataCatalog(CatalogNamespace):
     __namespace_list__: list[str]
 
-class ReportCatalog(CatalogNamespace):
-    __namespace_list__: list[str]
-
 datacat: DataCatalog
-reportcat: ReportCatalog

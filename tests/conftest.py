@@ -189,7 +189,6 @@ def dataset_ns_map():
 def dataset_defaults():
     return {
         "storage": {"account": "account_test", "container": "container_test"},
-        "access_ledger": {"path": "_access/test/ledger/"},
     }
 
 

@@ -49,13 +49,6 @@ def _representative_catalog_stub(dataset_config: Path) -> str:
                 },
             },
         },
-        report_ns_map={
-            "public": {
-                "examples": {
-                    "basic_report": "/reports/basic_report.ipynb",
-                },
-            },
-        },
     )
 
 
@@ -77,7 +70,6 @@ def test_render_catalog_stub_uses_real_dataset_paths_and_stages(tmp_path):
                 },
             },
         },
-        report_ns_map={},
     )
 
     assert "class _DataCatalogPublicStfNhsnHrdPrelimDataset(DatasetEndpoint):" in stub
@@ -93,24 +85,6 @@ def test_render_catalog_stub_uses_real_dataset_paths_and_stages(tmp_path):
     assert "load: BlobEndpoint" not in public_namespace
 
 
-def test_render_catalog_stub_uses_real_report_paths():
-    stub = render_catalog_stub(
-        dataset_ns_map={},
-        report_ns_map={
-            "public": {
-                "examples": {
-                    "basic_report": "/reports/basic_report.ipynb",
-                },
-            },
-        },
-    )
-
-    assert (
-        "class _ReportCatalogPublicExamplesBasicReportReport(NotebookEndpoint):" in stub
-    )
-    assert "basic_report: _ReportCatalogPublicExamplesBasicReportReport" in stub
-
-
 def test_render_init_stub_outputs_parseable_python_syntax():
     ast.parse(render_init_stub())
 
@@ -121,7 +95,6 @@ def test_render_catalog_stub_rejects_non_identifier_segments(tmp_path):
     with pytest.raises(ValueError, match="not a valid Python identifier"):
         render_catalog_stub(
             dataset_ns_map={"public-data": {"example": str(dataset_config)}},
-            report_ns_map={},
         )
 
 
@@ -132,7 +105,6 @@ def test_write_catalog_stubs_creates_project_local_stub_tree(tmp_path):
     written = write_catalog_stubs(
         output_root,
         dataset_ns_map={"public": {"example": str(dataset_config)}},
-        report_ns_map={},
     )
 
     assert written == [
