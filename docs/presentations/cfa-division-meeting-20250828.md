@@ -113,7 +113,7 @@ In addition to organizing and managing ETL, the cfa-dataops seemed a fine starti
 
 ## Roadmap
 
-- Add dataset freshness monitoring for data access
+- Add logs/ledger for data access (know when datasets go stale)
 - ETL automation and scheduling
 - Config inheritance
 - Splitting the interpreter code from the configuration and workflow scripts
