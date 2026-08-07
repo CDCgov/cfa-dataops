@@ -47,7 +47,7 @@ def install_azure_stubs(
                         ".", 1
                     )[0],
                     container_name=self._container,
-                    prefix="",
+                    name_starts_with="",
                 )
             except Exception as e:
                 status_code = getattr(e, "status_code", None)

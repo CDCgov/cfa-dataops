@@ -180,6 +180,22 @@ class TestReadBlobsWithAccessCheck:
         assert "Cannot access Blob storage" in str(exc_info.value)
 
 
+class TestReadCsvWithAccessCheck:
+    """Tests for read_csv with access checks."""
+
+    def test_read_csv_fails_without_access(self, blob_endpoint, mocker):
+        mocker.patch.object(
+            blob_endpoint,
+            "verify_blob_access",
+            side_effect=RuntimeError("Cannot access Blob storage. Access denied"),
+        )
+
+        with pytest.raises(RuntimeError) as exc_info:
+            blob_endpoint.read_csv("test.csv")
+
+        assert "Cannot access Blob storage" in str(exc_info.value)
+
+
 class TestGetVersionsWithAccessCheck:
     """Tests for get_versions with access checks."""
 
