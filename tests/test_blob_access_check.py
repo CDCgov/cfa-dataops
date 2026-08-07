@@ -196,6 +196,52 @@ class TestReadCsvWithAccessCheck:
         assert "Cannot access Blob storage" in str(exc_info.value)
 
 
+class TestGetDataframeWithAccessCheck:
+    """Tests for get_dataframe with access checks."""
+
+    def test_get_dataframe_fails_without_access(self, blob_endpoint, mocker):
+        mocker.patch.object(
+            blob_endpoint,
+            "verify_blob_access",
+            side_effect=RuntimeError("Cannot access Blob storage. Access denied"),
+        )
+
+        with pytest.raises(RuntimeError) as exc_info:
+            blob_endpoint.get_dataframe(output="pandas")
+
+        assert "Cannot access Blob storage" in str(exc_info.value)
+
+
+class TestGetVersionBlobsWithAccessCheck:
+    """Tests for _get_version_blobs with access checks."""
+
+    def test_get_version_blobs_ledger_fails_without_access(self, mocker):
+        ledger_location = {
+            "account": "account_test",
+            "container": "container_test",
+            "prefix": "_access/test/ledger/",
+        }
+        ledger_endpoint = BlobEndpoint(
+            account="myaccount",
+            container="mycontainer",
+            prefix="_access/test/ledger",
+            ledger_location=ledger_location,
+            ns="ledger_endpoint",
+        )
+        mocker.patch.object(
+            ledger_endpoint,
+            "verify_blob_access",
+            side_effect=RuntimeError("Cannot access Blob storage. Access denied"),
+        )
+        mock_walk = mocker.patch("cfa.dataops.catalog.walk_blobs_in_container")
+
+        with pytest.raises(RuntimeError) as exc_info:
+            ledger_endpoint._get_version_blobs()
+
+        assert "Cannot access Blob storage" in str(exc_info.value)
+        mock_walk.assert_not_called()
+
+
 class TestGetVersionsWithAccessCheck:
     """Tests for get_versions with access checks."""
 
