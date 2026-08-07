@@ -7,6 +7,8 @@ from types import ModuleType, SimpleNamespace
 import pandas as pd
 from pytest import fixture
 
+from tests.azure_stubs import install_azure_stubs
+
 
 def _ensure_module(name: str, **attrs):
     module = sys.modules.get(name)
@@ -40,12 +42,7 @@ def _install_test_stubs() -> None:
     sys.modules["cfa.cloudops"].blob_helpers = sys.modules["cfa.cloudops.blob_helpers"]
     sys.modules["cfa.cloudops"].util = sys.modules["cfa.cloudops.util"]
 
-    _ensure_module(
-        "azure.identity",
-        ManagedIdentityCredential=type("ManagedIdentityCredential", (), {}),
-    )
-    _ensure_module("azure")
-    sys.modules["azure"].identity = sys.modules["azure.identity"]
+    install_azure_stubs(_ensure_module)
 
     _ensure_module(
         "nbformat",

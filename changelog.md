@@ -7,6 +7,10 @@ and this project adheres to [Calendar Versioning](https://calver.org/).
 The versioning pattern is `YYYY.MM.DD.micro(a/b/{none if release})`
 
 ---
+## [2026.08.07.0]
+
+- added function to check blob access to provide more accurate error messages if access does not exist.
+
 ## [2026.08.06.0]
 
 - added function `get_ref()` for easier referencing of datasets by name
