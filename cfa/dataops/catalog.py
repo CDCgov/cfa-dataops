@@ -451,7 +451,6 @@ class BlobEndpoint:
             list: sorted list of data version paths in descending order
             (latest first)
         """
-        self._verify_ext_access()
         self.verify_blob_access()
         glob_path = f"{self.prefix}/"
         return sorted(
