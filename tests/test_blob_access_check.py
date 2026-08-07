@@ -271,3 +271,24 @@ class TestGetVersionsWithAccessCheck:
         blob_endpoint.get_versions()
 
         assert mock_ext.call_count == 1
+
+    def test_get_versions_calls_ext_verification_once_per_call(
+        self, blob_endpoint, mocker
+    ):
+        mocker.patch("cfa.dataops.catalog.check_ext_env", return_value=True)
+        mocker.patch.object(
+            blob_endpoint, "check_blob_access", return_value=(True, "Access OK")
+        )
+        mock_verify_ext = mocker.patch.object(
+            blob_endpoint,
+            "_verify_ext_access",
+            wraps=blob_endpoint._verify_ext_access,
+        )
+        mocker.patch(
+            "cfa.dataops.catalog.walk_blobs_in_container",
+            return_value=[{"name": "test/prefix/2026-01-01T00-00-00/"}],
+        )
+
+        blob_endpoint.get_versions()
+
+        assert mock_verify_ext.call_count == 1

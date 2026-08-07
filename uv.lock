@@ -635,6 +635,7 @@ version = "2026.8.7.0"
 source = { editable = "." }
 dependencies = [
     { name = "altair" },
+    { name = "azure-identity" },
     { name = "azure-storage-blob" },
     { name = "cfa-cloudops" },
     { name = "duckdb" },
@@ -681,6 +682,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "altair", specifier = ">=5.5.0" },
+    { name = "azure-identity", specifier = ">=1.25.3" },
     { name = "azure-storage-blob", specifier = ">=12.28.0" },
     { name = "cfa-cloudops", git = "https://github.com/CDCgov/cfa-cloudops.git" },
     { name = "duckdb", specifier = ">=1.2.0" },
