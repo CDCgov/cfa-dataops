@@ -8,7 +8,7 @@ import polars as pl
 def get_all_catalogs() -> list: ...
 
 class CatalogNamespace(SimpleNamespace):
-    pass
+    def get_ref(self, name: str, *, allow_suffix: bool = True) -> Any: ...
 
 class VersionMetadata:
     version: str | None

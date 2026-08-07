@@ -113,6 +113,60 @@ report_namespaces = get_dataset_dot_path(all_reports_ns_map)
 class CatalogNamespace(SimpleNamespace):
     """Runtime namespace wrapper for catalog access."""
 
+    def _resolve_namespace_path(self, namespace_path: str) -> Any:
+        """Resolve a dotted namespace path to the target object."""
+        current: Any = self
+        for segment in namespace_path.split("."):
+            if not hasattr(current, segment):
+                raise KeyError(
+                    f"Given namespace path '{namespace_path}' could not be resolved. Catalog component '{segment}', does not exist or is not specific enough. Check spelling or try adding additional catalog components."
+                )
+            current = getattr(current, segment)
+        return current
+
+    def get_ref(self, name: str, *, allow_suffix: bool = True) -> Any:
+        """Resolve and return a catalog object by full path or unique suffix.
+
+        Args:
+            name (str): Dotted namespace path or suffix to resolve.
+            allow_suffix (bool): Whether to allow suffix matching when an exact
+                path is not provided.
+
+        Returns:
+            Any: The resolved namespace object (for example, a DatasetEndpoint).
+
+        Raises:
+            ValueError: If ``name`` is empty or resolves ambiguously.
+            KeyError: If no namespace matches ``name``.
+            TypeError: If ``name`` is not a string.
+        """
+        if not isinstance(name, str):
+            raise TypeError("name must be a string.")
+
+        ref_name = name.strip()
+        if ref_name == "":
+            raise ValueError("name must be a non-empty string.")
+
+        namespace_list = getattr(self, "__namespace_list__", None)
+        if not isinstance(namespace_list, list):
+            raise AttributeError(
+                "get_ref is only available on namespace roots with '__namespace_list__'."
+            )
+
+        matches = [ns for ns in namespace_list if ns == ref_name]
+        if not matches and allow_suffix:
+            suffix = f".{ref_name}"
+            matches = [ns for ns in namespace_list if ns.endswith(suffix)]
+
+        if not matches:
+            raise KeyError(f"No dataset found matching '{ref_name}'.")
+        if len(matches) > 1:
+            raise ValueError(
+                f"Ambiguous dataset name '{ref_name}'. Matches: {', '.join(sorted(matches))}"
+            )
+
+        return self._resolve_namespace_path(matches[0])
+
 
 class DatasetEndpoint:
     """The DatasetEndpoint class for including in the datacat namespace.
@@ -454,7 +508,7 @@ class BlobEndpoint:
             )
             if not version:
                 raise ValueError(
-                    f"Version {version} not found in available versions: {available_versions}"
+                    f"Version matching {version_spec} not found in available versions: {available_versions}"
                 )
             logger.info(f"Using version: {version}")
             if print_version:

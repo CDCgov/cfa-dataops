@@ -113,7 +113,7 @@ class Query:
         if self.limit is None or self.limit > n_rows_after_offset:
             return n_rows_after_offset
         else:
-            return n_rows_after_offset - self.limit
+            return self.limit
 
     def _get_records(self, start: int, end: int) -> list[dict]:
         assert end >= start

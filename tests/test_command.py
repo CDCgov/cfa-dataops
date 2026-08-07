@@ -1,5 +1,6 @@
 """Tests for command.py functions"""
 
+from types import SimpleNamespace
 from unittest.mock import MagicMock
 
 import pytest
@@ -8,6 +9,10 @@ from cfa.dataops.command import (
     _get_dataset_namespaces,
     _get_stages_list,
     _get_versions_list,
+    get_available_data,
+    get_dataset_stages,
+    get_dataset_versions,
+    save_data_locally,
 )
 
 
@@ -169,3 +174,131 @@ class TestHelperFunctionsIntegration:
             "stage_03",
         ]
         assert result == expected_order
+
+
+class TestCliCommands:
+    """Tests for CLI command entry points"""
+
+    def test_get_available_data_with_prefix_filter(self, mock_datacat, mocker):
+        """Test listing datasets filtered by prefix"""
+        mocker.patch(
+            "cfa.dataops.command.ArgumentParser.parse_args",
+            return_value=SimpleNamespace(prefix="test"),
+        )
+        print_mock = mocker.patch("cfa.dataops.command.Console.print")
+
+        get_available_data()
+
+        print_mock.assert_called_once()
+        output = print_mock.call_args.args[0]
+        assert "Available Datasets" in output
+        assert "- test.dataset1" in output
+        assert "- test.dataset2" in output
+        assert "prod.dataset1" not in output
+
+    def test_get_dataset_stages_formats_default_stage(self, mock_datacat, mocker):
+        """Test listing stages highlights the final stage as default"""
+        mocker.patch(
+            "cfa.dataops.command.ArgumentParser.parse_args",
+            return_value=SimpleNamespace(dataset="test.dataset1"),
+        )
+        print_mock = mocker.patch("cfa.dataops.command.Console.print")
+
+        get_dataset_stages()
+
+        print_mock.assert_called_once()
+        output = print_mock.call_args.args[0]
+        assert "Stages for test.dataset1" in output
+        assert "- extract" in output
+        assert "- load" in output
+        assert "- [red]stage_01[/red]" in output
+        assert "Stages in [red]red[/red] indicate the default stage" in output
+
+    def test_get_dataset_versions_uses_requested_stage(self, mock_datacat, mocker):
+        """Test listing versions for an explicit stage"""
+        mocker.patch(
+            "cfa.dataops.command.ArgumentParser.parse_args",
+            return_value=SimpleNamespace(dataset="test.dataset1", stage="load"),
+        )
+        print_mock = mocker.patch("cfa.dataops.command.Console.print")
+
+        get_dataset_versions()
+
+        print_mock.assert_called_once()
+        output = print_mock.call_args.args[0]
+        assert "[bold]test.dataset1[/bold]" in output
+        assert "- [red]2025-01-02T12-00-00[/red]" in output
+        assert "- 2025-01-01T12-00-00" in output
+
+    def test_save_data_locally_prints_tree_on_download(self, mock_datacat, mocker):
+        """Test save_data_locally prints tree output after a download"""
+        mocker.patch(
+            "cfa.dataops.command.ArgumentParser.parse_args",
+            return_value=SimpleNamespace(
+                dataset="test.dataset1",
+                location="downloads",
+                stage="load",
+                version="2025-01-02T12-00-00",
+                force=True,
+                oldest=True,
+            ),
+        )
+        mocker.patch(
+            "cfa.dataops.command.os.path.abspath",
+            return_value="/tmp/downloads",
+        )
+        tree_mock = mocker.patch(
+            "cfa.dataops.command.tree",
+            return_value="tree output",
+        )
+        print_mock = mocker.patch("cfa.dataops.command.Console.print")
+
+        save_data_locally()
+
+        mock_datacat.test.dataset1.load.download_version_to_local.assert_called_once_with(
+            "/tmp/downloads",
+            version_spec="2025-01-02T12-00-00",
+            force=True,
+            selection="oldest",
+        )
+        tree_mock.assert_called_once_with("/tmp/downloads", show_hidden=False)
+        print_mock.assert_called_once()
+        output = print_mock.call_args.args[0]
+        assert "has been saved locally" in output
+        assert "/tmp/downloads" in output
+        assert "tree output" in output
+
+    def test_save_data_locally_reports_existing_download(self, mock_datacat, mocker):
+        """Test save_data_locally reports when the dataset already exists"""
+        mock_datacat.test.dataset1.load.download_version_to_local.return_value = False
+        mocker.patch(
+            "cfa.dataops.command.ArgumentParser.parse_args",
+            return_value=SimpleNamespace(
+                dataset="test.dataset1",
+                location="downloads",
+                stage="load",
+                version="2025-01-02T12-00-00",
+                force=False,
+                oldest=False,
+            ),
+        )
+        mocker.patch(
+            "cfa.dataops.command.os.path.abspath",
+            return_value="/tmp/downloads",
+        )
+        tree_mock = mocker.patch("cfa.dataops.command.tree")
+        print_mock = mocker.patch("cfa.dataops.command.Console.print")
+
+        save_data_locally()
+
+        mock_datacat.test.dataset1.load.download_version_to_local.assert_called_once_with(
+            "/tmp/downloads",
+            version_spec="2025-01-02T12-00-00",
+            force=False,
+            selection="newest",
+        )
+        tree_mock.assert_not_called()
+        print_mock.assert_called_once()
+        output = print_mock.call_args.args[0]
+        assert "is already present" in output
+        assert "Use --force to re-download" in output

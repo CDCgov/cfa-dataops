@@ -64,6 +64,9 @@ def test_render_catalog_stub_outputs_parseable_python_syntax(tmp_path):
     stub = _representative_catalog_stub(dataset_config)
 
     ast.parse(stub)
+    assert (
+        "def get_ref(self, name: str, *, allow_suffix: bool = True) -> Any: ..." in stub
+    )
 
 
 def test_render_catalog_stub_uses_real_dataset_paths_and_stages(tmp_path):
