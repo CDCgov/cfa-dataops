@@ -123,6 +123,18 @@ class TestVerifyBlobAccess:
         assert "Access denied" in error_msg
         assert "test.endpoint" in error_msg
 
+    def test_verify_blob_access_caches_ext_access_check(self, blob_endpoint):
+        with (
+            patch("cfa.dataops.catalog.check_ext_env", return_value=True) as mock_ext,
+            patch.object(
+                blob_endpoint, "check_blob_access", return_value=(True, "Access OK")
+            ),
+        ):
+            blob_endpoint.verify_blob_access()
+            blob_endpoint.verify_blob_access()
+
+        assert mock_ext.call_count == 1
+
 
 class TestWriteBlobWithAccessCheck:
     """Tests for write_blob with access checks."""
@@ -183,3 +195,17 @@ class TestGetVersionsWithAccessCheck:
             blob_endpoint.get_versions()
 
         assert "Cannot access Blob storage" in str(exc_info.value)
+
+    def test_get_versions_checks_ext_env_once_per_instance(self, blob_endpoint, mocker):
+        mock_ext = mocker.patch("cfa.dataops.catalog.check_ext_env", return_value=True)
+        mocker.patch.object(
+            blob_endpoint, "check_blob_access", return_value=(True, "Access OK")
+        )
+        mocker.patch(
+            "cfa.dataops.catalog.walk_blobs_in_container",
+            return_value=[{"name": "test/prefix/2026-01-01T00-00-00/"}],
+        )
+
+        blob_endpoint.get_versions()
+
+        assert mock_ext.call_count == 1

@@ -263,6 +263,14 @@ class BlobEndpoint:
         self.is_ledger = True if ns == "ledger_endpoint" else False
         self.__ns_str__ = ns
 
+    def _verify_ext_access(self) -> None:
+        """Verify EXT environment access and cache successful checks."""
+        if getattr(self, "_ext_access_verified", False):
+            return
+        if not check_ext_env():
+            raise RuntimeError("No EXT access configured.")
+        self._ext_access_verified = True
+
     def check_blob_access(self) -> tuple[bool, str]:
         """Check if the user has access to the Blob storage account and container.
 
@@ -341,6 +349,8 @@ class BlobEndpoint:
         Raises:
             RuntimeError: If access to Blob storage cannot be verified.
         """
+        self._verify_ext_access()
+
         has_access, message = self.check_blob_access()
         if not has_access:
             raise RuntimeError(
@@ -441,8 +451,7 @@ class BlobEndpoint:
             list: sorted list of data version paths in descending order
             (latest first)
         """
-        if not check_ext_env():
-            raise RuntimeError("No EXT access configured.")
+        self._verify_ext_access()
         self.verify_blob_access()
         glob_path = f"{self.prefix}/"
         return sorted(
@@ -498,8 +507,7 @@ class BlobEndpoint:
             ValueError: If the requested version cannot be resolved.
         """
         # check credential access
-        if not check_ext_env():
-            raise RuntimeError("No EXT access configured.")
+        self._verify_ext_access()
         version = None
         if not self.is_ledger:
             available_versions = self.get_versions()
@@ -624,8 +632,7 @@ class BlobEndpoint:
         Returns:
             pd.DataFrame | pl.DataFrame | pl.LazyFrame: the dataframe
         """
-        if not check_ext_env():
-            raise RuntimeError("No EXT access configured.")
+        self._verify_ext_access()
         if output not in ["pandas", "polars", "pd", "pl", "pl_lazy", "lazy"]:
             raise ValueError(
                 f"Output {output} needs to be 'pandas', 'polars', 'pd', 'pl', 'pl_lazy', or 'lazy'."
