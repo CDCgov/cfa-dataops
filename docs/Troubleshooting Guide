@@ -23,11 +23,9 @@ This guide is intended to improve the user experience with cfa-dataops client ca
   
   ```Python```
 
-  `from cfa.dataops import datacat, reportcat`
+  `from cfa.dataops import datacat`
 
   `print("Datasets:", datacat.__namespace_list__)`
-
-  `print("Reports:", reportcat.__namespace_list__)`
 
   If imports fail, see **Environment & Installation** below.
 
@@ -181,37 +179,6 @@ This guide is intended to improve the user experience with cfa-dataops client ca
   - If recent changes impacted schemas, consult **Release Notes** for updates and migrate accordingly.
 
 
-### 6. Reporting / Notebook Conversion (Reportcat)
-
-  **Issue**
-  
-  Notebook→HTML export fails; missing assets or runtime errors.
-
-  **Common causes**
-
-  - Missing notebook dependencies (e.g., papermill, ipykernel, ipywidgets).
-  - Incorrect report namespace or path.
-
-**Solution**
-
-  - Verify report namespaces
-  
-    `from cfa.dataops import reportcat`
-    
-    `print("Reports:", reportcat.__namespace_list__)`
-
-
-  - Try a minimal conversion
-  
-    `html = reportcat.private.examples.basics_ipynb.nb_to_html_str()`
-    
-    If this works, the issue is likely report‑specific.
-
-  - Confirm report dependencies are installed; pyproject.toml lists required packages (e.g., papermill, ipykernel, ipywidgets). 
-
-  - Check the **Report Generation** docs for patterns & publishing steps.
-
-
 ### 7. Performance & Memory
 
   **Issue**
@@ -262,17 +229,13 @@ This guide is intended to improve the user experience with cfa-dataops client ca
     
   - Preview version before load
 
-    `from cfa.dataops import datacatresolved = datacat.private.scenarios.covid19vax_trends.load.resolve_version(version_spec=">=2025-05-01,<2025-06-01", selection="newest",)`
+    `from cfa.dataops import datacat`
+
+    `resolved = datacat.private.scenarios.covid19vax_trends.load.resolve_version(version_spec=">=2025-05-01,<2025-06-01", selection="newest",)`
 
     `print(resolved.version, resolved.blob_url)`
     
-  - Notebook → HTML (quick check)
-
-    `from cfa.dataops import reportcat`
-    
-    `html = reportcat.private.examples.basics_ipynb.nb_to_html_str()`
-
-
+  
 ## When to Open a GitHub Issue
 
 Open an issue when:
