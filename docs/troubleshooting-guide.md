@@ -10,7 +10,7 @@ This guide is intended to improve the user experience with cfa-dataops client ca
 1. **Start with a quick health check** (environment, access).
 2. **Find your issue** in the sections below.
 3. **Implement a solution**, then re‑run the minimal example(s).
-4. If the issue persists, collect logs and **open a GitHub issue** in the [Repo](https://github.com/CDCgov/cfa-dataops)
+4. If the issue persists, collect logs and **open a GitHub issue** in the [Repo](https://github.com/CDCgov/cfa-dataops).
 
 
 ## Quick Health Check
