@@ -24,16 +24,27 @@ This project provides data tools and low friction access to versioned datasets w
    from cfa.dataops import datacat
    print(datacat.__namespace_list__)
    ```
-4. See which versions of a dataset are available (blob endpoints for datasets will be namedL `.load`, `.extract`, or `.stage_##`):
+4. Resolve a dataset reference from a full path or unique suffix:
+   ```python
+   # exact namespace path
+   nhsn = datacat.get_ref("public.stf.nshn_hrd")
+
+   # unique suffix lookup
+   nhsn = datacat.get_ref("nhsn_hrd")
+
+   # raises ValueError if the suffix is ambiguous
+   # nhsn = datacat.get_ref("shared_dataset_name")
+   ```
+5. See which versions of a dataset are available (blob endpoints for datasets will be named `.load`, `.extract`, or `.stage_##`):
    ```python
    print(datacat.{{dataset}}.load.get_versions())
    ```
-5. Get a specific version of a dataset:
+6. Get a specific version of a dataset:
    ```python
    df = datacat.{{dataset}}.load.get_dataframe()
    df.glimpse()
    ```
-6. Generate project-local type stubs for the installed catalog:
+7. Generate project-local type stubs for the installed catalog:
    ```bash
    dataops_catalog_stubs
    ```

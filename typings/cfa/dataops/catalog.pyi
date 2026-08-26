@@ -8,7 +8,7 @@ import polars as pl
 def get_all_catalogs() -> list: ...
 
 class CatalogNamespace(SimpleNamespace):
-    pass
+    def get_ref(self, name: str, *, allow_suffix: bool = True) -> Any: ...
 
 class VersionMetadata:
     version: str | None
@@ -27,6 +27,8 @@ class BlobEndpoint:
     container: str
     prefix: str
     __ns_str__: str
+    def check_blob_access(self) -> tuple[bool, str]: ...
+    def verify_blob_access(self) -> None: ...
     def write_blob(
         self,
         file_buffer: bytes | Sequence[bytes],

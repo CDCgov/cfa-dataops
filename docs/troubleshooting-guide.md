@@ -1,0 +1,254 @@
+# CFA DataOps — Troubleshooting Guide
+
+## Purpose
+
+This guide is intended to improve the user experience with cfa-dataops client capabilities.  It provides guidance on troubleshooting common issues that CFA users may encounter when using **CFA dataops** toolkit, catalogs, and reporting utilities.
+
+
+## How to Use This Guide
+
+1. **Start with a quick health check** (environment, access).
+2. **Find your issue** in the sections below.
+3. **Implement a solution**, then re‑run the minimal example(s).
+4. If the issue persists, collect logs and **open a GitHub issue** in the [Repo](https://github.com/CDCgov/cfa-dataops).
+
+
+## Quick Health Check
+
+- **Python environment**
+
+  - Confirm Python 3.10+ is active and dependencies installed (pandas, polars, duckdb, papermill, etc.).
+
+- **Import the core namespaces**
+
+  ```Python```
+
+  `from cfa.dataops import datacat`
+
+  `print("Datasets:", datacat.__namespace_list__)`
+
+  If imports fail, see **Environment & Installation** below.
+
+- **Azure Cloud access**
+
+    If your workflow requires blob access, ensure you’re logged in, using the appropriate authorization for your context.
+
+        `az login --identity`
+
+## Common Issues & Solutions
+
+### 1. Environment & Installation
+
+  **Issue**
+
+  `ModuleNotFoundError` for cfa.dataops, polars, duckdb, or pandera
+
+**Common causes**
+
+  - Virtual environment not activated.
+  - Installed with incompatible Python version.
+
+**Solution**
+
+  - Verify Python listed in pyproject.toml and install/upgrade accordingly.
+  - Re‑install the project using your team’s standard (e.g., uv, pip, or poetry) and re‑activate the venv.
+  - Re‑try minimal imports (see Quick Health Check).
+
+
+### 2. Accessing Data — get_dataframe() Errors
+
+  **Issue**
+
+  Errors when loading dataframes (e.g., “no matching version”, “cannot resolve selection”).
+
+**Common causes**
+
+  - No dataset versions meet your version-spec.
+  - Using default selection where multiple matches exist.
+  - Attempting to load large outputs into pandas that exceed memory.
+
+**Solution**
+
+  - Preview the version that would be used before loading:
+
+      `from cfa.dataops import datacat`
+
+      `resolved = datacat.private.scenarios.covid19vax_trends.load.resolve_version(    version_spec=">=2025-05-01,<2025-06-01",    selection="newest",)`
+
+      `print(resolved.version)`
+
+      `print(resolved.blob_url)`
+
+      Then pass the same arguments to:
+
+      `get_dataframe()`
+
+
+  - List available versions to confirm your constraints
+
+    `datacat.private.scenarios.covid19vax_trends.load.get_versions()`
+
+    If empty or unexpected, re‑run ETL or relax version-spec.
+
+  - Choose appropriate output for size/performance
+
+    \# pandas DataFrame
+
+      `df = datacat.private.scenarios.covid19vax_trends.load.get_dataframe(output="pandas")`
+
+      \# polars DataFrame
+
+        `df_pl = datacat.private.scenarios.covid19vax_trends.load.get_dataframe(output="polars")`
+
+      \# lazy polars (defer materialization)
+
+        `df_lazy = datacat.private.scenarios.covid19vax_trends.load.get_dataframe(output="pl_lazy")`
+
+    Use polars/pl_lazy for large datasets to mitigate memory pressure.
+
+
+  - Advanced version filters
+
+    - If you rely on range or pattern filters (e.g., >=..., <..., latest), confirm your string syntax matches the project’s conventions noted in release notes.
+
+
+### 3. Authentication / Azure Blob Access
+
+**Issue**
+
+  Read/write fails to blob storage; “permission denied” or timeouts.
+
+**Common causes**
+
+  - Not authenticated in the current shell/session.
+  - Missing role or wrong subscription/tenant.
+  - Network constraints.
+
+**Solution**
+
+  - Log in using your approved method (e.g., az login --identity) and verify subscription.
+  - If you use helper utilities from the companion cfa-cloudops library for authentication/workflows, ensure it’s correctly configured and you’re on a supported Python version.
+  - Re‑run a small read_blobs/get_versions check to validate access via the catalog (see **Data User Guide**).
+
+
+### 4. Catalog Creation & Management
+
+  **Issue**
+
+  New datasets or catalogs don’t appear under datacat.__namespace_list__.
+
+**Common causes**
+
+  - Catalog not installed/registered in the environment.
+  - Misconfigured dataset definition (TOML).
+  - Namespace conflicts.
+
+**Solution**
+
+  - Use the catalog initialization CLI to create a standards‑compliant structure:
+
+    `dataops_catalog_init --help`
+
+
+    Then follow the catalog creation and managing guides in docs/.
+
+  - Validate dataset configuration (paths, names, and extract/load endpoints) and re‑install the catalog if needed. (See Managing Catalogs and Catalog Creation pages).
+  - Restart your Python session to refresh namespace discovery and re‑check:
+
+    `from cfa.dataops import datacat`
+
+    `print(datacat.__namespace_list__)`
+
+
+### 5. Schema Validation Failures
+
+  **Issue**
+
+  Errors citing required columns, types, or value ranges.
+
+  **Common causes**
+
+  - Source feed changed upstream.
+  - Transform altered types unexpectedly.
+  - Misaligned schema definitions.
+
+  **Solution**
+
+  - Review the dataset’s schema expectations and correct the ETL or input source. (See Data Validation in the Data User Guide).
+
+  - If recent changes impacted schemas, consult **Release Notes** for updates and migrate accordingly.
+
+
+### 7. Performance & Memory
+
+  **Issue**
+
+  Slow dataframe operations; process killed due to memory.
+
+  **Common causes**
+
+  - Loading large datasets into pandas.
+  - Inefficient transformations and eager evaluation.
+
+  **Solution**
+
+  - Use Polars or DuckDB for large joins/aggregations
+  - Use lazy operations via output="pl_lazy" and materialize only the final result.
+  - Filter and project early (column & row pruning) before joins; verify results on a small sample.
+
+
+### 8. Versioning & Reproducibility
+
+  **Issue**
+
+  Analyses aren’t reproducible; different runs return different data.
+
+  **Common causes**
+
+  - Implicit latest version selection.
+  - Ambiguous version-spec ranges.
+
+  **Solution**
+
+  - Pin exact versions using timestamp equality:
+
+  `df = datacat.private.scenarios.covid19vax_trends.load.get_dataframe(version_spec="==2025-06-03T17-59-16")`
+
+  - Document your version-spec and selection and store them with the analysis for auditability.
+
+
+## Minimal Working Examples (MWE)
+
+  - List datasets & load one
+
+    `from cfa.dataops import datacat`
+
+    `print(datacat.__namespace_list__)`
+
+    `df = datacat.private.scenarios.covid19vax_trends.load.get_dataframe()`
+
+  - Preview version before load
+
+    `from cfa.dataops import datacat`
+
+    `resolved = datacat.private.scenarios.covid19vax_trends.load.resolve_version(version_spec=">=2025-05-01,<2025-06-01", selection="newest",)`
+
+    `print(resolved.version, resolved.blob_url)`
+
+
+## When to Open a GitHub Issue
+
+Open an issue when:
+
+  - You can reproduce a failure using an MWE above.
+  - Behavior contradicts documented APIs or release notes.
+  - A dataset’s schema or versioning appears inconsistent with docs.
+
+Provide:
+
+  - Python version, package versions (pip list/uv pip list), OS.
+  - Exact code snippet and traceback.
+  - Dataset/catalog names and version-spec.
+  - Whether Azure auth was active (az login), if relevant.
+
+Use the repo’s [issue tracker](CDCgov/cfa-dataops)

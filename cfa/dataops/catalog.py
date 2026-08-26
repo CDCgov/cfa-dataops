@@ -15,7 +15,13 @@ from typing import Any, Literal, overload
 import pandas as pd
 import polars as pl
 import tomli
+from azure.core.exceptions import (
+    ClientAuthenticationError,
+    HttpResponseError,
+    ResourceNotFoundError,
+)
 from azure.identity import ManagedIdentityCredential
+from azure.storage.blob import BlobServiceClient
 from cfa.cloudops.blob_helpers import (
     read_blob_stream,
     walk_blobs_in_container,
@@ -98,6 +104,60 @@ dataset_namespaces = get_dataset_dot_path(all_dataset_ns_map)
 
 class CatalogNamespace(SimpleNamespace):
     """Runtime namespace wrapper for catalog access."""
+
+    def _resolve_namespace_path(self, namespace_path: str) -> Any:
+        """Resolve a dotted namespace path to the target object."""
+        current: Any = self
+        for segment in namespace_path.split("."):
+            if not hasattr(current, segment):
+                raise KeyError(
+                    f"Given namespace path '{namespace_path}' could not be resolved. Catalog component '{segment}', does not exist or is not specific enough. Check spelling or try adding additional catalog components."
+                )
+            current = getattr(current, segment)
+        return current
+
+    def get_ref(self, name: str, *, allow_suffix: bool = True) -> Any:
+        """Resolve and return a catalog object by full path or unique suffix.
+
+        Args:
+            name (str): Dotted namespace path or suffix to resolve.
+            allow_suffix (bool): Whether to allow suffix matching when an exact
+                path is not provided.
+
+        Returns:
+            Any: The resolved namespace object (for example, a DatasetEndpoint).
+
+        Raises:
+            ValueError: If ``name`` is empty or resolves ambiguously.
+            KeyError: If no namespace matches ``name``.
+            TypeError: If ``name`` is not a string.
+        """
+        if not isinstance(name, str):
+            raise TypeError("name must be a string.")
+
+        ref_name = name.strip()
+        if ref_name == "":
+            raise ValueError("name must be a non-empty string.")
+
+        namespace_list = getattr(self, "__namespace_list__", None)
+        if not isinstance(namespace_list, list):
+            raise AttributeError(
+                "get_ref is only available on namespace roots with '__namespace_list__'."
+            )
+
+        matches = [ns for ns in namespace_list if ns == ref_name]
+        if not matches and allow_suffix:
+            suffix = f".{ref_name}"
+            matches = [ns for ns in namespace_list if ns.endswith(suffix)]
+
+        if not matches:
+            raise KeyError(f"No dataset found matching '{ref_name}'.")
+        if len(matches) > 1:
+            raise ValueError(
+                f"Ambiguous dataset name '{ref_name}'. Matches: {', '.join(sorted(matches))}"
+            )
+
+        return self._resolve_namespace_path(matches[0])
 
 
 class DatasetEndpoint:
@@ -186,6 +246,103 @@ class BlobEndpoint:
         self.prefix = prefix if prefix[-1] != "/" else prefix[:-1]
         self.__ns_str__ = ns
 
+    def _verify_ext_access(self) -> None:
+        """Verify EXT environment access and cache successful checks."""
+        if getattr(self, "_ext_access_verified", False):
+            return
+        if not check_ext_env():
+            raise RuntimeError("No EXT access configured.")
+        self._ext_access_verified = True
+
+    def check_blob_access(self) -> tuple[bool, str]:
+        """Check if the user has access to the Blob storage account and container.
+
+        This method attempts a lightweight operation (getting container properties)
+        to verify access before attempting data operations. This provides clear
+        error messages instead of cryptic Azure SDK errors.
+
+        Returns:
+            tuple[bool, str]: A tuple containing:
+                - bool: True if access is available, False otherwise
+                - str: A message describing the access status or error details
+
+        Raises:
+            Does not raise exceptions; always returns a tuple with status and message.
+        """
+        if getattr(self, "_blob_access_verified", False):
+            return True, f"✓ Access confirmed to {self.account}/{self.container}"
+
+        try:
+            # Create a BlobServiceClient to check access
+            credential = ManagedIdentityCredential()
+            blob_service_client = BlobServiceClient(
+                account_url=f"https://{self.account}.blob.core.windows.net",
+                credential=credential,
+            )
+            # Try to get container properties to verify access
+            container_client = blob_service_client.get_container_client(self.container)
+            container_client.get_container_properties()
+            self._blob_access_verified = True
+            return True, f"✓ Access confirmed to {self.account}/{self.container}"
+
+        except ClientAuthenticationError as e:
+            return (
+                False,
+                f"Authentication failed for Blob storage account '{self.account}'. "
+                f"Error: {str(e)}. Please check your credentials and ensure you have "
+                f"the required permissions.",
+            )
+        except ResourceNotFoundError as e:
+            return (
+                False,
+                f"Container '{self.container}' not found in storage account '{self.account}'. "
+                f"Error: {str(e)}. Please verify the container name is correct.",
+            )
+        except HttpResponseError as e:
+            if e.status_code == 403:
+                return (
+                    False,
+                    f"Access denied to container '{self.container}' in account '{self.account}'. "
+                    f"You do not have the required permissions. Error: {str(e)}",
+                )
+            elif e.status_code == 401:
+                return (
+                    False,
+                    f"Unauthorized access to '{self.account}'. "
+                    f"Your credentials are invalid or have expired. Error: {str(e)}",
+                )
+            else:
+                return (
+                    False,
+                    f"HTTP error accessing Blob storage: {e.status_code}. Error: {str(e)}",
+                )
+        except Exception as e:
+            return (
+                False,
+                f"Failed to verify access to Blob storage account '{self.account}'. "
+                f"Error type: {type(e).__name__}. Error: {str(e)}",
+            )
+
+    def verify_blob_access(self) -> None:
+        """Verify access to Blob storage and raise an informative error if access is denied.
+
+        This is a convenience method that calls check_blob_access() and raises
+        a RuntimeError with a helpful message if access verification fails.
+
+        Raises:
+            RuntimeError: If access to Blob storage cannot be verified.
+        """
+        self._verify_ext_access()
+
+        has_access, message = self.check_blob_access()
+        if not has_access:
+            raise RuntimeError(
+                f"Cannot access Blob storage. {message}\n"
+                f"Dataset: {self.__ns_str__}\n"
+                f"Account: {self.account}\n"
+                f"Container: {self.container}"
+            )
+
     def write_blob(
         self,
         file_buffer: bytes | Sequence[bytes],
@@ -205,6 +362,7 @@ class BlobEndpoint:
             auto_version (bool, optional): whether to automatically version
             append (bool, optional): whether to append to existing file (only for single file writes).
         """
+        self.verify_blob_access()
         if auto_version and not append:
             path_after_prefix = f"{get_timestamp()}/{path_after_prefix.lstrip('/')}"
         path_after_prefix = path_after_prefix.lstrip("/")
@@ -241,6 +399,7 @@ class BlobEndpoint:
             selection (Literal["newest", "oldest"], optional): whether to get the newest or oldest matching versions. Defaults to "newest".
             print_version (bool, optional): whether to print the version being used. Defaults to True.
         """
+        self.verify_blob_access()
         blobs, _ = self._get_version_blobs(
             version_spec=version_spec, selection=selection, print_version=print_version
         )
@@ -255,6 +414,7 @@ class BlobEndpoint:
         return blob_bytes
 
     def read_csv(self, suffix: str) -> pd.DataFrame:
+        self.verify_blob_access()
         blob = read_blob_stream(
             blob_url=self.prefix + "/" + suffix,
             account_name=self.account,
@@ -271,8 +431,7 @@ class BlobEndpoint:
             list: sorted list of data version paths in descending order
             (latest first)
         """
-        if not check_ext_env():
-            raise RuntimeError("No EXT access configured.")
+        self.verify_blob_access()
         glob_path = f"{self.prefix}/"
         return sorted(
             [
@@ -327,8 +486,7 @@ class BlobEndpoint:
             ValueError: If the requested version cannot be resolved.
         """
         # check credential access
-        if not check_ext_env():
-            raise RuntimeError("No EXT access configured.")
+        self.verify_blob_access()
         version = None
         available_versions = self.get_versions()
         version = version_matcher(version_spec, available_versions, selection=selection)
@@ -447,8 +605,7 @@ class BlobEndpoint:
         Returns:
             pd.DataFrame | pl.DataFrame | pl.LazyFrame: the dataframe
         """
-        if not check_ext_env():
-            raise RuntimeError("No EXT access configured.")
+        self.verify_blob_access()
         if output not in ["pandas", "polars", "pd", "pl", "pl_lazy", "lazy"]:
             raise ValueError(
                 f"Output {output} needs to be 'pandas', 'polars', 'pd', 'pl', 'pl_lazy', or 'lazy'."
