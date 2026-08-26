@@ -3,6 +3,11 @@
 from unittest.mock import patch
 
 import pytest
+from azure.core.exceptions import (
+    ClientAuthenticationError,
+    HttpResponseError,
+    ResourceNotFoundError,
+)
 
 from cfa.dataops.catalog import BlobEndpoint
 
@@ -10,16 +15,10 @@ from cfa.dataops.catalog import BlobEndpoint
 @pytest.fixture
 def blob_endpoint():
     """Create a BlobEndpoint instance for testing."""
-    ledger_location = {
-        "account": "account_test",
-        "container": "container_test",
-        "prefix": "_access/test/ledger/",
-    }
     return BlobEndpoint(
         account="myaccount",
         container="mycontainer",
         prefix="test/prefix",
-        ledger_location=ledger_location,
         ns="test.endpoint",
     )
 
@@ -38,13 +37,12 @@ class TestCheckBlobAccess:
         assert "mycontainer" in message
 
     def test_check_blob_access_401_unauthorized(self, blob_endpoint):
-        class Err401(Exception):
-            status_code = 401
+        error = HttpResponseError(message="Unauthorized")
+        error.status_code = 401
 
-        with patch(
-            "cfa.dataops.catalog.walk_blobs_in_container",
-            side_effect=Err401("Unauthorized"),
-        ):
+        with patch("cfa.dataops.catalog.BlobServiceClient") as mock_bsc:
+            mock_container = mock_bsc.return_value.get_container_client.return_value
+            mock_container.get_container_properties.side_effect = error
             has_access, message = blob_endpoint.check_blob_access()
 
         assert has_access is False
@@ -52,13 +50,12 @@ class TestCheckBlobAccess:
         assert "credentials" in message.lower()
 
     def test_check_blob_access_403_forbidden(self, blob_endpoint):
-        class Err403(Exception):
-            status_code = 403
+        error = HttpResponseError(message="Access denied")
+        error.status_code = 403
 
-        with patch(
-            "cfa.dataops.catalog.walk_blobs_in_container",
-            side_effect=Err403("Access denied"),
-        ):
+        with patch("cfa.dataops.catalog.BlobServiceClient") as mock_bsc:
+            mock_container = mock_bsc.return_value.get_container_client.return_value
+            mock_container.get_container_properties.side_effect = error
             has_access, message = blob_endpoint.check_blob_access()
 
         assert has_access is False
@@ -66,13 +63,11 @@ class TestCheckBlobAccess:
         assert "permissions" in message.lower()
 
     def test_check_blob_access_resource_not_found(self, blob_endpoint):
-        class Err404(Exception):
-            status_code = 404
-
-        with patch(
-            "cfa.dataops.catalog.walk_blobs_in_container",
-            side_effect=Err404("Container not found"),
-        ):
+        with patch("cfa.dataops.catalog.BlobServiceClient") as mock_bsc:
+            mock_container = mock_bsc.return_value.get_container_client.return_value
+            mock_container.get_container_properties.side_effect = ResourceNotFoundError(
+                "Container not found"
+            )
             has_access, message = blob_endpoint.check_blob_access()
 
         assert has_access is False
@@ -80,20 +75,22 @@ class TestCheckBlobAccess:
         assert "mycontainer" in message
 
     def test_check_blob_access_authentication_error(self, blob_endpoint):
-        with patch(
-            "cfa.dataops.catalog.walk_blobs_in_container",
-            side_effect=Exception("credential unavailable"),
-        ):
+        with patch("cfa.dataops.catalog.BlobServiceClient") as mock_bsc:
+            mock_container = mock_bsc.return_value.get_container_client.return_value
+            mock_container.get_container_properties.side_effect = (
+                ClientAuthenticationError("credential unavailable")
+            )
             has_access, message = blob_endpoint.check_blob_access()
 
         assert has_access is False
         assert "Authentication failed" in message
 
     def test_check_blob_access_generic_exception(self, blob_endpoint):
-        with patch(
-            "cfa.dataops.catalog.walk_blobs_in_container",
-            side_effect=Exception("Something went wrong"),
-        ):
+        with patch("cfa.dataops.catalog.BlobServiceClient") as mock_bsc:
+            mock_container = mock_bsc.return_value.get_container_client.return_value
+            mock_container.get_container_properties.side_effect = Exception(
+                "Something went wrong"
+            )
             has_access, message = blob_endpoint.check_blob_access()
 
         assert has_access is False
@@ -215,28 +212,22 @@ class TestGetDataframeWithAccessCheck:
 class TestGetVersionBlobsWithAccessCheck:
     """Tests for _get_version_blobs with access checks."""
 
-    def test_get_version_blobs_ledger_fails_without_access(self, mocker):
-        ledger_location = {
-            "account": "account_test",
-            "container": "container_test",
-            "prefix": "_access/test/ledger/",
-        }
-        ledger_endpoint = BlobEndpoint(
+    def test_get_version_blobs_fails_without_access(self, mocker):
+        endpoint = BlobEndpoint(
             account="myaccount",
             container="mycontainer",
-            prefix="_access/test/ledger",
-            ledger_location=ledger_location,
-            ns="ledger_endpoint",
+            prefix="test/prefix",
+            ns="test.endpoint",
         )
         mocker.patch.object(
-            ledger_endpoint,
+            endpoint,
             "verify_blob_access",
             side_effect=RuntimeError("Cannot access Blob storage. Access denied"),
         )
         mock_walk = mocker.patch("cfa.dataops.catalog.walk_blobs_in_container")
 
         with pytest.raises(RuntimeError) as exc_info:
-            ledger_endpoint._get_version_blobs()
+            endpoint._get_version_blobs()
 
         assert "Cannot access Blob storage" in str(exc_info.value)
         mock_walk.assert_not_called()
