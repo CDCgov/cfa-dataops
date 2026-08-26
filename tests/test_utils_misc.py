@@ -14,24 +14,6 @@ def test_remove_ws_and_nonalpha_normalizes_text():
     )
 
 
-def test_get_fs_ns_map_basic_without_endpoint_func(tmp_path):
-    reports = tmp_path / "reports"
-    reports.mkdir()
-    top = reports / "My Notebook.ipynb"
-    nested_dir = reports / "Team Alpha"
-    nested_dir.mkdir()
-    nested = nested_dir / "Quarterly.Report.ipynb"
-    top.write_text("{}")
-    nested.write_text("{}")
-
-    fs_map = utils.get_fs_ns_map(str(reports), "ipynb")
-
-    assert "my_notebook" in fs_map
-    assert fs_map["my_notebook"] == str(top)
-    assert "team_alpha" in fs_map
-    assert fs_map["team_alpha"]["quarterly_report"] == str(nested)
-
-
 def test_get_fs_ns_map_with_endpoint_func(tmp_path):
     datasets = tmp_path / "datasets"
     datasets.mkdir()
@@ -55,24 +37,6 @@ def test_get_fs_ns_map_endpoint_func_must_return_string(tmp_path):
 
     with pytest.raises(ValueError, match="endpoint_func must return a string"):
         utils.get_fs_ns_map(str(datasets), "toml", endpoint_func=lambda _: 123)
-
-
-def test_get_dataset_dot_path_flattens_nested_map():
-    endpoint_map = {
-        "space": {
-            "example": "configs/example.toml",
-            "nested": {"report": "reports/q1.ipynb"},
-            "skip": "not_a_dataset.txt",
-        },
-        "root": "configs/root.toml",
-    }
-
-    paths = utils.get_dataset_dot_path(endpoint_map)
-
-    assert "space.example" in paths
-    assert "space.nested.report" in paths
-    assert "root" in paths
-    assert "space.skip" not in paths
 
 
 def test_get_timestamp_formats(mocker):

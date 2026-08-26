@@ -108,7 +108,7 @@ def main():
                 )
             )
 
-        for mod_i in ["datasets", "reports", "workflows"]:
+        for mod_i in ["datasets", "workflows"]:
             shutil.copytree(
                 os.path.join(repo_files_dirs, mod_i),
                 os.path.join(library_modules_root, mod_i),

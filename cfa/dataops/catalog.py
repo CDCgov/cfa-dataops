@@ -1,6 +1,5 @@
 """building a validated datasource namespace"""
 
-import json
 import logging
 import os
 import pkgutil
@@ -37,12 +36,9 @@ from .config_validator import (
     StorageEndpointValidation,
     ValidationError,
 )
-from .reporting.catalog import report_dict_to_sn
 from .utils import (
     get_dataset_dot_path,
-    get_date,
     get_timestamp,
-    get_user,
     version_matcher,
 )
 
@@ -89,25 +85,21 @@ def get_all_catalogs() -> list:
     return catalogs
 
 
-# aggregating all datasets and reports into a single mapping for namespace
+# aggregating all datasets into a single mapping for namespace
 # and endpoint construction:
 all_catalogs = get_all_catalogs()
 
 all_dataset_ns_map = {}
-all_reports_ns_map = {}
 all_defaults = {}
 for cns, cat_name, cat_path in all_catalogs:
     dataset_mod = import_module(f"{cns}.{cat_name}.datasets")
-    report_mod = import_module(f"{cns}.{cat_name}.reports")
     all_dataset_ns_map.update(dataset_mod.dataset_ns_map)
-    all_reports_ns_map.update(report_mod.report_ns_map)
     with open(os.path.join(cat_path, cat_name, "catalog_defaults.toml"), "rb") as f:
         defaults = tomli.load(f)
     for k in dataset_mod.dataset_ns_map.keys():
         all_defaults.update({k: defaults})
 
 dataset_namespaces = get_dataset_dot_path(all_dataset_ns_map)
-report_namespaces = get_dataset_dot_path(all_reports_ns_map)
 
 
 class CatalogNamespace(SimpleNamespace):
@@ -196,11 +188,7 @@ class DatasetEndpoint:
                 if container == "":
                     self.config[k]["container"] = self.defaults["storage"]["container"]
         self.validate_dataset_config(config_path)
-        self._ledger_location = {
-            "account": self.defaults["storage"]["account"],
-            "container": self.defaults["storage"]["container"],
-            "prefix": self.defaults["access_ledger"]["path"],
-        }
+
         for k, v in self.config.items():
             if k in ["load", "extract", "data"] or k.startswith("stage"):
                 self.__setattr__(
@@ -209,7 +197,6 @@ class DatasetEndpoint:
                         account=self.config[k]["account"],
                         container=self.config[k]["container"],
                         prefix=v["prefix"],
-                        ledger_location=self._ledger_location,
                         ns=f"{self.__ns_str__}.{k}",
                     ),
                 )
@@ -243,7 +230,6 @@ class BlobEndpoint:
         account: str,
         container: str,
         prefix: str,
-        ledger_location: dict,
         ns: str,
     ):
         """Basic functionality to interact with blobs to be included
@@ -253,14 +239,11 @@ class BlobEndpoint:
             account (str): the azure storage account to use
             container (str): the container in the account to use
             prefix (str): the path prefix in the container to use
-            ledger_location (dict): the location to write access logs to
             ns (str): the current namespace path
         """
         self.account = account
         self.container = container
         self.prefix = prefix if prefix[-1] != "/" else prefix[:-1]
-        self.ledger_location = ledger_location
-        self.is_ledger = True if ns == "ledger_endpoint" else False
         self.__ns_str__ = ns
 
     def _verify_ext_access(self) -> None:
@@ -400,7 +383,6 @@ class BlobEndpoint:
                 container_name=self.container,
                 append_blob=append,
             )
-        # self.ledger_entry(action="write")
         # print(f"file written to: {full_path}")
 
     def read_blobs(
@@ -429,7 +411,6 @@ class BlobEndpoint:
             )
             for i in blobs
         ]
-        # self.ledger_entry(action="read")
         return blob_bytes
 
     def read_csv(self, suffix: str) -> pd.DataFrame:
@@ -440,7 +421,6 @@ class BlobEndpoint:
             container_name=self.container,
         )
         df = pd.read_csv(blob)
-        # self.ledger_entry(action="read")
         return df
 
     def get_versions(self) -> list:
@@ -508,21 +488,17 @@ class BlobEndpoint:
         # check credential access
         self.verify_blob_access()
         version = None
-        if not self.is_ledger:
-            available_versions = self.get_versions()
-            version = version_matcher(
-                version_spec, available_versions, selection=selection
+        available_versions = self.get_versions()
+        version = version_matcher(version_spec, available_versions, selection=selection)
+        if not version:
+            raise ValueError(
+                f"Version matching {version_spec} not found in available versions: {available_versions}"
             )
-            if not version:
-                raise ValueError(
-                    f"Version matching {version_spec} not found in available versions: {available_versions}"
-                )
-            logger.info(f"Using version: {version}")
-            if print_version:
-                print(f"Using version: {version}")
-            walk_path = f"{self.prefix}/{version}/"
-        else:
-            walk_path = f"{self.prefix.removesuffix('/')}/"
+        logger.info(f"Using version: {version}")
+        if print_version:
+            print(f"Using version: {version}")
+        walk_path = f"{self.prefix}/{version}/"
+
         return sorted(
             list(
                 walk_blobs_in_container(
@@ -576,8 +552,6 @@ class BlobEndpoint:
             with open(local_file_path, "wb") as f:
                 f.write(file_bytes)
                 written = True
-        # if written:
-        # self.ledger_entry(action="read")
         return written
 
     @overload
@@ -660,7 +634,6 @@ class BlobEndpoint:
                         credential=ManagedIdentityCredential()
                     ),
                 )
-                # self.ledger_entry(action="read")
                 return df
             elif file_ext == "csv":
                 df = pl.scan_csv(
@@ -671,7 +644,6 @@ class BlobEndpoint:
                         credential=ManagedIdentityCredential()
                     ),
                 )
-                ##self.ledger_entry(action="read")
                 return df
             elif file_ext == "ndjson" or file_ext == "jsonl":
                 df = pl.scan_ndjson(
@@ -682,7 +654,6 @@ class BlobEndpoint:
                         credential=ManagedIdentityCredential()
                     ),
                 )
-                ##self.ledger_entry(action="read")
                 return df
             else:
                 raise ValueError(f"Lazy loading not supported for {file_ext} files.")
@@ -740,32 +711,6 @@ class BlobEndpoint:
                     how="diagonal",
                 )
             return df
-
-    def ledger_entry(self, action: str) -> None:
-        """Write an access log entry to the ledger location
-
-        Args:
-            action (str): the action taken (e.g., 'read', 'write')
-        """
-        if self.is_ledger:
-            return
-        log_entry = {
-            "timestamp": get_timestamp(make_standard=True),
-            "username": get_user(),
-            "dataset": self.__ns_str__,
-            "action": action,
-        }
-        log_data = (json.dumps(log_entry) + "\n").encode("utf-8")
-        ledger_path = f"{self.ledger_location['prefix']}/{get_date()}.jsonl"
-
-        write_blob_stream(
-            data=log_data,
-            blob_url=ledger_path,
-            account_name=self.ledger_location["account"],
-            container_name=self.ledger_location["container"],
-            append_blob=True,
-            overwrite=False,
-        )
 
     def resolve_version(
         self,
@@ -976,18 +921,6 @@ def dict_to_sn(d: Any, defaults: dict | None = None, ns: str = "") -> CatalogNam
         )
         for k, v in d.items()
     ]
-    if ns != "" and "." not in ns:
-        setattr(
-            x,
-            "_ledger_endpoint",
-            BlobEndpoint(
-                account=defaults["storage"]["account"],
-                container=defaults["storage"]["container"],
-                prefix=defaults["access_ledger"]["path"],
-                ledger_location={},
-                ns="ledger_endpoint",
-            ),
-        )
     return x
 
 
@@ -996,15 +929,8 @@ for k in all_dataset_ns_map.keys():
     dc.append(dict_to_sn({k: all_dataset_ns_map[k]}, all_defaults.get(k, {})))
 combined_dict = {key: value for ns in dc for key, value in vars(ns).items()}
 
-rc = []
-for k in all_reports_ns_map.keys():
-    rc.append(report_dict_to_sn({k: all_reports_ns_map[k]}))
-combined_reports_dict = {key: value for ns in rc for key, value in vars(ns).items()}
-
 datacat: CatalogNamespace = CatalogNamespace(**combined_dict)
 datacat.__setattr__("__namespace_list__", dataset_namespaces)
-reportcat: CatalogNamespace = CatalogNamespace(**combined_reports_dict)
-reportcat.__setattr__("__namespace_list__", report_namespaces)
 
 
 def _attach_schema_mock_functions(datacat: CatalogNamespace, catalogs: list) -> None:

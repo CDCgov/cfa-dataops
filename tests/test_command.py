@@ -37,7 +37,6 @@ def mock_datacat(mocker):
         extract=mock_extract,
         load=mock_load,
         stage_01=mock_stage_01,
-        _ledger_endpoint=MagicMock(),
     )
 
     # Create test namespace
@@ -85,8 +84,6 @@ class TestGetStagesList:
         assert "extract" in result
         assert "load" in result
         assert "stage_01" in result
-        assert "_ledger_endpoint" not in result  # Should be filtered out
-
         # Verify stages are sorted
         assert result == sorted(result)
 
@@ -268,8 +265,8 @@ class TestCliCommands:
         assert "/tmp/downloads" in output
         assert "tree output" in output
 
-    def test_save_data_locally_reports_existing_download(self, mock_datacat, mocker):
-        """Test save_data_locally reports when the dataset already exists"""
+    def test_save_data_locally_notifies_existing_download(self, mock_datacat, mocker):
+        """Test save_data_locally notifies when the dataset already exists"""
         mock_datacat.test.dataset1.load.download_version_to_local.return_value = False
         mocker.patch(
             "cfa.dataops.command.ArgumentParser.parse_args",

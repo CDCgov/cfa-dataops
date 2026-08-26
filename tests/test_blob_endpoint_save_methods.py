@@ -18,16 +18,10 @@ def blob_endpoint(mocker, mock_write_blob_stream):
         "cfa.dataops.catalog.write_blob_stream",
         mock_write_blob_stream,
     )
-    ledger_location = {
-        "account": "account_test",
-        "container": "container_test",
-        "prefix": "_access/test/ledger/",
-    }
     return BlobEndpoint(
         account="account_test",
         container="container_test",
         prefix="test/prefix",
-        ledger_location=ledger_location,
         ns="test.endpoint",
     )
 
