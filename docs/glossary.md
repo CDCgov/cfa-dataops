@@ -9,7 +9,7 @@ This glossary provides clear, CDC-context definiitons of key technologies, tools
     - It provides secure, scablable storage for ingestion pipelines, cleaned datasets, and analytical outputs used in CFA modeling and analytics
     - Many cfa-dataops integration tests rely on Blob Storage access, which requires authenticating with 'az login --identity`
     - Enables cloub-based pipelines that mirror production environments, making local-to-cloud reproducibility easier
-    
+
 
 ## Catalog (CFA Catalog)
 The **CFA Catalog** is a central structured repository of datasets used by CFA modeling teams. It provides metadata, versioning, provenance, and standardized accessibility, enabling discoverability, reproducibility, and governance.
@@ -54,14 +54,14 @@ Polars is a high-performance DataFrame library for Rust and Python, optimized fo
 **pytest** is a Python testing framework used to write and execute test suites, including unit tests, integration tests, and property-based tests.
 
 ### Why it matters in cfa-dataops
-    - CFA DataOps uses pytest as its primary test runner, including support for: 
+    - CFA DataOps uses pytest as its primary test runner, including support for:
         - Discovery of test files
         - Mocking with pytest-mock
         - Coverage reporting
-        - Property-based tests via Hypothesis 
-        - Unit tests, 
+        - Property-based tests via Hypothesis
+        - Unit tests,
         - Integration tests
-    - pytest integrates seamlessly with uv (uv run pytest) 
+    - pytest integrates seamlessly with uv (uv run pytest)
     - supports node ID selection for running specific tests.
 
 
@@ -72,5 +72,3 @@ Polars is a high-performance DataFrame library for Rust and Python, optimized fo
     - uv provides reliable installs and consistent execution environments across developer machines and CI
     - In cfa-dataops, uv is the recommended setup tool for running tests and syncing dependencies (uv sync, uv run pytest)
     - It improves the stability of pipelines and reduces environment drift
-
-
