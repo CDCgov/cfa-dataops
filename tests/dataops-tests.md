@@ -4,10 +4,10 @@
 The cfa-dataops/tests directory contains automated checks to help ensure the reliability of **cfa-dataops** library and its supporting utilities.  The suite is designed to run locally and in CI, emphasizing fast unit tests while allowing (optional) integration tests that touch cloud resources used by CFA DataOps (e.g. Azure Blob Storage).
 
 ## Key Features of Tests Directory
-**Pytest-based suite:** Leverages pytest for discovery and execution.  
-**Mocking support:** Uses pytest-mock to isolate external dependencies during unit testing.  
-**Property-based tests:** Optionally uses hypothesis to validate invariants across randomized inputs.  
-**Coverage instrumentation:** Configurable via .coveragerc and pytest-cov.  
+**Pytest-based suite:** Leverages pytest for discovery and execution.
+**Mocking support:** Uses pytest-mock to isolate external dependencies during unit testing.
+**Property-based tests:** Optionally uses hypothesis to validate invariants across randomized inputs.
+**Coverage instrumentation:** Configurable via .coveragerc and pytest-cov.
 **Works with uv:** The ecosystem commonly runs commands through uv (e.g., uv run pytest) for consistent environments.
 
 ## Quick Start Checklist
