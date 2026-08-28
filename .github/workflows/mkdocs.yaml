@@ -1,4 +1,4 @@
-name: mkdocs
+name: zensical
 on:
   pull_request:
   push:
@@ -14,7 +14,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v7
-      - uses: ./.github/actions/mkdocs-build
+      - uses: ./.github/actions/zensical-build
 
   deploy:
     if: ${{ github.event_name == 'push' && github.ref_name == 'main' }}
@@ -33,7 +33,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v7
-      - uses: ./.github/actions/mkdocs-build
+      - uses: ./.github/actions/zensical-build
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v5
         with:
@@ -41,6 +41,7 @@ jobs:
           path: site
           retention-days: "3"
       - name: deploy to gh pages
+        id: deployment
         uses: actions/deploy-pages@v5
         with:
           artifact_name: github-pages
