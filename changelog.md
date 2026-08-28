@@ -7,6 +7,10 @@ and this project adheres to [Calendar Versioning](https://calver.org/).
 The versioning pattern is `YYYY.MM.DD.micro(a/b/{none if release})`
 
 ---
+## [2026.08.28.0]
+
+- updated the doc site to zensical
+
 ## [2026.08.07.0]
 
 - added function to check blob access to provide more accurate error messages if access does not exist.
