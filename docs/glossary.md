@@ -3,12 +3,10 @@ This glossary provides clear, CDC-context definiitons of key technologies, tools
 
 
 ## Azure Blob Storage
-**Azure Blob Storage** is Microsoft Azure's cloud object storage solution used for storing large volumes of unstructured data such as CSV files, Parquet datasets, model outputs, logs, and other artifacts.
+**Azure Blob Storage** is Microsoft Azure's cloud object storage solution used for storing large volumes of data such as CSV files, Parquet datasets, model outputs, logs, and other artifacts.
 
 ### Why it matters in cfa-dataops
     - It provides secure, scablable storage for ingestion pipelines, cleaned datasets, and analytical outputs used in CFA modeling and analytics
-    - Many cfa-dataops integration tests rely on Blob Storage access, which requires authenticating with 'az login --identity`
-    - Enables cloub-based pipelines that mirror production environments, making local-to-cloud reproducibility easier
 
 
 ## Catalog (CFA Catalog)
@@ -26,13 +24,9 @@ DuckDB is an in-process OLAP (analytical) database designed for fast, local anal
 
 ### Why it matters in cfa-dataops
     - Supports SQL, making transformations readable and standardized
-    - Enables reproducible local pipelines before cloud publication
     - Ideal for rapid local development and reproducible ETL workflows
     - Efficient for working with large CSV/Parquet datasets locally
 
-
-## Hypothesis
-Hypothesis is a property-based testing framework for Python.  Instead of manually specifying inputs, Hypothesis automatially generates input data to explore edge cases.
 
 ### Why it matters in cfa-dataops
     - Helps ensure reliability of ingestion and transformation functions
