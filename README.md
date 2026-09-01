@@ -32,7 +32,7 @@ Before getting started, ensure you have:
 - Python and Git installed
 
 ### Steps
-1. Clone the repository and install dependencies with `poetry install` (**requires `poetry >= 2.0`**)
+1. Clone the repository and install dependencies with `uv`
 2. Ensure your have access to the relevant resources (e.g.`az login --identity`)
 1. Clone the repository and install dependencies with `uv sync`
 2. Ensure you have access to the relevant resources (e.g., `az login --identity`)
