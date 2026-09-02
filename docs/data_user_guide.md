@@ -18,7 +18,7 @@ df = datacat.private.scenarios.covid19vax_trends.load.get_dataframe()
 
 ## Accessing Data
 
-When the ETL pipelines are run, the data sources (raw and/or transformed) are stored into Azure Blob Storage. You can access these datasets directly using the `datacat` interface:
+Raw and transformed data produced by ETL pipelines are stored in Azure Blob Storage. You can access these datasets directly using the `datacat` interface:
 
 ```python
 from cfa.dataops import datacat
@@ -27,12 +27,18 @@ from cfa.dataops import datacat
 df = datacat.private.scenarios.covid19vax_trends.load.get_dataframe()
 
 # Get raw data as polars DataFrame
-df = datacat.private.scenarios.seroprevalence.extract.get_dataframe(output="polars")
+raw_df = datacat.private.scenarios.seroprevalence.extract.get_dataframe(output="polars")
 
 # Get specific version
-df = datacat.private.scenarios.covid19vax_trends.load.get_dataframe(
+version_df = datacat.private.scenarios.covid19vax_trends.load.get_dataframe(
     version_spec="==2025-06-03T17-56-50"
 )
+
+# Get raw or transformed data as Polars Lazyframe
+lazy_df = datacat.private.scenarios.seropervalence.extract.get_dataframe(output="pl_lazy")
+
+# Get reference datasets
+ref_df = datacat.reference.my_reference_dataset.get_dataframe()
 ```
 
 ### Dataset Access Methods
@@ -138,6 +144,9 @@ vax_df = datacat.private.scenarios.covid19vax_trends.load.get_dataframe()
 
 # Get raw data for analysis
 raw_vax = datacat.private.scenarios.covid19vax_trends.extract.get_dataframe()
+
+# Get raw or transformed data as LazyFrame
+lazy_vax = datacat.private.scenarios.covid19vax_trends.load.get_dataframe(output="pl_lazy")
 ```
 
 ### Fetching Versions within a Range
