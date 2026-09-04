@@ -86,7 +86,7 @@ def create_catalog_programmatically(
             )
 
         # Copy module directories
-        for mod_i in ["datasets", "reports", "workflows"]:
+        for mod_i in ["datasets", "workflows"]:
             shutil.copytree(
                 os.path.join(repo_files_dirs, mod_i),
                 os.path.join(library_modules_root, mod_i),
@@ -156,7 +156,6 @@ def test_create_basic_catalog(catalog_parent):
 
     # Check module directories
     assert catalog_module_path.join("datasets").check(dir=True)
-    assert catalog_module_path.join("reports").check(dir=True)
     assert catalog_module_path.join("workflows").check(dir=True)
 
 
@@ -280,29 +279,6 @@ def test_datasets_directory_structure(catalog_parent):
         assert datasets_path.join(example_file).check(file=True), (
             f"Missing example file: {example_file}"
         )
-
-
-def test_reports_directory_structure(catalog_parent):
-    """Test that the reports directory is properly created."""
-    unique_name = "reports_test"
-    catalog_location = catalog_parent.join("reports_test")
-
-    success = create_catalog_programmatically(
-        unique_name=unique_name,
-        location=str(catalog_location),
-        expanded_repo_for_cfa=False,
-    )
-
-    assert success is True
-
-    reports_path = catalog_location.join("cfa", "catalog", unique_name, "reports")
-    assert reports_path.check(dir=True)
-    assert reports_path.join("__init__.py").check(file=True)
-
-    # Check for examples directory
-    examples_path = reports_path.join("examples")
-    assert examples_path.check(dir=True)
-    assert examples_path.join("basics.ipynb").check(file=True)
 
 
 def test_workflows_directory_structure(catalog_parent):
@@ -457,7 +433,7 @@ def test_file_copying_operations(catalog_parent):
     assert gitignore_path.check(file=True)
 
     # Verify module directories were copied with their contents
-    for module_dir in ["datasets", "reports", "workflows"]:
+    for module_dir in ["datasets", "workflows"]:
         module_path = catalog_module_path.join(module_dir)
         assert module_path.check(dir=True)
         assert module_path.join("__init__.py").check(file=True)

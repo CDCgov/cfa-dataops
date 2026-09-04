@@ -4,7 +4,7 @@ This guide explains how to create a new dataops data catalog repository using th
 
 ## Overview
 
-The `dataops_catalog_init` command creates a structured repository for managing data catalogs within the CFA DataOps framework. It generates a complete Python package with predefined templates for datasets, workflows, and reports.
+The `dataops_catalog_init` command creates a structured repository for managing data catalogs within the CFA DataOps framework. It generates a complete Python package with predefined templates for datasets and workflows.
 
 ## Prerequisites
 
@@ -87,10 +87,6 @@ When you run the command, it creates the following structure:
 │           │   ├── experiment_tracking_example.toml
 │           │   ├── multistage_example.toml
 │           │   └── reference_data_example.toml
-│           ├── reports/
-│           │   ├── __init__.py
-│           │   └── examples/
-│           │       └── basics.ipynb
 │           └── workflows/
 │               ├── __init__.py
 │               ├── etl/
@@ -121,15 +117,12 @@ When you run the command, it creates the following structure:
 
 ### 1. Catalog Defaults (`catalog_defaults.toml`)
 
-Contains default configuration for storage and access:
+Contains default configuration for storage:
 
 ```toml
 [storage]
 account = "cfadatalakeprd"
 container = "cfapredict"
-
-[access_ledger]
-path = "_access/<unique_name>/ledger/"
 ```
 
 ### 2. Dataset Examples
@@ -218,6 +211,8 @@ uv run python -c "from cfa.dataops import datacat; print(datacat._namespace_list
 
 5. **Start developing your datasets, workflows, and reports**
 
+7. **Start developing your datasets and workflows**
+
 ## Interactive Confirmation
 
 The command includes an interactive confirmation step:
@@ -265,7 +260,7 @@ After creating your catalog repository:
 1. Review and customize the example dataset configurations
 2. Add your actual data sources and configurations
 3. Develop custom workflows for your data processing needs
-4. Create reports and visualizations using the provided templates
+4. Add project-specific processing logic in the generated workflow packages
 5. Set up automated testing and validation
 
 ## Troubleshooting

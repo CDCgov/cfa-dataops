@@ -12,12 +12,25 @@ try:
 except ImportError:
     __version__ = "unknown"
 
-__all__ = ["__version__", "datacat", "reportcat"]
+__all__ = ["__version__", "datacat"]
 
 
 def __getattr__(name: str):
-    if name in {"datacat", "reportcat"}:
-        from .catalog import datacat, reportcat
+    if name == "datacat":
+        from .catalog import datacat
 
-        return datacat if name == "datacat" else reportcat
+        return datacat
+    if name == "reportcat":
+        import warnings
+
+        warnings.warn(
+            "reportcat has been removed from cfa.dataops. "
+            "Reporting support is no longer available.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        raise AttributeError(
+            f"module {__name__!r} has no attribute {name!r}: "
+            "reportcat and reporting support have been removed."
+        )
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

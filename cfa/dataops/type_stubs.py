@@ -20,7 +20,6 @@ TEMPLATE_PACKAGE = "cfa.dataops.stub_templates"
 class _Node:
     children: dict[str, "_Node"] = field(default_factory=dict)
     dataset_config_path: str | None = None
-    report_path: str | None = None
 
 
 @dataclass(frozen=True)
@@ -64,13 +63,11 @@ def _insert_node(
     path: tuple[str, ...],
     *,
     dataset_config_path: str | None = None,
-    report_path: str | None = None,
 ) -> None:
     node = root
     for segment in path:
         node = node.children.setdefault(segment, _Node())
     node.dataset_config_path = dataset_config_path
-    node.report_path = report_path
 
 
 def _walk_dataset_map(
@@ -90,25 +87,6 @@ def _walk_dataset_map(
                 if isinstance(item, Mapping):
                     datasets.extend(_walk_dataset_map(item, path))
     return datasets
-
-
-def _walk_report_map(
-    mapping: Mapping[str, Any],
-    namespace: tuple[str, ...] = (),
-) -> list[tuple[tuple[str, ...], str]]:
-    reports: list[tuple[tuple[str, ...], str]] = []
-    for key, value in mapping.items():
-        segment = _ensure_identifier(str(key), namespace)
-        path = (*namespace, segment)
-        if isinstance(value, str) and value.endswith(".ipynb"):
-            reports.append((path, value))
-        elif isinstance(value, Mapping):
-            reports.extend(_walk_report_map(value, path))
-        elif isinstance(value, list):
-            for item in value:
-                if isinstance(item, Mapping):
-                    reports.extend(_walk_report_map(item, path))
-    return reports
 
 
 def _dataset_stage_names(config_path: str) -> list[str]:
@@ -134,10 +112,6 @@ def _dataset_class(class_name: str, config_path: str) -> _StubClass:
     )
 
 
-def _report_class(class_name: str) -> _StubClass:
-    return _StubClass(name=class_name, base="NotebookEndpoint")
-
-
 def _namespace_classes(
     node: _Node,
     *,
@@ -153,9 +127,6 @@ def _namespace_classes(
         if child.dataset_config_path is not None:
             child_class = _class_name(prefix, child_path, "Dataset")
             classes.append(_dataset_class(child_class, child.dataset_config_path))
-        elif child.report_path is not None:
-            child_class = _class_name(prefix, child_path, "Report")
-            classes.append(_report_class(child_class))
         else:
             child_classes, child_class = _namespace_classes(
                 child,
@@ -173,8 +144,6 @@ def _namespace_classes(
     ]
     if not path:
         attributes.append(_StubAttribute("__namespace_list__", "list[str]"))
-    elif is_dataset_catalog and len(path) == 1:
-        attributes.append(_StubAttribute("_ledger_endpoint", "BlobEndpoint"))
 
     classes.append(
         _StubClass(
@@ -193,16 +162,8 @@ def _build_dataset_tree(dataset_ns_map: Mapping[str, Any]) -> _Node:
     return root
 
 
-def _build_report_tree(report_ns_map: Mapping[str, Any]) -> _Node:
-    root = _Node()
-    for path, report_path in _walk_report_map(report_ns_map):
-        _insert_node(root, path, report_path=report_path)
-    return root
-
-
 def _build_stub_model(
     dataset_ns_map: Mapping[str, Any],
-    report_ns_map: Mapping[str, Any],
 ) -> _StubModel:
     dataset_classes, _ = _namespace_classes(
         _build_dataset_tree(dataset_ns_map),
@@ -211,14 +172,7 @@ def _build_stub_model(
         root_name="DataCatalog",
         is_dataset_catalog=True,
     )
-    report_classes, _ = _namespace_classes(
-        _build_report_tree(report_ns_map),
-        prefix="ReportCatalog",
-        path=(),
-        root_name="ReportCatalog",
-        is_dataset_catalog=False,
-    )
-    return _StubModel(classes=tuple([*dataset_classes, *report_classes]))
+    return _StubModel(classes=tuple(dataset_classes))
 
 
 def _render_template(template_name: str, **context: Any) -> str:
@@ -230,13 +184,12 @@ def _render_template(template_name: str, **context: Any) -> str:
 
 def render_catalog_stub(
     dataset_ns_map: Mapping[str, Any],
-    report_ns_map: Mapping[str, Any],
 ) -> str:
     """Render a precise ``cfa.dataops.catalog`` stub for installed catalogs."""
 
     return _render_template(
         "catalog.pyi.mako",
-        model=_build_stub_model(dataset_ns_map, report_ns_map),
+        model=_build_stub_model(dataset_ns_map),
     )
 
 
@@ -248,7 +201,6 @@ def write_catalog_stubs(
     output_root: str | Path = DEFAULT_STUB_ROOT,
     *,
     dataset_ns_map: Mapping[str, Any],
-    report_ns_map: Mapping[str, Any],
 ) -> list[Path]:
     output_root = Path(output_root)
     package_root = output_root / "cfa" / "dataops"
@@ -257,7 +209,7 @@ def write_catalog_stubs(
     catalog_stub = package_root / "catalog.pyi"
     init_stub = package_root / "__init__.pyi"
     catalog_stub.write_text(
-        render_catalog_stub(dataset_ns_map, report_ns_map),
+        render_catalog_stub(dataset_ns_map),
         encoding="utf-8",
     )
     init_stub.write_text(render_init_stub(), encoding="utf-8")
@@ -276,12 +228,11 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    from .catalog import all_dataset_ns_map, all_reports_ns_map
+    from .catalog import all_dataset_ns_map
 
     written = write_catalog_stubs(
         args.output_root,
         dataset_ns_map=all_dataset_ns_map,
-        report_ns_map=all_reports_ns_map,
     )
     for path in written:
         print(path)

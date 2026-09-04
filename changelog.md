@@ -7,6 +7,10 @@ and this project adheres to [Calendar Versioning](https://calver.org/).
 The versioning pattern is `YYYY.MM.DD.micro(a/b/{none if release})`
 
 ---
+## [2026.08.28.0]
+
+- updated the doc site to zensical
+
 ## [2026.08.07.0]
 
 - added function to check blob access to provide more accurate error messages if access does not exist.
@@ -127,7 +131,7 @@ This release marks a significant milestone for the CFA DataOps project, providin
 
 **Key Highlights:**
 - **Unified Data Access**: `datacat` interface for seamless dataset access.
-- **Automated Reporting**: `reportcat` for generating interactive HTML reports from Jupyter notebooks.
+- **Automated Reporting**: `reportcat` for generating interactive HTML reports from Jupyter notebooks. *(Note: `reportcat` and reporting support were removed in a later release.)*
 - **Robust CLI Tools**: Manage catalogs and datasets effortlessly.
 - **Flexible Data Loading**: Advanced version filtering for Pandas and Polars DataFrames.
 

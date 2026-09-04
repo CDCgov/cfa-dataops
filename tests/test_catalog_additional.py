@@ -23,7 +23,6 @@ def _make_blob_endpoint(ns: str = "tests.example.load") -> BlobEndpoint:
         account="acct",
         container="container",
         prefix="base/prefix/",
-        ledger_location={"account": "lacct", "container": "lcont", "prefix": "_access"},
         ns=ns,
     )
 
@@ -72,13 +71,10 @@ def test_get_all_catalogs_reraises_non_namespace_import_error(mocker):
         get_all_catalogs()
 
 
-def test_blob_endpoint_strips_trailing_slash_and_ledger_flag():
+def test_blob_endpoint_strips_trailing_slash():
     normal = _make_blob_endpoint(ns="tests.example.load")
-    ledger = _make_blob_endpoint(ns="ledger_endpoint")
 
     assert normal.prefix == "base/prefix"
-    assert normal.is_ledger is False
-    assert ledger.is_ledger is True
 
 
 def test_write_blob_splits_partitions_with_suffix(mocker):
@@ -120,39 +116,12 @@ def test_get_versions_returns_desc_sorted_names(mocker):
     assert versions == ["2026-01-01T00-00-00", "2025-01-01T00-00-00"]
 
 
-def test_get_version_blobs_for_ledger_uses_prefix_without_version(mocker):
-    endpoint = _make_blob_endpoint(ns="ledger_endpoint")
-    mocker.patch("cfa.dataops.catalog.check_ext_env", return_value=True)
-    walk_mock = mocker.patch(
-        "cfa.dataops.catalog.walk_blobs_in_container",
-        return_value=[
-            {"name": "_access/2026-01-01.jsonl", "creation_time": 2},
-            {"name": "_access/2025-12-31.jsonl", "creation_time": 1},
-        ],
-    )
-
-    blobs, version = endpoint._get_version_blobs(print_version=False)
-
-    assert version is None
-    assert [b["creation_time"] for b in blobs] == [1, 2]
-    assert walk_mock.call_args.kwargs["name_starts_with"] == "base/prefix/"
-
-
 def test_get_dataframe_raises_for_invalid_output(mocker):
     endpoint = _make_blob_endpoint()
     mocker.patch("cfa.dataops.catalog.check_ext_env", return_value=True)
 
     with pytest.raises(ValueError, match="needs to be 'pandas'"):
         endpoint.get_dataframe(output="arrow")
-
-
-def test_ledger_entry_noop_for_ledger_endpoint(mocker):
-    endpoint = _make_blob_endpoint(ns="ledger_endpoint")
-    write_mock = mocker.patch("cfa.dataops.catalog.write_blob_stream")
-
-    endpoint.ledger_entry(action="read")
-
-    write_mock.assert_not_called()
 
 
 def test_resolve_version_returns_empty_metadata_when_no_match(mocker):

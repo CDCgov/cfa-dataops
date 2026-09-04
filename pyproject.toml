@@ -1,6 +1,6 @@
 [project]
 name = "cfa.dataops"
-version = "2026.08.07.0"
+version = "2026.08.28.0"
 description = "Data cataloging, ETL, modeling, verification, and validation for CFA"
 authors = [
     { name = "Ryan Raasch", email = "xng3@cdc.gov" },
@@ -17,15 +17,8 @@ dependencies = [
     "tqdm (>=4.67.1)",
     "pyarrow (>=19.0.1)",
     "fastparquet (>=2025.12.0)",
-    "matplotlib (~=3.9)",
     "pandas (>=2.2.3)",
-    "altair (>=5.5.0)",
-    "vl-convert-python (>=1.7.0)",
     "pandera[pandas] (>=0.24.0)",
-    "papermill (>=2.6.0)",
-    "ipywidgets (>=8.1.7)",
-    "itables (>=2.4.4)",
-    "nbconvert (>=7.16.6)",
     "jupyter (>=1.1.1)",
     "jupyterlab>=4.5.10",
     "rich (>=14.1.0)",
@@ -67,7 +60,7 @@ dev = [
     "coverage-badge>=1.1.2",
     "hypothesis>=6.133.0",
     "ipykernel>=6.30.0",
-    "mkdocs>=1.6.1",
+    "zensical>=0.0.57",
     "mkdocs-material>=9.6.16",
     "mkdocstrings[python]>=0.30.0",
     "mdx-truly-sane-lists>=1.3",
