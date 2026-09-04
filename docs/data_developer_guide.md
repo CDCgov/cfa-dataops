@@ -1,6 +1,6 @@
 # Data Developer Guide
 
-This guide explains how to add new datasets and ETL processes to your catalog repositories.
+This guide explains how to create, maintain, add update datasets within a **CFA DataOps** catalog repository. A catalog is a Python package that contains one or more datasets, each with configurable TOML-based ETL workflows.  This guide is intended for **dataset developers** who author ETL pipelines, add new dataset versions, and manage catalog content, schemas, and validation logic.
 
 > **Prerequisites**: You need to have a catalog repository created and installed. See [Managing Catalogs](managing_catalogs.md) for setup instructions.
 
@@ -23,6 +23,22 @@ The ETL pipeline system is built around:
 - Python ETL scripts that handle extraction, transformation and loading
 - SQL templates for transformations (optional)
 - Schema validation using Pandera
+- Catalog repository content (datasets/, reports/, workflows/, etc.)
+- datacat; the runtime dataset interface used to inspect, validate, and load dataset versions
+
+## Key directories for developers:
+
+### `datasets/`
+contains TOML files defining dataset ETL pipelines, metadata, validation rules, and staging behaviours.
+
+### `workflows/`
+contains reusable Python modules or workflow scripts supporting ETL.
+
+### `reports/`
+Contains notebook templates or report-genrating logic tied to datasets (optional).
+
+### `catalog_defaults.toml`
+Defines common config shared by all datasets in the catalog (e.g. blob paths, validation defaults).
 
 ## Update an existing dataset
 
@@ -52,7 +68,61 @@ To add a new dataset to your catalog repository:
 3. Create a new ETL script in `{your_catalog}/workflows/{workflow_type}/`
 4. Add SQL transformation templates if using SQL for transforms (these are [Mako templates](https://www.makotemplates.org/))
 
-### Configuration file
+## Versioning Behavior
+
+Dataset versions are typially timestamped (e.g. 2025-10-31).  Developers can:
+
+Inspect versions
+
+```python
+from cfa.dataops import datacat
+
+datacat.my_project.my_dataset.load.get_versions()
+```
+
+Load a version
+
+```python
+df = datacat.my_project.mydataset.load.get_dataframe()
+```
+
+Load with a version filter
+
+```python
+df = datacat.my_project.my_dataset.load.get_dataframe(version=">2024.12.01,<2025.08")
+```
+
+See which version would be chosen
+
+```python
+v = datacat.my_project.my_dataset.load.resolve_versions(version="latest")
+```
+
+
+
+## Configuration file
+
+Configuration sections typyically include:
+
+**[extract]**
+
+How raw data is sourced.  Common patterns include:
+- reading Parquet or CSV from blob storage
+- applying schema checks on raw fields
+- filtering out malformed input
+
+**[transform]**
+
+Defines transformation logic. Options include:
+- SQL expressions (DuckDB or Polars SQL)
+- Python functions
+- multistage ETL pipelines (split into etl/modules)
+
+**[load]**
+
+Defines how the transformed dataset is written inot versioned storage.
+Versions are timestampe-based and automatically assigned when new data is produced.
+
 
 ```toml title="{your_catalog}/datasets/{dataset_name}.toml"
 [properties]

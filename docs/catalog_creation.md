@@ -8,16 +8,25 @@ The `dataops_catalog_init` command creates a structured repository for managing 
 
 ## Prerequisites
 
-- Python 3.10 (required)
+- Python 3.10 or newer (required)
 - `cfa.dataops` package installed
 - Access to create directories in your target location
+- uv installed
 
 ## Installation
+
+To verify uv installation
+
+`uv --version`
 
 The `dataops_catalog_init` command is automatically available after installing the `cfa.dataops` package:
 
 ```bash
 pip install cfa.dataops
+
+or 
+
+uv add cfa.dataops
 ```
 
 ## Basic Usage
@@ -184,9 +193,25 @@ After creating your catalog repository:
 2. **Install in editable mode:**
    ```bash
    pip install -e .[dev]
+
+   or
+
+   uv pip install -e .[dev]
    ```
 
-3. **Start developing your datasets and workflows**
+3. **Synchronize dependenceis**
+   ```bash
+   uv sync
+   ```
+
+4. Run Python commands inside the environment
+```bash
+uv run python -c "from cfa.dataops import datacat; print(datacat._namespace_list_)"
+```
+
+5. **Start developing your datasets, workflows, and reports**
+
+7. **Start developing your datasets and workflows**
 
 ## Interactive Confirmation
 
