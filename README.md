@@ -12,11 +12,28 @@ This project provides data tools and low friction access to versioned datasets w
 - Utilities for time-stamping and template loading
 - Data validation and quality checks
 - Custom workflows
-- Tooling for easy access to Socrata Open Data API (e.i., data.cdc.gov) (copied and modified from [here](https://github.com/CDCgov/cfasodapy))
+- Tooling for easy access to Socrata Open Data API (data.cdc.gov) (copied and modified from [here](https://github.com/CDCgov/cfasodapy))
 - Ability to initialize new dataset catalog libraries and maintain datasets in more than one repo
+
+## Technology Stack
+- DuckDB (in-process analytics engine)
+- Polars (high-performance data frame library)
+- Azure Blob Storage (centralized data storage)
+- Dagster (workflow orchestration, emerging)
+- Pandas (data manipulation and analysis python library)
+- Socrata API (public health data access)
 
 ## Getting started
 
+### Prequisites
+Before getting started, ensure you have:
+- GitHub access to this repository
+- Azure credentials (Blob storage, VPC access)
+- Python and Git installed
+
+### Steps
+1. Clone the repository and install dependencies with `uv`
+2. Ensure your have access to the relevant resources (e.g.`az login --identity`)
 1. Clone the repository and install dependencies with `uv sync`
 2. Ensure you have access to the relevant resources (e.g., `az login --identity`)
 3. See which datasets are available:
