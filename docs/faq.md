@@ -8,8 +8,8 @@ This FAQ document addressess common questions about the **cfa-dataops** reposito
 **1. What access do I need before I can use cfa-dataops?**
 
     You should have access to:
-    - CDC network 
-    - CFA DataOps Github 
+    - CDC network
+    - CFA DataOps Github
     - CDC.gov repositories
     - CDCent entrerprise repos
     - cloud resources assigned to your project
@@ -105,5 +105,3 @@ Use the internal [Troubleshooting Guide](https://github.com/CDCgov/cfa-dataops/b
 **12. Where do I ask for help or escalate issues?**
 
 [Email CFA Tools](mailto:cfatoolsteam@cdc.gov) for access or platform questions.
-
-
