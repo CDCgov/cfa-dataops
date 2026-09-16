@@ -58,11 +58,10 @@ datacat.private.my_project.custom_dataset.load.get_dataframe()
 
 # Preview the version that will be loaded
 df_meta = datacat.private.scenarios.covid19vax_trends.load.resolve_version(
-   version_spec=">=2025-05-01,<2025-06-01",
-   selection="newest",
+    version_spec=">=2025-05-01,<2025-06-01",
+    selection="newest",
 )
 print(df_meta.version)
-
 ```
 
 ### Listing Available Resources
