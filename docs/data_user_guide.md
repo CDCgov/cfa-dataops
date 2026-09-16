@@ -53,12 +53,14 @@ Use `datacat.get_ref(...)` when you want to resolve a dataset first and then reu
 The typical way to create a reference is as follows:
 ```python
 from cfa.dataops import datacat
+
 ref = datacat.public.team.data_trends
 ```
 
 This can be done much simpler using `get_ref`:
 ```python
 from cfa.dataops import datacat
+
 data_ref = datacat.get_ref("data_trends")
 ```
 
@@ -85,8 +87,8 @@ If you want to see which version will be returned before loading the dataframe, 
 from cfa.dataops import datacat
 
 resolved = datacat.private.scenarios.covid19vax_trends.load.resolve_version(
-   version_spec=">=2025-05-01,<2025-06-01",
-   selection="newest",
+    version_spec=">=2025-05-01,<2025-06-01",
+    selection="newest",
 )
 
 print(resolved.version)
@@ -153,7 +155,7 @@ from cfa.dataops import datacat
 
 # newest match in the range (single version)
 df = datacat.private.scenarios.covid19vax_trends.load.get_dataframe(
-   version_spec=">=2025-05-01,<2025-06-01"
+    version_spec=">=2025-05-01,<2025-06-01"
 )
 ```
 
@@ -165,7 +167,7 @@ Used version: '2025-05-30T19-55-51'
 ```python
 # oldest match in the same range (selection=oldest)
 df_old = datacat.private.scenarios.covid19vax_trends.load.get_dataframe(
-   version_spec=">=2025-05-01,<2025-06-01", selection = "oldest"
+    version_spec=">=2025-05-01,<2025-06-01", selection="oldest"
 )
 ```
 
@@ -177,8 +179,7 @@ Used version: '2025-05-30T14-50-36'
 ```python
 # Preview the exact version that would be loaded for the same range
 resolved = datacat.private.scenarios.covid19vax_trends.load.resolve_version(
-   version_spec=">=2025-05-01,<2025-06-01",
-   selection="newest"
+    version_spec=">=2025-05-01,<2025-06-01", selection="newest"
 )
 
 resolved.version

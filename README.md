@@ -22,6 +22,7 @@ This project provides data tools and low friction access to versioned datasets w
 3. See which datasets are available:
    ```python
    from cfa.dataops import datacat
+
    print(datacat.__namespace_list__)
    ```
 4. Resolve a dataset reference from a full path or unique suffix:

@@ -81,15 +81,13 @@ prefix = "path/to/transformed/data"
 ```python title="cfa/dataops/datasets/{team_dir}/schemas/{dataset_name}.py"
 import pandera.pandas as pa
 
-extract_schema = pa.DataFrameSchema({
-    "column1": pa.Column(str),
-    "column2": pa.Column(float)
-})
+extract_schema = pa.DataFrameSchema(
+    {"column1": pa.Column(str), "column2": pa.Column(float)}
+)
 
-load_schema = pa.DataFrameSchema({
-    "transformed_col1": pa.Column(str),
-    "transformed_col2": pa.Column(float)
-})
+load_schema = pa.DataFrameSchema(
+    {"transformed_col1": pa.Column(str), "transformed_col2": pa.Column(float)}
+)
 ```
 
 ### ETL script
@@ -156,32 +154,34 @@ import pandas as pd
 import pandera.pandas as pa
 
 # Define the schemas for validation
-extract_schema = pa.DataFrameSchema({
-    "date": pa.Column(pd.DatetimeTZDtype(tz='UTC')),
-    "value": pa.Column(float, checks=pa.Check.greater_than(0)),
-    "category": pa.Column(str, checks=pa.Check.isin(['A', 'B', 'C']))
-})
+extract_schema = pa.DataFrameSchema(
+    {
+        "date": pa.Column(pd.DatetimeTZDtype(tz="UTC")),
+        "value": pa.Column(float, checks=pa.Check.greater_than(0)),
+        "category": pa.Column(str, checks=pa.Check.isin(["A", "B", "C"])),
+    }
+)
 
-load_schema = pa.DataFrameSchema({
-    "date": pa.Column(pd.DatetimeTZDtype(tz='UTC')),
-    "normalized_value": pa.Column(float),
-    "category": pa.Column(str)
-})
+load_schema = pa.DataFrameSchema(
+    {
+        "date": pa.Column(pd.DatetimeTZDtype(tz="UTC")),
+        "normalized_value": pa.Column(float),
+        "category": pa.Column(str),
+    }
+)
+
 
 # Add mock data generation for testing
 # prefix with 'extract' or 'load'
-def extract_mock_data(output="pandas", size=10) -> pd.DataFrame|pl.DataFrame:
+def extract_mock_data(output="pandas", size=10) -> pd.DataFrame | pl.DataFrame:
     data = {
-            "date": pd.date_range(
-                start="2023-01-01",
-                periods=size,
-                tz='UTC'
-            ),
-            "value": np.random.uniform(1, 100, size),
-            "category": np.random.choice(['A', 'B', 'C'], size)
+        "date": pd.date_range(start="2023-01-01", periods=size, tz="UTC"),
+        "value": np.random.uniform(1, 100, size),
+        "category": np.random.choice(["A", "B", "C"], size),
     }
     df = pd.DataFrame(data)
     return df if output == "pandas" or output == "pd" else pl.from_pandas(df)
+
 
 # Validate synthetic data matches schema
 if __name__ == "__main__":
