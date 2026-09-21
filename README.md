@@ -62,6 +62,15 @@ Read the [Dataset User Guide](docs/data_user_guide.md) for more information abou
 
 Read the [Dataset Developer Guide](docs/data_developer_guide.md) for information about how to run ETL to add new versions of an existing datasets and about how to create new datasets.
 
+## Related Repos
+
+| Repo | Description |
+| --- | --- |
+| [cfa-catalog-pub](https://github.com/cdcgov/cfa-catalog-pub) | Repo containing the configurations and ETL workflows for public CDC data. |
+| [cfa-dataops-scheduler](https://github.com/cdcent/cfa-dataops-scheduler) | Repo containing the Dagster workflow configurations for executing ETL pipelines on a schedule. |
+| [cfa-catalog-private](https://github.com/cdcent/cfa-catalog-private) | Repo containing the configurations and ETL workflows for private CDC data. |
+| [cfa-stf-data](https://github.com/cdcgov/cfa-stf-data) | Repo for data access for the STF team. |
+
 ## Project admins
 
 - Thomas Hladish <utx5@cdc.gov> (CDC/OD/ORR/CFA)
