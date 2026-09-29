@@ -7,6 +7,17 @@ and this project adheres to [Calendar Versioning](https://calver.org/).
 The versioning pattern is `YYYY.MM.DD.micro(a/b/{none if release})`
 
 ---
+## [Unreleased]
+
+### Added
+
+- new `cfa.dataops.quality` module: version-to-version data quality and drift
+  checks for catalog datasets (freshness, row count, columns, dtypes, null
+  rates, numeric drift, categorical values) with a `QualityReport` designed
+  for CI gating, plus a `python -m cfa.dataops.quality` CLI and a
+  `docs/data_quality.md` guide.
+
+---
 ## [2026.08.28.0]
 
 - updated the doc site to zensical

@@ -6,6 +6,7 @@ nav:
   - managing_catalogs.md
   - data_user_guide.md
   - data_developer_guide.md
+  - data_quality.md
   - cli_tools.md
 
 repo_url: https://github.com/cdcgov/cfa-dataops
