@@ -133,7 +133,7 @@ def test_get_pages_yields_expected_page_ranges(mocker):
     assert result == [[{"id": 1}, {"id": 2}], [{"id": 3}]]
     assert get_records.call_args_list == [
         mocker.call(start=0, end=1),
-        mocker.call(start=2, end=3),
+        mocker.call(start=2, end=2),
     ]
 
 
@@ -181,3 +181,74 @@ def test_get_request_adds_app_token_header(mocker):
         params={"$limit": 1},
     )
     response.raise_for_status.assert_called_once_with()
+
+
+def _soda_endpoint(n_dataset_rows: int, record_requests: list[dict]):
+    """Stand in for a Socrata endpoint holding ``n_dataset_rows`` rows.
+
+    Answers count queries and serves ``$offset``/``$limit`` windows, appending
+    each record request to ``record_requests``.
+    """
+
+    def get_request(url, params=None, app_token=None):
+        params = params or {}
+
+        if params.get("$select") == "count(:id)":
+            return [{"count_id": str(n_dataset_rows)}]
+
+        offset = params["$offset"]
+        limit = params["$limit"]
+        record_requests.append({"offset": offset, "limit": limit})
+        return [{"id": i} for i in range(offset, min(offset + limit, n_dataset_rows))]
+
+    return get_request
+
+
+def test_get_pages_with_limit_below_page_size(mocker):
+    record_requests = []
+    mocker.patch.object(
+        Query, "_get_request", side_effect=_soda_endpoint(15_000, record_requests)
+    )
+
+    pages = list(
+        Query(domain="data.cdc.gov", id="abc123", limit=5, verbose=False).get_pages()
+    )
+
+    assert pages == [[{"id": i} for i in range(5)]]
+    assert record_requests == [{"offset": 0, "limit": 5}]
+
+
+def test_get_pages_with_limit_not_a_multiple_of_page_size(mocker):
+    record_requests = []
+    mocker.patch.object(
+        Query, "_get_request", side_effect=_soda_endpoint(20_000, record_requests)
+    )
+
+    pages = list(
+        Query(
+            domain="data.cdc.gov", id="abc123", limit=15_000, verbose=False
+        ).get_pages(page_size=10_000)
+    )
+
+    assert [len(page) for page in pages] == [10_000, 5_000]
+    assert record_requests == [
+        {"offset": 0, "limit": 10_000},
+        {"offset": 10_000, "limit": 5_000},
+    ]
+
+
+def test_get_pages_does_not_request_rows_past_the_last_one(mocker):
+    record_requests = []
+    mocker.patch.object(
+        Query, "_get_request", side_effect=_soda_endpoint(3, record_requests)
+    )
+
+    pages = list(
+        Query(domain="data.cdc.gov", id="abc123", verbose=False).get_pages(page_size=2)
+    )
+
+    assert pages == [[{"id": 0}, {"id": 1}], [{"id": 2}]]
+    assert record_requests == [
+        {"offset": 0, "limit": 2},
+        {"offset": 2, "limit": 1},
+    ]

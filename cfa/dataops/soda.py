@@ -72,7 +72,7 @@ class Query:
                 print(f"  Downloading page {i + 1}/{n_pages}")
 
             start = i * page_size
-            end = (i + 1) * page_size - 1
+            end = min((i + 1) * page_size, row_count) - 1
             page = self._get_records(start=start, end=end)
 
             assert len(page) > 0
